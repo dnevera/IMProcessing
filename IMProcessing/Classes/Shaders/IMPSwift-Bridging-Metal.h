@@ -9,7 +9,10 @@
 #ifndef IMPSwiftBridge_h
 #define IMPSwiftBridge_h
 
+#ifdef __METAL_VERSION__
+
 #include "../Bridging/IMProcessing-Bridging-Header.h"
 
+#endif
 
 #endif /* IMPSwiftBridge_h */

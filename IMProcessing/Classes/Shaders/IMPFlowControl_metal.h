@@ -9,6 +9,8 @@
 #ifndef IMPFlowControl_metal_h
 #define IMPFlowControl_metal_h
 
+#ifdef __METAL_VERSION__
+
 #include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -59,6 +61,8 @@ namespace IMProcessing
         return 1.0 - a;
     }
 }
+
+#endif
 
 #endif
 

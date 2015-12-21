@@ -9,6 +9,8 @@
 #ifndef IMPHistogramLayer_metal_h
 #define IMPHistogramLayer_metal_h
 
+#ifdef __METAL_VERSION__
+
 #include <metal_stdlib>
 
 #include "IMPSwift-Bridging-Metal.h"
@@ -68,5 +70,6 @@ namespace IMProcessing
 
 #endif
 
+#endif
 
 #endif /* IMPHistogramLayer_metal_h */

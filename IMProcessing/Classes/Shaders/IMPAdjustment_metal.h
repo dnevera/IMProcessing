@@ -9,6 +9,8 @@
 #ifndef IMPAdjustment_metal_h
 #define IMPAdjustment_metal_h
 
+#ifdef __METAL_VERSION__
+
 #include "IMPStdlib_metal.h"
 
 using namespace metal;
@@ -110,6 +112,8 @@ namespace IMProcessing
         return result;
     }
 }
+
+#endif
 
 #endif
 

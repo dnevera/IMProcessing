@@ -12,10 +12,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => 'https://github.com/dnevera/IMProcessing.git', :tag => '0.0.1'}
   
   s.source_files  = 'IMProcessing/Classes/**/*.{h,swift}'
-  s.exclude_files = "IMProcessing/Classes/Shaders/*.{h,metal}"
-  s.public_header_files = 'IMProcessing/Classes/**/*.h'
+# s.exclude_files = 'IMProcessing/Classes/Shaders/*.{h,metal}'
+  s.public_header_files = 'IMProcessing/Classes/**/*.h',
 
-  s.frameworks   = 'UIKit', 'Metal'
+  s.frameworks   = 'Metal'
   s.requires_arc = true
 
 

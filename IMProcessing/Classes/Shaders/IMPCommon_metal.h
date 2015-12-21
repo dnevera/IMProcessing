@@ -9,8 +9,9 @@
 #ifndef IMPCommon_metal_h
 #define IMPCommon_metal_h
 
-#include <metal_stdlib>
+#ifdef __METAL_VERSION__
 
+#include <metal_stdlib>
 
 #include "IMPSwift-Bridging-Metal.h"
 #include "IMPFlowControl_metal.h"
@@ -170,6 +171,8 @@ namespace IMProcessing
                    );
     }
 }
+
+#endif
 
 #endif
 

@@ -9,6 +9,8 @@
 #ifndef IMPBlending_metal_h
 #define IMPBlending_metal_h
 
+#ifdef __METAL_VERSION__
+
 #include <metal_stdlib>
 #include <simd/simd.h>
 #include "IMPCommon_metal.h"
@@ -97,4 +99,5 @@ namespace IMProcessing
 }
 #endif
 
+#endif
 #endif /* IMPBlending_metal_h */

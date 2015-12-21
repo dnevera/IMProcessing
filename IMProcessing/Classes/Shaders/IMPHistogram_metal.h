@@ -9,6 +9,8 @@
 #ifndef IMPHistogram_h
 #define IMPHistogram_h
 
+#ifdef __METAL_VERSION__
+
 #include <metal_stdlib>
 #include "IMPFlowControl_metal.h"
 #include "IMPConstants_metal.h"
@@ -133,6 +135,8 @@ namespace IMProcessing
         }
     }
 }
+
+#endif
 
 #endif
 

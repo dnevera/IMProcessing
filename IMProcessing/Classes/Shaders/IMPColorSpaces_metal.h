@@ -9,6 +9,8 @@
 #ifndef IMPColorSpaces_metal_h
 #define IMPColorSpaces_metal_h
 
+#ifdef __METAL_VERSION__
+
 #include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -255,4 +257,5 @@ namespace IMProcessing
 }
 #endif
 
+#endif
 #endif /* IMPColorSpaces_metal_h */
