@@ -20,7 +20,7 @@ using namespace metal;
 namespace IMProcessing
 {
     /**
-     * Auto white balance adjustment
+     * White balance adjustment
      * The main idea has been taken from http://zhur74.livejournal.com/44023.html
      */
     

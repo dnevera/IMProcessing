@@ -19,24 +19,25 @@
 # include <simd/simd.h>
 
 
-///
-/// Не будем выдумавыть новые размерности цветовых гистограм - остановимся на магическом 256.
-///
+///  @brief Histogram width
 static constant uint kIMP_HistogramSize        = 256;
+
+///  @brief Maximum channels histogram may contain
 static constant uint kIMP_HistogramMaxChannels = 4;
 
-///
-/// Буфер бинов гистограммы
+///  @brief Interchangeable integral buffer between Metal host implementation and
+/// Metal Shading Language shaders
 ///
 typedef struct IMPHistogramBuffer {
     uint channels[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
 }IMPHistogramBuffer;
 
-
+///  @brief Interchangeable float number buffer
 typedef struct {
     float channels[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
 }IMPHistogramFloatBuffer;
 
+///  @brief Histogram visualization color options
 typedef struct {
     float r,g,b,a;
 }IMPHistogramLayerComponent;
@@ -51,5 +52,13 @@ struct IMPHistogramLayer {
 #endif
     bool                        backgroundSource;
 };
+
+typedef struct{
+    float saturation;
+    float black;
+    float white;
+} IMPColorWeightsClipping;
+
+
 
 #endif /* IMPHistogramTypes_h */

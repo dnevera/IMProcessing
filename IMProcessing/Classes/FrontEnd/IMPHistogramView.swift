@@ -33,7 +33,7 @@ public class IMPHistogramView: IMPView {
             self.addFilter(solver)
             
             analayzer = IMPHistogramAnalyzer(context: self.context)
-            analayzer.solvers.append(solver)
+            analayzer.addSolver(solver)
             
             self.addSourceObserver{ (source:IMPImageProvider) -> Void in
                 self.analayzer.source = source

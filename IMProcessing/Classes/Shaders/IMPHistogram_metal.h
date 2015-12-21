@@ -23,10 +23,17 @@ namespace IMProcessing
 {
     
     namespace histogram{
-        //
-        // Линейно отсемплируем входную тектсуру до размера заданного параметром scale.
-        // Предполагаем, что изменеяем размер всегда в меньшую сторону.
-        //
+        
+        static constant float3 Im(kIMP_HistogramSize - 1);
+
+        ///  @brief Get a sample acording texture scale factor value.
+        ///
+        ///  @param inTexture       input texture
+        ///  @param scale           scale factor
+        ///  @param gid             position thread in grrid, equal x,y coordiant position of pixel in texure
+        ///
+        ///  @return sampled color value
+        ///
         inline float4 sampledColor(
                                    texture2d<float, access::sample> inTexture,
                                    float                   scale,
@@ -44,9 +51,14 @@ namespace IMProcessing
         }
         
         
-        //
-        // Проверка региона в котором вычисляем гистограмму
-        //
+        ///  @brief Test is there pixel inside in a box or not
+        ///
+        ///  @param v          pixel coordinate
+        ///  @param bottomLeft offset from bottom-left conner
+        ///  @param topRight   offset from top-right conner
+        ///
+        ///  @return 0 or 1
+        ///
         inline  float coordsIsInsideBox(float2 v, float2 bottomLeft, float2 topRight) {
             float2 s =  step(bottomLeft, v) - step(topRight, v);
             return s.x * s.y;
@@ -71,23 +83,30 @@ namespace IMProcessing
         
     }
     
-    
+    ///  @brief Compute bin index of a color in input texture.
+    ///
+    ///  @param inTexture       input texture
+    ///  @param regionIn        idents region which explore for the histogram calculation
+    ///  @param scale           scale factor
+    ///  @param gid             position thread in grrid, equal x,y coordiant position of pixel in texure
+    ///
+    ///  @return bin index
+    ///
     inline uint4 channel_binIndex(
                                   texture2d<float, access::sample>  inTexture,
                                   constant IMPCropRegion          &regionIn,
                                   constant float                    &scale,
-                                  uint2 gid [[thread_position_in_grid]]
+                                  uint2 gid
                                   ){
-        constexpr float3 Im(kIMP_HistogramSize - 1);
         
         float4 inColor = histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
-        uint   Y       = uint(dot(inColor.rgb,IMProcessing::Y_YCbCr_factor) * inColor.a * Im.x);
+        uint   Y       = uint(dot(inColor.rgb,IMProcessing::Y_YCbCr_factor) * inColor.a * histogram::Im.x);
         
-        return uint4(uint3(inColor.rgb * Im), Y);
+        return uint4(uint3(inColor.rgb * histogram::Im), Y);
     }
     
     ///
-    /// Функция счета через частичные гистограммы в локальных тредах и сложение голбальных на DSP
+    ///  @brief Kernel compute partial histograms
     ///
     kernel void kernel_impHistogramPartial(
                                            texture2d<float, access::sample>   inTexture  [[texture(0)]],
@@ -102,16 +121,16 @@ namespace IMProcessing
     {
         threadgroup atomic_int temp[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
         
+        uint w      = uint(float(inTexture.get_width())*scale)/groupSize.x;
+        uint h      = uint(float(inTexture.get_height())*scale);
+        uint size   = w*h;
+        uint offset = kIMP_HistogramSize;
+        
         for (uint i=0; i<channels; i++){
             atomic_store_explicit(&(temp[i][tid]),0,memory_order_relaxed);
         }
         
         threadgroup_barrier(mem_flags::mem_threadgroup);
-        
-        uint w      = uint(float(inTexture.get_width())*scale)/groupSize.x;
-        uint h      = uint(float(inTexture.get_height())*scale);
-        uint size   = w*h;
-        uint offset = kIMP_HistogramSize;
         
         for (uint i=0; i<size; i+=offset){
             
@@ -134,6 +153,7 @@ namespace IMProcessing
             outArray[groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
         }
     }
+            
 }
 
 #endif

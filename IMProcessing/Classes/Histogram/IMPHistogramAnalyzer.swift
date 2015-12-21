@@ -13,7 +13,7 @@ public typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
 ///
 /// Протокол солверов статистики гистограммы. Солверами будем решать конкретные задачи обработки данных прилетевших в контейнер.
 ///
-public protocol IMPHistogramSolver{
+public protocol IMPHistogramSolver {
     func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize);
 }
 
@@ -51,11 +51,15 @@ public class IMPHistogramAnalyzer: IMPFilter {
     }
     private var channelsToComputeBuffer:MTLBuffer!
     
+    private var solvers:[IMPHistogramSolver] = [IMPHistogramSolver]()
+    
     ///
     /// Солверы анализирующие гистограмму в текущем инстансе
-    ///.
-    public var solvers:[IMPHistogramSolver] = [IMPHistogramSolver]()
-    
+    ///
+    public func addSolver(solver:IMPHistogramSolver){
+            solvers.append(solver)
+    }
+        
     ///
     /// Регион внутри которого вычисляем гистограмму.
     ///
@@ -122,9 +126,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
     ///
     /// Замыкание выполняющаеся после завершения расчета значений солвера.
     /// Замыкание можно определить для обновления значений пользовательской цепочки фильтров.
-    ///
-    //var analyzerDidUpdate: ((histogram:IMPHistogram) -> Void)?
-    
+    ///    
     public func addUpdateObserver(observer:IMPAnalyzerUpdateHandler){
         analizerUpdateHandlers.append(observer)
     }
@@ -173,6 +175,8 @@ public class IMPHistogramAnalyzer: IMPFilter {
             commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
             commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
             commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
+            
+            self.configure(self.kernel_impHistogramCounter, command: commandEncoder)
             
             //
             // Запускаем вычисления

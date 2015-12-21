@@ -13,6 +13,7 @@ class IMPTestFilter:IMPFilter {
     
     var sourceAnalayzer:IMPHistogramAnalyzer!
     var dominantAnalayzer:IMPHistogramAnalyzer!
+    var colorAlizer:IMPColorWeightsAnalyzer!
     
     let dominantSolver = IMPHistogramDominantColorSolver()
     let rangeSolver = IMPHistogramRangeSolver()
@@ -33,10 +34,12 @@ class IMPTestFilter:IMPFilter {
         addFilter(wbFilter)
 
         dominantAnalayzer = IMPHistogramAnalyzer(context: self.context)
-        dominantAnalayzer.solvers.append(dominantSolver)
+        dominantAnalayzer.addSolver(dominantSolver)
         
         sourceAnalayzer = IMPHistogramAnalyzer(context: self.context)
-        sourceAnalayzer.solvers.append(rangeSolver)
+        sourceAnalayzer.addSolver(rangeSolver)
+        
+        colorAlizer = IMPColorWeightsAnalyzer(context: self.context)
         
         sourceAnalayzer.addUpdateObserver({ (histogram) -> Void in
             self.contrastFilter.adjustment.minimum = self.rangeSolver.minimum
@@ -49,16 +52,17 @@ class IMPTestFilter:IMPFilter {
         
         contrastFilter.addDestinationObserver { (destination) -> Void in
             self.dominantAnalayzer.source = destination
+            self.colorAlizer.source = destination
         }
         
         addSourceObserver { (source) -> Void in
             self.sourceAnalayzer.source = source
-        }        
+        }
         
         addDestinationObserver { (destination) -> Void in
             histogramView.source = destination
             histogramCDFView.source = destination
-        }
+        }        
     }
     
     required init(context: IMPContext) {
