@@ -27,7 +27,6 @@
 		3112BD001C281D9F00825078 /* IMPFunction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCD61C281D9F00825078 /* IMPFunction.swift */; };
 		3112BD021C281D9F00825078 /* IMPImageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCD81C281D9F00825078 /* IMPImageProvider.swift */; };
 		3112BD031C281D9F00825078 /* IMPTexturePovider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCDA1C281D9F00825078 /* IMPTexturePovider.swift */; };
-		3112BD051C281D9F00825078 /* IMProcessingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCDE1C281D9F00825078 /* IMProcessingBridge.m */; };
 		3112BD061C281D9F00825078 /* IMPImageProvider+CubeLut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCE01C281D9F00825078 /* IMPImageProvider+CubeLut.swift */; };
 		3112BD071C281D9F00825078 /* IMPImageProvider+IMPImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCE11C281D9F00825078 /* IMPImageProvider+IMPImage.swift */; };
 		3112BD081C281D9F00825078 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCEC1C281D9F00825078 /* IMPMain_metal.metal */; };
@@ -62,10 +61,7 @@
 		3112BCD51C281D9F00825078 /* IMPFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPFilter.swift; sourceTree = "<group>"; };
 		3112BCD61C281D9F00825078 /* IMPFunction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPFunction.swift; sourceTree = "<group>"; };
 		3112BCD81C281D9F00825078 /* IMPImageProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPImageProvider.swift; sourceTree = "<group>"; };
-		3112BCD91C281D9F00825078 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMProcessing-Bridging-Header.h"; path = "../IMProcessing-Bridging-Header.h"; sourceTree = "<group>"; };
 		3112BCDA1C281D9F00825078 /* IMPTexturePovider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPTexturePovider.swift; sourceTree = "<group>"; };
-		3112BCDD1C281D9F00825078 /* IMProcessingBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMProcessingBridge.h; sourceTree = "<group>"; };
-		3112BCDE1C281D9F00825078 /* IMProcessingBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMProcessingBridge.m; sourceTree = "<group>"; };
 		3112BCE01C281D9F00825078 /* IMPImageProvider+CubeLut.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImageProvider+CubeLut.swift"; sourceTree = "<group>"; };
 		3112BCE11C281D9F00825078 /* IMPImageProvider+IMPImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImageProvider+IMPImage.swift"; sourceTree = "<group>"; };
 		3112BCE31C281D9F00825078 /* IMPAdjustment_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPAdjustment_metal.h; sourceTree = "<group>"; };
@@ -85,8 +81,10 @@
 		3112BD0F1C2820B400825078 /* IMProcessing.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMProcessing.podspec; sourceTree = SOURCE_ROOT; };
 		3112BD131C2821F200825078 /* IMPHistogramView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPHistogramView.swift; path = FrontEnd/IMPHistogramView.swift; sourceTree = "<group>"; };
 		3112BD141C2821F200825078 /* IMPView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPView.swift; path = FrontEnd/IMPView.swift; sourceTree = "<group>"; };
-		3112BD181C2822BA00825078 /* IMPHistogramTypes_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogramTypes_metal.h; sourceTree = "<group>"; };
-		3112BD191C2822BA00825078 /* IMPTypes_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPTypes_metal.h; sourceTree = "<group>"; };
+		3112BD201C28260000825078 /* IMPSwift-Bridging-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMPSwift-Bridging-Metal.h"; sourceTree = "<group>"; };
+		3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPHistogramTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPHistogramTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
+		3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMProcessing-Bridging-Header.h"; path = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
+		3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,14 +127,13 @@
 		3112BCC61C281D9F00825078 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				3112BCDC1C281D9F00825078 /* Bridging */,
+				3112BCEF1C281D9F00825078 /* Utils */,
+				3112BD111C28218500825078 /* Base */,
 				3112BCC71C281D9F00825078 /* Adjustments */,
 				3112BCCC1C281D9F00825078 /* Histogram */,
-				3112BD111C28218500825078 /* Base */,
-				3112BCDC1C281D9F00825078 /* ObjcBridge */,
 				3112BCDF1C281D9F00825078 /* Providers */,
 				3112BCE21C281D9F00825078 /* Shaders */,
-				3112BD171C2822BA00825078 /* ShareWithMetal */,
-				3112BCEF1C281D9F00825078 /* Utils */,
 				3112BD121C2821D200825078 /* FrontEnd */,
 			);
 			path = Classes;
@@ -173,13 +170,14 @@
 			path = Solvers;
 			sourceTree = "<group>";
 		};
-		3112BCDC1C281D9F00825078 /* ObjcBridge */ = {
+		3112BCDC1C281D9F00825078 /* Bridging */ = {
 			isa = PBXGroup;
 			children = (
-				3112BCD91C281D9F00825078 /* IMProcessing-Bridging-Header.h */,
-				3112BCDD1C281D9F00825078 /* IMProcessingBridge.h */,
-				3112BCDE1C281D9F00825078 /* IMProcessingBridge.m */,
+				3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */,
+				3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */,
+				3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */,
 			);
+			name = Bridging;
 			path = ObjcBridge;
 			sourceTree = "<group>";
 		};
@@ -195,6 +193,7 @@
 		3112BCE21C281D9F00825078 /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
+				3112BD201C28260000825078 /* IMPSwift-Bridging-Metal.h */,
 				3112BCE31C281D9F00825078 /* IMPAdjustment_metal.h */,
 				3112BCE41C281D9F00825078 /* IMPBlending_metal.h */,
 				3112BCE51C281D9F00825078 /* IMPColorSpaces_metal.h */,
@@ -261,15 +260,6 @@
 				3112BD141C2821F200825078 /* IMPView.swift */,
 			);
 			name = FrontEnd;
-			sourceTree = "<group>";
-		};
-		3112BD171C2822BA00825078 /* ShareWithMetal */ = {
-			isa = PBXGroup;
-			children = (
-				3112BD181C2822BA00825078 /* IMPHistogramTypes_metal.h */,
-				3112BD191C2822BA00825078 /* IMPTypes_metal.h */,
-			);
-			path = ShareWithMetal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -366,7 +356,6 @@
 				3112BCF91C281D9F00825078 /* IMPHistogramAnalyzer.swift in Sources */,
 				3112BD0B1C281D9F00825078 /* IMPImage+CGImage.swift in Sources */,
 				3112BD071C281D9F00825078 /* IMPImageProvider+IMPImage.swift in Sources */,
-				3112BD051C281D9F00825078 /* IMProcessingBridge.m in Sources */,
 				3112BCF51C281D9F00825078 /* IMPContrastFilter.swift in Sources */,
 				3112BD161C2821F200825078 /* IMPView.swift in Sources */,
 				3112BD0C1C281D9F00825078 /* IMPImage+MTLTexture.swift in Sources */,
@@ -477,6 +466,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = dehancer.photo.IMProcessing;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -489,6 +479,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = dehancer.photo.IMProcessing;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h";
 			};
 			name = Release;
 		};

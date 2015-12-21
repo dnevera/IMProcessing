@@ -12,7 +12,7 @@
 #include <metal_stdlib>
 #include <simd/simd.h>
 
-#include "IMPTypes_metal.h"
+#include "IMPSwift-Bridging-Metal.h"
 #include "IMPConstants_metal.h"
 #include "IMPHistogram_metal.h"
 #include "IMPHistogramLayer_metal.h"

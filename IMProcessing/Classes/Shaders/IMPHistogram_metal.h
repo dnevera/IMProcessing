@@ -10,8 +10,6 @@
 #define IMPHistogram_h
 
 #include <metal_stdlib>
-#include "IMPTypes_metal.h"
-#include "IMPHistogramTypes_metal.h"
 #include "IMPFlowControl_metal.h"
 #include "IMPConstants_metal.h"
 
