@@ -11,7 +11,7 @@
 
 #ifdef __METAL_VERSION__
 
-#include "../Bridging/IMProcessing-Bridging-Header.h"
+#include "IMProcessing-Bridging-Header.h"
 
 #endif
 

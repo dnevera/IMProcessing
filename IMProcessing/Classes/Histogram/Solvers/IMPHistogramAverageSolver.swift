@@ -13,15 +13,15 @@ import simd
 /// Солвер доминантного цвета изображения в пространстве RGB(Y)
 /// Вычисляет среднее значение интенсивностей каждого канала по гистограмме этих каналов
 ///
-class IMPHistogramDominantColorSolver: IMPHistogramSolver {
+public class IMPHistogramDominantColorSolver: NSObject, IMPHistogramSolver {
     
     ///
     /// Доминантный (средний) цвет изображения. Используем векторный тип float4 из фреймворка 
     /// для работы с векторными типа данных simd
     ///
-    var color=float4()
+    public var color=float4()
     
-    func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
         for i in 0..<histogram.channels.count{
             color[i] = histogram.mean(channel: i)
         }

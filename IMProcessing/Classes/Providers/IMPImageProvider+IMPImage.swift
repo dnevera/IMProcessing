@@ -10,12 +10,12 @@ import Foundation
 import Metal
 
 extension IMPImageProvider{    
-    convenience init(context: IMPContext, image: IMPImage, maxSize: Float = 0) {
+    public convenience init(context: IMPContext, image: IMPImage, maxSize: Float = 0) {
         self.init(context: context)
         self.update(image)
     }
     
-    func update(image:IMPImage){
+    public func update(image:IMPImage){
         self.texture = image.newTexture(self.context)
     }
 }

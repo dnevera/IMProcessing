@@ -8,14 +8,14 @@
 
 import Cocoa
 
-class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
+public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
     
-    enum IMPHistogramType{
+    public enum IMPHistogramType{
         case PDF
         case CDF
     }
     
-    var layer = IMPHistogramLayer(
+    public var layer = IMPHistogramLayer(
         components: (
             float4(x: 1, y: 0, z: 0, w: 0.5),
             float4(x: 0, y: 1, z: 0, w: 0.5),
@@ -30,13 +30,13 @@ class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         }
     }
     
-    var histogramType:(type:IMPHistogramType,power:Float) = (type:.PDF,power:1){
+    public var histogramType:(type:IMPHistogramType,power:Float) = (type:.PDF,power:1){
         didSet{
             self.dirty = true;
         }
     }
     
-    required init(context: IMPContext) {
+    public required init(context: IMPContext) {
         super.init(context: context)
         kernel = IMPFunction(context: self.context, name: "kernel_histogramLayer")
         self.addFunction(kernel)
@@ -46,7 +46,7 @@ class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         memcpy(layerUniformBiffer.contents(), &layer, sizeof(IMPHistogramLayer))
     }
     
-    func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
         
         var pdf:IMPHistogram;
         
@@ -69,7 +69,7 @@ class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         self.dirty = true;
     }
     
-    override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
+    override public func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
         if (kernel == function){
             command.setBuffer(histogramUniformBuffer, offset: 0, atIndex: 0)
             command.setBuffer(channelsUniformBuffer,  offset: 0, atIndex: 1)

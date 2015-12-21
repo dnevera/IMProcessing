@@ -8,10 +8,10 @@
 
 import Cocoa
 
-class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
-    static let defaultAdjustment = IMPAdjustment(blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
+public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
+    public static let defaultAdjustment = IMPAdjustment(blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
     
-    var adjustment:IMPAdjustment!{
+    public var adjustment:IMPAdjustment!{
         didSet{
             self.updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPAdjustment))
             self.dirty = true
@@ -21,24 +21,24 @@ class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
     internal var adjustmentBuffer:MTLBuffer?
     internal var kernel:IMPFunction!
     internal var lut:IMPImageProvider?
-    internal var lutDescription = IMPImageProvider.lutDescription()
+    internal var lutDescription = IMPImageProvider.Description()
     
-    required init(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.lutDescription) {
+    public required init(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.Description) {
         
         super.init(context: context)
 
-        updateLut(lut, description: description)
+        update(lut, description: description)
         
         defer{
             self.adjustment = IMPLutFilter.defaultAdjustment
         }
     }
     
-    required init(context: IMPContext) {
+    public required init(context: IMPContext) {
         fatalError("init(context:) has not been implemented, IMPLutFilter(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.lutDescription) should be used instead...")
     }
     
-    func updateLut(lut:IMPImageProvider, description:IMPImageProvider.lutDescription){
+    public func update(lut:IMPImageProvider, description:IMPImageProvider.Description){
         var name = "kernel_adjustLut"
         
         if description.type == .D1D {
@@ -62,7 +62,7 @@ class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
         self.dirty = true
     }
     
-    override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
+    public override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
         if kernel == function {
             command.setTexture(lut?.texture, atIndex: 2)
             command.setBuffer(adjustmentBuffer, offset: 0, atIndex: 0)

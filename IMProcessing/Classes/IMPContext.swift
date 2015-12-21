@@ -10,13 +10,13 @@ import Cocoa
 import Metal
 import OpenGL.GL
 
-protocol IMPContextProvider{
+public protocol IMPContextProvider{
     var context:IMPContext! {get}
 }
 
-typealias IMPContextExecution = ((commandBuffer:MTLCommandBuffer) -> Void)
+public typealias IMPContextExecution = ((commandBuffer:MTLCommandBuffer) -> Void)
 
-class IMPContext {
+public class IMPContext {
     
     private struct sharedContainerType {
         
@@ -40,12 +40,12 @@ class IMPContext {
     
     private static var sharedContainer = sharedContainerType()
     
-    let device:MTLDevice! = MTLCreateSystemDefaultDevice()
-    let commandQueue:MTLCommandQueue?
-    let defaultLibrary:MTLLibrary?
-    let isLasy:Bool
+    public let device:MTLDevice! = MTLCreateSystemDefaultDevice()
+    public let commandQueue:MTLCommandQueue?
+    public let defaultLibrary:MTLLibrary?
+    public let isLasy:Bool
     
-    required init(lazy:Bool = false)  {
+    required public init(lazy:Bool = false)  {
         isLasy = lazy
         if let device = self.device{
             commandQueue = device.newCommandQueue()
@@ -62,7 +62,7 @@ class IMPContext {
         }
     }
     
-    final func execute(closure: IMPContextExecution) {
+    public final func execute(closure: IMPContextExecution) {
         if let commandBuffer = commandQueue?.commandBuffer(){
             
             closure(commandBuffer: commandBuffer)
@@ -74,7 +74,7 @@ class IMPContext {
         }
     }
     
-    static var maximumTextureSize:Int{
+    public static var maximumTextureSize:Int{
         
         set(newMaximumTextureSize){
             IMPContext.sharedContainer.currentMaximumTextureSize = 0
@@ -96,7 +96,7 @@ class IMPContext {
         
     }
     
-    static func sizeAdjustTo(size inputSize:CGSize, maxSize:Float = Float(IMPContext.maximumTextureSize)) -> CGSize
+    public static func sizeAdjustTo(size inputSize:CGSize, maxSize:Float = Float(IMPContext.maximumTextureSize)) -> CGSize
     {
         if (inputSize.width < CGFloat(maxSize)) && (inputSize.height < CGFloat(maxSize))  {
             return inputSize
@@ -114,6 +114,6 @@ class IMPContext {
         return adjustedSize;
     }
     
-    var dirty:Bool = true
+    public var dirty:Bool = true
     
 }

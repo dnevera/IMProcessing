@@ -11,28 +11,28 @@ import simd
 import Metal
 
 #if os(iOS)
-    typealias IMPImage = UIImage
-    typealias IMPColor = UIColor
+    public typealias IMPImage = UIImage
+    public typealias IMPColor = UIColor
 #else
-    typealias IMPImage = NSImage
-    typealias IMPColor = NSColor
+    public typealias IMPImage = NSImage
+    public typealias IMPColor = NSColor
 #endif
 
-typealias IMPSize  = CGSize
+public typealias IMPSize  = CGSize
 
-enum IMProcessing{
+public enum IMProcessing{
     struct names {
         static let prefix = "com.improcessing."
     }
 }
 
-extension IMPColor{
+public extension IMPColor{
     convenience init(color:float4) {
         self.init(red: CGFloat(color.x), green: CGFloat(color.y), blue: CGFloat(color.z), alpha: CGFloat(color.w))
     }
 }
 
-extension float3{
+public extension float3{
     var r:Float{ set{ x = r } get{ return x } }
     var g:Float{ set{ y = g } get{ return y } }
     var b:Float{ set{ z = b } get{ return z } }
@@ -44,7 +44,7 @@ extension float3{
     }
 }
 
-extension float4{
+public extension float4{
     var r:Float{ set{ x = r } get{ return x } }
     var g:Float{ set{ y = g } get{ return y } }
     var b:Float{ set{ z = b } get{ return z } }
@@ -70,11 +70,11 @@ extension float4{
     }
 }
 
-func / (left:float3,right:Float) -> float3 {
+public func / (left:float3,right:Float) -> float3 {
     return float3(left.x/right,left.y/right,left.z/right)
 }
 
-func / (left:float4,right:Float) -> float4 {
+public func / (left:float4,right:Float) -> float4 {
     return float4(left.x/right,left.y/right,left.z/right,left.w/right)
 }
 
@@ -84,7 +84,7 @@ extension MTLSize{
     }
 }
 
-extension String {
+public extension String {
     
     var floatValue: Float {
         return (self as NSString).floatValue
@@ -103,22 +103,22 @@ extension String {
     }
 }
 
-func * (left:MTLSize,right:(Float,Float,Float)) -> MTLSize {
+public func * (left:MTLSize,right:(Float,Float,Float)) -> MTLSize {
     return MTLSize(
         width: Int(Float(left.width)*right.0),
         height: Int(Float(left.height)*right.1),
         depth: Int(Float(left.height)*right.2))
 }
 
-func != (left:MTLSize,right:MTLSize) ->Bool {
+public func != (left:MTLSize,right:MTLSize) ->Bool {
     return (left.width != right.width && left.height != right.height && left.depth != right.depth)
 }
 
-func == (left:MTLSize,right:MTLSize) ->Bool {
+public func == (left:MTLSize,right:MTLSize) ->Bool {
     return !(left != right)
 }
 
-extension IMPBlendingMode{
+public extension IMPBlendingMode{
     static let LUMNINOSITY = IMPBlendingMode(0)
     static let NORMAL      = IMPBlendingMode(1)
 }

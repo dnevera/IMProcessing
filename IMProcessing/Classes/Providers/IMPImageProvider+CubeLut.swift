@@ -10,13 +10,13 @@ import Foundation
 import Cocoa
 import simd
 
-enum IMPLutType{
+public enum IMPLutType{
     case D1D
     case D3D
     case UNKNOOWN
 }
 
-enum IMPLutStatus:Int{
+public enum IMPLutStatus:Int{
     case OK          = 0
     case NOT_FOUND
     case WRONG_FORMAT
@@ -27,15 +27,17 @@ enum IMPLutStatus:Int{
 
 extension IMPImageProvider{
     
-    struct lutDescription {
-        var type = IMPLutType.UNKNOOWN
-        var title = String("")
-        var domainMin = float3(0)
-        var domainMax = float3(1)
-        var lut3DSize = Int(0)
+    public struct Description {
+        public var type = IMPLutType.UNKNOOWN
+        public var title = String("")
+        public var domainMin = float3(0)
+        public var domainMax = float3(1)
+        public var lut3DSize = Int(0)
+        
+        public init(){}
     }
     
-    convenience init(context: IMPContext, cubeFile:String, inout description:lutDescription) throws {
+    public convenience init(context: IMPContext, cubeFile:String, inout description:Description) throws {
         self.init(context: context)
         do{
             description = try update(cubeFile)
@@ -46,10 +48,10 @@ extension IMPImageProvider{
     }
     
     
-    func update(cubeFile:String) throws ->  lutDescription {
+    public func update(cubeFile:String) throws ->  Description {
         
         let manager = NSFileManager.defaultManager()
-        var description = lutDescription()
+        var description = Description()
         
         if manager.fileExistsAtPath(cubeFile){
 
@@ -140,7 +142,7 @@ extension IMPImageProvider{
         return description
     }
     
-    private func updateTextureFromData(data:NSData, desciption:lutDescription) {
+    private func updateTextureFromData(data:NSData, desciption:Description) {
         let width  = desciption.lut3DSize
         let height = desciption.type == .D1D ? 1: width
         let depth  = desciption.type == .D1D ? 1: width
@@ -170,7 +172,7 @@ extension IMPImageProvider{
         self.texture!.replaceRegion(region, mipmapLevel:0, slice:0, withBytes:data.bytes, bytesPerRow:bytesPerRow, bytesPerImage:bytesPerImage)
     }
     
-    private func updateBytes(words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: lutDescription) -> IMPLutStatus {
+    private func updateBytes(words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: Description) -> IMPLutStatus {
         
         let keyword = words[0];
         

@@ -8,24 +8,25 @@
 
 import Cocoa
 
-typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
+public typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
 
 ///
 /// Протокол солверов статистики гистограммы. Солверами будем решать конкретные задачи обработки данных прилетевших в контейнер.
 ///
-protocol IMPHistogramSolver{
+public protocol IMPHistogramSolver{
     func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize);
 }
+
 
 ///
 /// Базовый анализатор гистограммы четырех канальной гистограммы.
 ///
-class IMPHistogramAnalyzer: IMPFilter {
+public class IMPHistogramAnalyzer: IMPFilter {
     
     ///
     /// Тут храним наши вычисленные распределения поканальных интенсивностей.
     ///
-    var histogram = IMPHistogram(){
+    public var histogram = IMPHistogram(){
         didSet{
             channelsToCompute = UInt(histogram.channels.count)
         }
@@ -34,7 +35,7 @@ class IMPHistogramAnalyzer: IMPFilter {
     ///
     /// На сколько уменьшаем картинку перед вычисления гистограммы.
     ///
-    var downScaleFactor:Float!{
+    public var downScaleFactor:Float!{
         didSet{
             scaleUniformBuffer = scaleUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(Float), options: .CPUCacheModeDefaultCache)
             memcpy(scaleUniformBuffer.contents(), &downScaleFactor, sizeof(Float))
@@ -53,12 +54,12 @@ class IMPHistogramAnalyzer: IMPFilter {
     ///
     /// Солверы анализирующие гистограмму в текущем инстансе
     ///.
-    var solvers:[IMPHistogramSolver] = [IMPHistogramSolver]()
+    public var solvers:[IMPHistogramSolver] = [IMPHistogramSolver]()
     
     ///
     /// Регион внутри которого вычисляем гистограмму.
     ///
-    var region:IMPCropRegion!{
+    public var region:IMPCropRegion!{
         didSet{
             regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPCropRegion), options: .CPUCacheModeDefaultCache)
             memcpy(regionUniformBuffer.contents(), &region, sizeof(IMPCropRegion))
@@ -92,7 +93,7 @@ class IMPHistogramAnalyzer: IMPFilter {
     /// как контейнером данных гистограммы.
     ///
     ///
-    init(context: IMPContext, function: String) {
+    public init(context: IMPContext, function: String) {
         super.init(context: context)
         
         // инициализируем счетчик
@@ -114,7 +115,7 @@ class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
-    convenience required init(context: IMPContext) {
+    convenience required public init(context: IMPContext) {
         self.init(context:context, function: "kernel_impHistogramPartial")
     }
     
@@ -124,7 +125,7 @@ class IMPHistogramAnalyzer: IMPFilter {
     ///
     //var analyzerDidUpdate: ((histogram:IMPHistogram) -> Void)?
     
-    func addUpdateObserver(observer:IMPAnalyzerUpdateHandler){
+    public func addUpdateObserver(observer:IMPAnalyzerUpdateHandler){
         analizerUpdateHandlers.append(observer)
     }
     
@@ -133,7 +134,7 @@ class IMPHistogramAnalyzer: IMPFilter {
     ///
     /// Перегружаем свойство источника: при каждом обновлении нам нужно выполнить подсчет новой статистики.
     ///
-    override var source:IMPImageProvider?{
+    public override var source:IMPImageProvider?{
         didSet{
             
             super.source = source
@@ -145,7 +146,7 @@ class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
-    override var destination:IMPImageProvider?{
+    public override var destination:IMPImageProvider?{
         get{
             return source
         }
@@ -181,7 +182,7 @@ class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
-    override func apply() {
+    public override func apply() {
         
         if let texture = source?.texture{
             

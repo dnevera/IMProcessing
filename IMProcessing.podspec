@@ -8,15 +8,14 @@ Pod::Spec.new do |s|
   s.summary      = 'IMProcessing is an image processing framework based on Apple Metal'
   s.description  = 'IMProcessing is an image processing framework provides original effect image/photo. It can be called "masterwork" image processing.'
 
-  s.platform     = :osx, '10.11'
   s.source       = { :git => 'https://github.com/dnevera/IMProcessing.git', :tag => '0.0.1'}
-  
-  s.source_files  = 'IMProcessing/Classes/**/*.{h,swift}'
-# s.exclude_files = 'IMProcessing/Classes/Shaders/*.{h,metal}'
-  s.public_header_files = 'IMProcessing/Classes/**/*.h',
 
+  s.osx.deployment_target = "10.11"
   s.frameworks   = 'Metal'
   s.requires_arc = true
+
+  s.source_files  = 'IMProcessing/Classes/**/*.{h,swift}', 'IMProcessing/Classes/*.{swift}'
+# s.public_header_files = 'IMProcessing/Classes/**/*.h'
 
 
 end

@@ -9,7 +9,7 @@
 import Foundation
 import Metal
 
-protocol IMPTextureProvider{
+public protocol IMPTextureProvider{
     var texture:MTLTexture?{ get set }
     init(context:IMPContext)
 }

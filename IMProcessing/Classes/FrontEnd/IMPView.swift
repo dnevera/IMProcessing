@@ -13,11 +13,11 @@ import GLKit.GLKMath
 import QuartzCore
 
 
-class IMPView: NSView, IMPContextProvider {
+public class IMPView: NSView, IMPContextProvider {
     
-    var context:IMPContext!
+    public var context:IMPContext!
     
-    var filter:IMPFilter?{
+    public var filter:IMPFilter?{
         didSet{
             if let s = self.source{
                 self.filter?.source = s
@@ -28,7 +28,7 @@ class IMPView: NSView, IMPContextProvider {
         }
     }
     
-    var source:IMPImageProvider?{
+    public var source:IMPImageProvider?{
         didSet{
             if let texture = source?.texture{
                 
@@ -57,13 +57,13 @@ class IMPView: NSView, IMPContextProvider {
         }
     }
     
-    var isPaused:Bool = false {
+    public var isPaused:Bool = false {
         didSet{
             self.timer?.paused = isPaused
         }
     }
     
-    init(context contextIn:IMPContext, frame: NSRect){
+    public init(context contextIn:IMPContext, frame: NSRect){
         super.init(frame: frame)
         context = contextIn
         defer{
@@ -71,11 +71,11 @@ class IMPView: NSView, IMPContextProvider {
         }
     }
     
-    convenience override init(frame frameRect: NSRect) {
+    public convenience override init(frame frameRect: NSRect) {
         self.init(context: IMPContext(), frame:frameRect)
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         super.init(coder: coder)
         context = IMPContext()
         defer{
@@ -83,7 +83,7 @@ class IMPView: NSView, IMPContextProvider {
         }
     }
     
-    var backgroundColor:IMPColor = IMPColor.clearColor(){
+    public var backgroundColor:IMPColor = IMPColor.clearColor(){
         didSet{
             metalLayer.backgroundColor = backgroundColor.CGColor
         }
@@ -191,22 +191,22 @@ class IMPView: NSView, IMPContextProvider {
         }
     }
     
-    override func display() {
+    override public func display() {
         self.refresh()
     }
     
     internal var layerNeedUpdate:Bool = true
     
-    override func setFrameSize(newSize: NSSize) {
+    override public func setFrameSize(newSize: NSSize) {
         super.setFrameSize(CGSize(width: newSize.width/CGFloat(self.scaleFactor), height: newSize.height/CGFloat(self.scaleFactor)))
         layerNeedUpdate = true
     }
     
-    override func setBoundsSize(newSize: NSSize) {
+    override public func setBoundsSize(newSize: NSSize) {
         super.setBoundsSize(newSize)
         layerNeedUpdate = true
     }
-    override func viewDidChangeBackingProperties() {
+    override public func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         layerNeedUpdate = true
     }

@@ -8,23 +8,23 @@
 
 import Cocoa
 
-class IMPHistogramView: IMPView {
+public class IMPHistogramView: IMPView {
     
-    class histogramLayerFilter: IMPFilter {
+    public class histogramLayerFilter: IMPFilter {
         
-        var analayzer:IMPHistogramAnalyzer!{
+        public var analayzer:IMPHistogramAnalyzer!{
             didSet{
                 self.dirty = true
             }
         }
         
-        var solver:IMPHistogramLayerSolver!{
+        public var solver:IMPHistogramLayerSolver!{
             didSet{
                 self.dirty = true
             }
         }
         
-        internal required init(context: IMPContext) {
+        public required init(context: IMPContext) {
             
             super.init(context: context)
                         
@@ -42,12 +42,12 @@ class IMPHistogramView: IMPView {
         
         private var view:IMPHistogramView?
         
-        required convenience init(context: IMPContext, view:IMPHistogramView) {
+        required convenience public init(context: IMPContext, view:IMPHistogramView) {
             self.init(context: context)
             self.view = view
         }
         
-        override func apply() {
+        override public func apply() {
             if let v = view{
                 var size = MTLSize(cgsize: v.bounds.size)*(v.scaleFactor,v.scaleFactor,1)
                 size.depth = 1
@@ -58,12 +58,12 @@ class IMPHistogramView: IMPView {
     }
     
     private var _filter:histogramLayerFilter!
-    override internal var filter:IMPFilter?{
+    override public var filter:IMPFilter?{
         set(newFiler){}
         get{ return _filter }
     }
     
-    var histogram:histogramLayerFilter{
+    public var histogram:histogramLayerFilter{
         get{
             return _filter
         }
@@ -77,7 +77,7 @@ class IMPHistogramView: IMPView {
         }
     }
     
-    required init?(coder: NSCoder) {
+    required public init?(coder: NSCoder) {
         super.init(coder: coder)
         _filter = histogramLayerFilter(context: self.context, view: self)
         _filter.addDirtyObserver { () -> Void in

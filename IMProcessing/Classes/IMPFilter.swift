@@ -9,28 +9,28 @@
 import Cocoa
 import Metal
 
-typealias IMPFilterSourceHandler = ((source:IMPImageProvider) -> Void)
-typealias IMPFilterDestinationHandler = ((destination:IMPImageProvider) -> Void)
-typealias IMPFilterDirtyHandler = (() -> Void)
+public typealias IMPFilterSourceHandler = ((source:IMPImageProvider) -> Void)
+public typealias IMPFilterDestinationHandler = ((destination:IMPImageProvider) -> Void)
+public typealias IMPFilterDirtyHandler = (() -> Void)
 
-class IMPFilter: NSObject,IMPContextProvider {
+public class IMPFilter: NSObject,IMPContextProvider {
     
-    var context:IMPContext!
+    public var context:IMPContext!
     
-    var source:IMPImageProvider?{
+    public var source:IMPImageProvider?{
         didSet{
             dirty = true
         }
     }
     
-    var destination:IMPImageProvider?{
+    public var destination:IMPImageProvider?{
         get{
             self.apply()
             return getDestination()
         }
     }
     
-    var destinationSize:MTLSize?{
+    public var destinationSize:MTLSize?{
         didSet{
             if let ov = destinationSize{
                 if ov != destinationSize! {
@@ -41,7 +41,7 @@ class IMPFilter: NSObject,IMPContextProvider {
     }
 
     
-    var dirty:Bool{
+    public var dirty:Bool{
         set(newDirty){
             self.context.dirty = newDirty
             for f in filterList{
@@ -58,7 +58,7 @@ class IMPFilter: NSObject,IMPContextProvider {
         }
     }
     
-    required init(context: IMPContext) {
+    required public init(context: IMPContext) {
         self.context = context
     }
     
@@ -68,21 +68,21 @@ class IMPFilter: NSObject,IMPContextProvider {
     private var destinationObservers:[IMPFilterDestinationHandler] = [IMPFilterDestinationHandler]()
     private var dirtyHandlers:[IMPFilterDirtyHandler] = [IMPFilterDirtyHandler]()
     
-    final func addFunction(function:IMPFunction){
+    public final func addFunction(function:IMPFunction){
         if functionList.contains(function) == false {
             functionList.append(function)
             self.dirty = true
         }
     }
     
-    final func removeFunction(function:IMPFunction){
+    public final func removeFunction(function:IMPFunction){
         if let index = functionList.indexOf(function) {
             functionList.removeAtIndex(index)
             self.dirty = true
         }
     }
     
-    final func addFilter(filter:IMPFilter){
+    public final func addFilter(filter:IMPFilter){
         if filterList.contains(filter) == false {
             filterList.append(filter)
             for o in dirtyHandlers{
@@ -92,22 +92,22 @@ class IMPFilter: NSObject,IMPContextProvider {
         }
     }
     
-    final func removeFilter(filter:IMPFilter){
+    public final func removeFilter(filter:IMPFilter){
         if let index = filterList.indexOf(filter) {
             filterList.removeAtIndex(index)
             self.dirty = true
         }
     }
 
-    final func addSourceObserver(source observer:IMPFilterSourceHandler){
+    public final func addSourceObserver(source observer:IMPFilterSourceHandler){
         sourceObservers.append(observer)
     }
     
-    final func addDestinationObserver(destination observer:IMPFilterDestinationHandler){
+    public final func addDestinationObserver(destination observer:IMPFilterDestinationHandler){
         destinationObservers.append(observer)
     }
 
-    final func addDirtyObserver(observer:IMPFilterDirtyHandler){
+    public final func addDirtyObserver(observer:IMPFilterDirtyHandler){
         dirtyHandlers.append(observer)
         for f in filterList{
             f.addDirtyObserver(observer)
@@ -117,7 +117,7 @@ class IMPFilter: NSObject,IMPContextProvider {
     private var texture:MTLTexture?
     private var destinationContainer:IMPImageProvider?
     
-    func getDestination() -> IMPImageProvider? {
+    internal func getDestination() -> IMPImageProvider? {
         if let t = self.texture{
             if let d = destinationContainer{
                 d.texture=t
@@ -129,7 +129,7 @@ class IMPFilter: NSObject,IMPContextProvider {
         return destinationContainer
     }
     
-    func configure(function:IMPFunction, command:MTLComputeCommandEncoder){}
+    public func configure(function:IMPFunction, command:MTLComputeCommandEncoder){}
     
     private func executeSourceObservers(source:IMPImageProvider?){
         if let s = source{
@@ -147,7 +147,7 @@ class IMPFilter: NSObject,IMPContextProvider {
         }
     }
     
-    func apply(){
+    public func apply(){
         
         if dirty {
 

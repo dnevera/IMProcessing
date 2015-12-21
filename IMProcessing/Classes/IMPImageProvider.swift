@@ -9,16 +9,16 @@
 import Cocoa
 import Metal
 
-class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
+public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     
-    var context:IMPContext!
-    var texture:MTLTexture?
+    public var context:IMPContext!
+    public var texture:MTLTexture?
 
-    required init(context: IMPContext) {
+    public required init(context: IMPContext) {
         self.context = context
     }
     
-    convenience init(context: IMPContext, texture:MTLTexture){
+    public convenience init(context: IMPContext, texture:MTLTexture){
         self.init(context: context)
         self.texture = texture
     }

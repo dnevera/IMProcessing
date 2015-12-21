@@ -13,28 +13,28 @@ import simd
 /// Представление гистограммы для произвольного цветового пространства
 /// с максимальным количеством каналов от одного до 4х.
 ///
-class IMPHistogram {
+public class IMPHistogram {
     
     ///
     /// Фиксированная размерность гистограмы. Всегда будем подразумевать 256.
     ///
-    let size = Int(kIMP_HistogramSize)
+    public let size = Int(kIMP_HistogramSize)
     
     ///
     /// Поканальная таблица счетов. Используем представление в числах с плавающей точкой.
     /// Нужно это для упрощения выполнения дополнительных акселерированных вычислений на DSP,
     /// поскольку все операции на DSP выполняются либо во float либо в double.
     ///
-    var channels:[[Float]];
+    public var channels:[[Float]];
     
     ///
     /// Конструктор пустой гистограммы.
     ///
-    init(){
+    public init(){
         channels = [[Float]](count: Int(kIMP_HistogramMaxChannels), repeatedValue: [Float](count: Int(kIMP_HistogramSize), repeatedValue: 0))
     }
     
-    init(channels number:UInt){
+    public init(channels number:UInt){
         if number > UInt(kIMP_HistogramMaxChannels){
             fatalError("IMPHistogram could not be created with channels number great then \(kIMP_HistogramMaxChannels)")
         }
@@ -46,7 +46,7 @@ class IMPHistogram {
     ///
     ///  - parameter channels: каналы с данными исходной гистограммы
     ///
-    init(channels:[[Float]]){
+    public init(channels:[[Float]]){
         self.channels = channels
     }
     
@@ -55,7 +55,7 @@ class IMPHistogram {
     ///
     /// - parameter dataIn: обновить значение интенсивностей по сырым данным. Сырые данные должны быть преставлены в формате IMPHistogramBuffer.
     ///
-    func updateWithData(dataIn: UnsafePointer<Void>){
+    public func updateWithData(dataIn: UnsafePointer<Void>){
         clearHistogram()
         let address = UnsafePointer<UInt32>(dataIn)
         for c in 0..<channels.count{
@@ -67,7 +67,7 @@ class IMPHistogram {
     ///
     ///  - parameter dataIn:    <#dataIn description#>
     ///  - parameter dataCount: <#dataCount description#>
-    func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
+    public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
         self.clearHistogram()
         for i in 0..<dataCount{
             let dataIn = UnsafePointer<IMPHistogramBuffer>(dataIn)+i
@@ -88,7 +88,7 @@ class IMPHistogram {
     ///
     /// - returns: контейнер значений гистограммы с комулятивным распределением значений интенсивностей
     ///
-    func cdf(scale:Float = 1, power pow:Float=1) ->IMPHistogram{
+    public func cdf(scale:Float = 1, power pow:Float=1) ->IMPHistogram{
         let _cdf = IMPHistogram(channels:channels);
         for c in 0..<_cdf.channels.count{
             power(pow: pow, A: _cdf.channels[c], B: &_cdf.channels[c])
@@ -103,7 +103,7 @@ class IMPHistogram {
     ///
     ///  - returns: <#return value description#>
     ///
-    func pdf(scale:Float = 1) -> IMPHistogram{
+    public func pdf(scale:Float = 1) -> IMPHistogram{
         let _pdf = IMPHistogram(channels:channels);
         for c in 0..<_pdf.channels.count{
             self.scale(A: &_pdf.channels[c], size: _pdf.channels[c].count, scale:scale)
@@ -119,7 +119,7 @@ class IMPHistogram {
     ///
     /// - returns: нормализованное значние средней интенсивности канала
     ///
-    func mean(channel index:Int) -> Float{
+    public func mean(channel index:Int) -> Float{
         let m = mean(A: &channels[index], size: channels[index].count)
         let denom = sum(A: &channels[index], size: channels[index].count)
         return m/denom
@@ -133,7 +133,7 @@ class IMPHistogram {
     ///
     /// - returns: Возвращается значение нормализованное к 1.
     ///
-    func low(channel index:Int, clipping:Float) -> Float{
+    public func low(channel index:Int, clipping:Float) -> Float{
         let size = channels[index].count
         var low:vDSP_Length = search_clipping(channel: index, size: size, clipping: clipping)
         low = low>0 ? low-1 : 0
@@ -149,7 +149,7 @@ class IMPHistogram {
     ///
     /// - returns: Возвращается значение нормализованное к 1.
     ///
-    func high(channel index:Int, clipping:Float) -> Float{
+    public func high(channel index:Int, clipping:Float) -> Float{
         let size = channels[index].count
         var high:vDSP_Length = search_clipping(channel: index, size: size, clipping: 1.0-clipping)
         high = high<vDSP_Length(size) ? high+1 : vDSP_Length(size)

@@ -8,14 +8,14 @@
 
 import Cocoa
 
-class IMPContrastFilter:IMPFilter,IMPAdjustmentProtocol{
+public class IMPContrastFilter:IMPFilter,IMPAdjustmentProtocol{
     
-    static let defaultAdjustment = IMPContrastAdjustment(
+    public static let defaultAdjustment = IMPContrastAdjustment(
         minimum: float4([0,0,0,0]),
         maximum: float4([1,1,1,1]),
         blending: IMPBlending(mode: IMPBlendingMode.LUMNINOSITY, opacity: 1))
     
-    var adjustment:IMPContrastAdjustment!{
+    public var adjustment:IMPContrastAdjustment!{
         didSet{
             self.updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPContrastAdjustment))
             self.dirty = true
@@ -25,7 +25,7 @@ class IMPContrastFilter:IMPFilter,IMPAdjustmentProtocol{
     internal var adjustmentBuffer:MTLBuffer?
     internal var kernel:IMPFunction!
     
-    required init(context: IMPContext) {
+    public required init(context: IMPContext) {
         super.init(context: context)
         kernel = IMPFunction(context: self.context, name: "kernel_adjustContrast")
         self.addFunction(kernel)
@@ -34,7 +34,7 @@ class IMPContrastFilter:IMPFilter,IMPAdjustmentProtocol{
         }
     }
     
-    override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
+    public override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
         if kernel == function {
             command.setBuffer(adjustmentBuffer, offset: 0, atIndex: 0)
         }

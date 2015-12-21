@@ -10,22 +10,22 @@ import Cocoa
 import Metal
 import simd
 
-class IMPFunction: NSObject, IMPContextProvider {
+public class IMPFunction: NSObject, IMPContextProvider {
 
-    struct GroupSize {
+    public struct GroupSize {
         var width:Int  = 16
         var height:Int = 16
     }
 
-    let kernel:MTLFunction?
-    let library:MTLLibrary?
-    let pipeline:MTLComputePipelineState?
-    let name:String
-    let groupSize:GroupSize = GroupSize()
+    public let kernel:MTLFunction?
+    public let library:MTLLibrary?
+    public let pipeline:MTLComputePipelineState?
+    public let name:String
+    public let groupSize:GroupSize = GroupSize()
     
-    var context:IMPContext!
+    public var context:IMPContext!
         
-    required init(context:IMPContext, name:String) {
+    public required init(context:IMPContext, name:String) {
         
         self.context = context
         self.name = name
