@@ -10,12 +10,25 @@ import Cocoa
 import Metal
 import OpenGL.GL
 
+///
+///  @brief Context provider protocol. 
+///  All filter classes should conform to the protocol to get access current filter context.
+///
 public protocol IMPContextProvider{
     var context:IMPContext! {get}
 }
 
+/// Context execution closure
 public typealias IMPContextExecution = ((commandBuffer:MTLCommandBuffer) -> Void)
 
+/// 
+/// The IMProcessing framework supports GPU-accelerated advanced data-parallel computation workloads. 
+/// IMPContext instance is created to connect curren GPU device and resources are allocated in order to 
+/// do computation.
+///
+/// IMPContext is a container bring together GPU-device, current command queue and default kernel functions library
+/// which export functions to the context.
+///
 public class IMPContext {
     
     private struct sharedContainerType {
@@ -40,11 +53,24 @@ public class IMPContext {
     
     private static var sharedContainer = sharedContainerType()
     
+    /// Current device is used in the current context
     public let device:MTLDevice! = MTLCreateSystemDefaultDevice()
+    
+    /// Current command queue uses the current device
     public let commandQueue:MTLCommandQueue?
+    
+    /// Default library associated with current context
     public let defaultLibrary:MTLLibrary?
+    
+    /// How context execution is processed
     public let isLasy:Bool
     
+    ///  Initialize current context
+    ///
+    ///  - parameter lazy: true if you need to process without waiting finishing computation in the context.
+    ///
+    ///  - returns: context instanc
+    ///
     required public init(lazy:Bool = false)  {
         isLasy = lazy
         if let device = self.device{
@@ -62,6 +88,10 @@ public class IMPContext {
         }
     }
     
+    ///  The main idea context execution: all filters should put commands in context queue within the one execution.
+    ///
+    ///  - parameter closure: execution context
+    ///
     public final func execute(closure: IMPContextExecution) {
         if let commandBuffer = commandQueue?.commandBuffer(){
             
@@ -74,6 +104,7 @@ public class IMPContext {
         }
     }
     
+    /// Get the maximum supported devices texture size.
     public static var maximumTextureSize:Int{
         
         set(newMaximumTextureSize){
@@ -96,6 +127,13 @@ public class IMPContext {
         
     }
     
+    ///  Get texture size alligned to maximum size which is suported by the current device
+    ///
+    ///  - parameter inputSize: real size of texture
+    ///  - parameter maxSize:   size of a texture which can be placed to the context
+    ///
+    ///  - returns: maximum size
+    ///
     public static func sizeAdjustTo(size inputSize:CGSize, maxSize:Float = Float(IMPContext.maximumTextureSize)) -> CGSize
     {
         if (inputSize.width < CGFloat(maxSize)) && (inputSize.height < CGFloat(maxSize))  {
@@ -114,6 +152,9 @@ public class IMPContext {
         return adjustedSize;
     }
     
+    ///
+    /// Dirty-trigger should be set when inherits object change stat of theirs processing
+    ///
     public var dirty:Bool = true
     
 }
