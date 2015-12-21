@@ -86,6 +86,7 @@
 		3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMProcessing-Bridging-Header.h"; path = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
 		314403AB1C28412600BC06A7 /* IMProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMProcessing.h; path = IMProcessing/Classes/IMProcessing.h; sourceTree = SOURCE_ROOT; };
+		31819C111C285E6B0037DA99 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -218,6 +219,7 @@
 		3112BD0D1C28209300825078 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
+				31819C111C285E6B0037DA99 /* README.md */,
 				3112BD0F1C2820B400825078 /* IMProcessing.podspec */,
 			);
 			name = Pods;

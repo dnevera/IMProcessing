@@ -1,6 +1,6 @@
 //
 //  IMPHistogramAnalyzer.swift
-//  ImageMetalling-06
+//  IMProcessing
 //
 //  Created by denis svinarchuk on 07.12.15.
 //  Copyright © 2015 IMetalling. All rights reserved.

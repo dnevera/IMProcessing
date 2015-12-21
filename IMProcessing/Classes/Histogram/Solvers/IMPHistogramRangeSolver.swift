@@ -1,6 +1,6 @@
 //
 //  IMPHistogramRangeSolver.swift
-//  ImageMetalling-05
+//  IMProcessing
 //
 //  Created by denis svinarchuk on 01.12.15.
 //  Copyright © 2015 IMetalling. All rights reserved.
