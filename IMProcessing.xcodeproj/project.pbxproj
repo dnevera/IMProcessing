@@ -37,7 +37,7 @@
 		31B1C2FD1C2804A100468121 /* IMPImage+CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31B1C2E51C2804A100468121 /* IMPImage+CGImage.swift */; };
 		31B1C2FE1C2804A100468121 /* IMPImage+MTLTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31B1C2E61C2804A100468121 /* IMPImage+MTLTexture.swift */; };
 		31B1C3051C2805D200468121 /* IMProcessingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 31B1C3041C2805D200468121 /* IMProcessingBridge.m */; };
-		31B1C3081C2806BF00468121 /* IMProcessing.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 31B1C3071C2806BF00468121 /* IMProcessing.podspec */; };
+		31C490E11C280EE700686FC1 /* IMProcessing.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 31C490E01C280EE700686FC1 /* IMProcessing.podspec */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -86,7 +86,7 @@
 		31B1C3021C2805D200468121 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMProcessing-Bridging-Header.h"; sourceTree = "<group>"; };
 		31B1C3031C2805D200468121 /* IMProcessingBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IMProcessingBridge.h; path = ObjcBridge/IMProcessingBridge.h; sourceTree = "<group>"; };
 		31B1C3041C2805D200468121 /* IMProcessingBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IMProcessingBridge.m; path = ObjcBridge/IMProcessingBridge.m; sourceTree = "<group>"; };
-		31B1C3071C2806BF00468121 /* IMProcessing.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMProcessing.podspec; sourceTree = "<group>"; };
+		31C490E01C280EE700686FC1 /* IMProcessing.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMProcessing.podspec; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,7 +251,7 @@
 		31B1C3061C2806B200468121 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				31B1C3071C2806BF00468121 /* IMProcessing.podspec */,
+				31C490E01C280EE700686FC1 /* IMProcessing.podspec */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -316,7 +316,7 @@
 			files = (
 				31B1C2B21C2803C200468121 /* Assets.xcassets in Resources */,
 				31B1C2B51C2803C200468121 /* Main.storyboard in Resources */,
-				31B1C3081C2806BF00468121 /* IMProcessing.podspec in Resources */,
+				31C490E11C280EE700686FC1 /* IMProcessing.podspec in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
