@@ -54,7 +54,6 @@
 		31B1C2C11C2804A100468121 /* IMPWBFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPWBFilter.swift; sourceTree = "<group>"; };
 		31B1C2C31C2804A100468121 /* IMPHistogram.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogram.swift; sourceTree = "<group>"; };
 		31B1C2C41C2804A100468121 /* IMPHistogramAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramAnalyzer.swift; sourceTree = "<group>"; };
-		31B1C2C51C2804A100468121 /* IMPHistogramTypes-classic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IMPHistogramTypes-classic.h"; sourceTree = "<group>"; };
 		31B1C2C71C2804A100468121 /* IMPHistogramAverageSolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramAverageSolver.swift; sourceTree = "<group>"; };
 		31B1C2C81C2804A100468121 /* IMPHistogramLayerSolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramLayerSolver.swift; sourceTree = "<group>"; };
 		31B1C2C91C2804A100468121 /* IMPHistogramRangeSolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramRangeSolver.swift; sourceTree = "<group>"; };
@@ -157,7 +156,6 @@
 			children = (
 				31B1C2C31C2804A100468121 /* IMPHistogram.swift */,
 				31B1C2C41C2804A100468121 /* IMPHistogramAnalyzer.swift */,
-				31B1C2C51C2804A100468121 /* IMPHistogramTypes-classic.h */,
 				31B1C2C61C2804A100468121 /* Solvers */,
 			);
 			path = Histogram;
