@@ -3,6 +3,7 @@
 //
 
 #include "IMPTypes-Bridging-Metal.h"
+#include "IMPConstants-Bridging-Metal.h"
 #include "IMPHistogramTypes-Bridging-Metal.h"
 
 #define IMPSTD_PASS_KERNEL "kernel_passthrough"

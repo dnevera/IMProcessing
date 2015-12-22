@@ -70,7 +70,7 @@ namespace IMProcessing
     
     
     template<typename T> METAL_FUNC T lum(vec<T, 3> c) {
-        return dot(c, Y_YCbCr_factor);
+        return dot(c, kIMP_Y_YCbCr_factor);
     }
     
     

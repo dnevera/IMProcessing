@@ -13,6 +13,7 @@
 
 #include <metal_stdlib>
 #include <simd/simd.h>
+#include "IMPCommon_metal.h"
 
 using namespace metal;
 #ifdef __cplusplus
@@ -171,9 +172,9 @@ namespace IMProcessing
         if ( pow(xyz.z,3.0) > 0.008856 ) xyz.z = pow(xyz.z,3.0);
         else                             xyz.z = ( xyz.z - 16.0 / 116.0 ) / 7.787;
         
-        xyz.x *= cielab_X;    //     Observer= 2°, Illuminant= D65
-        xyz.y *= cielab_Y;
-        xyz.z *= cielab_Z;
+        xyz.x *= kIMP_Cielab_X;    //     Observer= 2°, Illuminant= D65
+        xyz.y *= kIMP_Cielab_Y;
+        xyz.z *= kIMP_Cielab_Z;
         
         return xyz;
     }
@@ -204,9 +205,9 @@ namespace IMProcessing
     
     inline float3 XYZ_2_Lab(float3 xyz)
     {
-        float var_X = xyz.x / cielab_X;   //   Observer= 2°, Illuminant= D65
-        float var_Y = xyz.y / cielab_Y;
-        float var_Z = xyz.z / cielab_Z;
+        float var_X = xyz.x / kIMP_Cielab_X;   //   Observer= 2°, Illuminant= D65
+        float var_Y = xyz.y / kIMP_Cielab_Y;
+        float var_Z = xyz.z / kIMP_Cielab_Z;
         
         float t1 = 1.0/3.0;
         float t2 = 16.0/116.0;

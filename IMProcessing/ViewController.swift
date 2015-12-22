@@ -74,6 +74,11 @@ class ViewController: NSViewController {
         }
     }
 
+    @IBAction func changeValue5(sender: NSSlider) {
+        asyncChanges { () -> Void in
+            self.mainFilter.hsvFilter?.adjustment.blues.x = (sender.floatValue/100 - 0.5) * 2
+        }
+    }
     
     override func viewDidLoad() {
         

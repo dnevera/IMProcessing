@@ -20,10 +20,10 @@
 #include "IMPHistogramLayer_metal.h"
 #include "IMPFlowControl_metal.h"
 #include "IMPCommon_metal.h"
-#include "IMPBlending_metal.h"
 #include "IMPAdjustment_metal.h"
 #include "IMPColorSpaces_metal.h"
 #include "IMPBlending_metal.h"
+#include "IMPAdjustmentHSV_metal.h"
 
 #ifdef __cplusplus
 
@@ -62,7 +62,7 @@ namespace IMProcessing
                                   uint2 gid [[thread_position_in_grid]])
     {
         float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
-        inColor.rgb = float3(dot(inColor.rgb,IMProcessing::Y_mean_factor));
+        inColor.rgb = float3(dot(inColor.rgb,kIMP_Y_mean_factor));
         outTexture.write(inColor, gid);
     }
     
@@ -90,6 +90,7 @@ namespace IMProcessing
         outTexture.write(result, gid);
     }
 
+ 
 }
 
 #endif

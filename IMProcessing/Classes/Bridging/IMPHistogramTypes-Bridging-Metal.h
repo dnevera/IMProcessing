@@ -47,8 +47,8 @@ struct IMPHistogramLayer {
     float4                      components[kIMP_HistogramMaxChannels];;
     float4                      backgroundColor;
 #else
-    packed_float4               components[kIMP_HistogramMaxChannels];;
-    packed_float4               backgroundColor;
+    vector_float4               components[kIMP_HistogramMaxChannels];;
+    vector_float4               backgroundColor;
 #endif
     bool                        backgroundSource;
 };

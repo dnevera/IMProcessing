@@ -426,7 +426,7 @@
                         <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
                     </connections>
                 </application>
-                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="ImageMetalling_07" customModuleProvider="target">
+                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="IMProcessing" customModuleProvider="target">
                     <connections>
                         <outlet property="openRecentMenu" destination="mgF-w6-uMD" id="ktP-MQ-Q2R"/>
                     </connections>
@@ -457,7 +457,7 @@
         <!--View Controller-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
-                <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="ImageMetalling_07" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="IMProcessing" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="1261" height="738"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -587,7 +587,7 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8IY-iL-6bR" customClass="IMPScrollView" customModule="ImageMetalling_07" customModuleProvider="target">
+                            <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8IY-iL-6bR" customClass="IMPScrollView" customModule="IMProcessing" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="972" height="739"/>
                                 <clipView key="contentView" id="DYk-Db-VEI">
                                     <rect key="frame" x="1" y="1" width="970" height="737"/>
@@ -609,7 +609,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="35z-k3-Jns">
-                                    <rect key="frame" x="956" y="1" width="15" height="737"/>
+                                    <rect key="frame" x="955" y="1" width="16" height="737"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -659,6 +659,13 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gMA-Td-sxw">
+                                <rect key="frame" x="976" y="67" width="282" height="20"/>
+                                <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" tickMarkPosition="above" sliderType="linear" id="Uup-ex-gfR"/>
+                                <connections>
+                                    <action selector="changeValue5:" target="XfG-lQ-9wD" id="zgj-Eb-Qdg"/>
+                                </connections>
+                            </slider>
                         </subviews>
                         <constraints>
                             <constraint firstItem="LLx-ka-QiE" firstAttribute="trailing" secondItem="yDW-ZX-XPS" secondAttribute="trailing" id="0oG-kL-Wg4"/>
@@ -702,8 +709,11 @@
                             <constraint firstItem="6pG-w0-33U" firstAttribute="trailing" secondItem="By9-fu-eIM" secondAttribute="trailing" id="f5M-qf-UIq"/>
                             <constraint firstItem="TZl-gt-MVi" firstAttribute="leading" secondItem="5Os-Pd-qIj" secondAttribute="trailing" constant="8" symbolic="YES" id="ffN-0e-6NH"/>
                             <constraint firstItem="MsJ-Qj-iJ3" firstAttribute="top" secondItem="LLx-ka-QiE" secondAttribute="bottom" constant="24" id="fx1-XQ-ML8"/>
+                            <constraint firstItem="gMA-Td-sxw" firstAttribute="trailing" secondItem="MsJ-Qj-iJ3" secondAttribute="trailing" id="gER-i9-dPE"/>
                             <constraint firstItem="LLx-ka-QiE" firstAttribute="leading" secondItem="yDW-ZX-XPS" secondAttribute="leading" id="gm1-zo-n5Z"/>
+                            <constraint firstItem="gMA-Td-sxw" firstAttribute="leading" secondItem="MsJ-Qj-iJ3" secondAttribute="leading" id="ieE-8C-9mb"/>
                             <constraint firstItem="Kxo-S2-uEz" firstAttribute="trailing" secondItem="yDW-ZX-XPS" secondAttribute="trailing" id="jZJ-FP-k5t"/>
+                            <constraint firstItem="gMA-Td-sxw" firstAttribute="top" secondItem="MsJ-Qj-iJ3" secondAttribute="bottom" constant="26" id="kAp-b6-pmu"/>
                             <constraint firstItem="6lR-Gw-Hni" firstAttribute="trailing" secondItem="MsJ-Qj-iJ3" secondAttribute="trailing" id="kt6-W3-p9Y"/>
                             <constraint firstItem="By9-fu-eIM" firstAttribute="leading" secondItem="8IY-iL-6bR" secondAttribute="trailing" constant="6" id="o8Z-V5-tEC"/>
                             <constraint firstItem="kyT-YL-oTA" firstAttribute="leading" secondItem="8IY-iL-6bR" secondAttribute="trailing" constant="6" id="qhb-yw-Z9d"/>

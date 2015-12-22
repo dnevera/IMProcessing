@@ -21,6 +21,8 @@ class IMPTestFilter:IMPFilter {
     var wbFilter:IMPWBFilter!
     var contrastFilter:IMPContrastFilter!
     
+    var hsvFilter:IMPHSVFilter!
+    
     required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
         
         super.init(context: context)
@@ -28,10 +30,13 @@ class IMPTestFilter:IMPFilter {
         addFunction(IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL))
         
         wbFilter = IMPWBFilter(context: self.context)
+        hsvFilter = IMPHSVFilter(context: self.context)
         contrastFilter = IMPContrastFilter(context: self.context)
+        
         
         addFilter(contrastFilter)
         addFilter(wbFilter)
+        addFilter(hsvFilter)
 
         dominantAnalayzer = IMPHistogramAnalyzer(context: self.context)
         dominantAnalayzer.addSolver(dominantSolver)
@@ -55,7 +60,7 @@ class IMPTestFilter:IMPFilter {
         }
         
         colorAlizer.addUpdateObserver { (histogram) -> Void in
-            print(" *** color weights = \(self.colorAlizer.solver.colorWeights, self.colorAlizer.solver.neutralWeights)")
+            //print(" *** color weights = \(self.colorAlizer.solver.colorWeights, self.colorAlizer.solver.neutralWeights)")
         }
         
         addSourceObserver { (source) -> Void in

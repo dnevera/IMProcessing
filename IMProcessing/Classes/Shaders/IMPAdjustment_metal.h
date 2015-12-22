@@ -11,7 +11,12 @@
 
 #ifdef __METAL_VERSION__
 
-#include "IMPStdlib_metal.h"
+#include "IMPSwift-Bridging-Metal.h"
+#include "IMPConstants_metal.h"
+#include "IMPFlowControl_metal.h"
+#include "IMPCommon_metal.h"
+#include "IMPColorSpaces_metal.h"
+#include "IMPBlending_metal.h"
 
 using namespace metal;
 

@@ -25,7 +25,7 @@ public class IMPHistogram {
     /// Нужно это для упрощения выполнения дополнительных акселерированных вычислений на DSP,
     /// поскольку все операции на DSP выполняются либо во float либо в double.
     ///
-    public var channels:[[Float]];
+    public var channels:[[Float]]
     
     ///
     /// Конструктор пустой гистограммы.
