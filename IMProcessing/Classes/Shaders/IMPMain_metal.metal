@@ -19,27 +19,27 @@ inline float weightOf(float hue, texture1d_array<float, access::sample>  weights
     return weights.sample(s, hue, index).x;
 }
 
-inline float3 adjust_lightness(float3 hsv, float4 levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index)
+inline float3 adjust_lightness(float3 hsv, float levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index)
 {
-    float v = levelOut.z * hsv.y ;//* weightOf(hue, weights, index);
-    hsv.z = mix (hsv.z * (1.0 + v), hsv.z + (v * (1.0 - hsv.z)), clamp(sign(v), 0.0, 1.0));
+    float v = 1.0 + levelOut * weightOf(hue,weights,index) * hsv.y;
+    hsv.z = clamp(hsv.z * v, 0.0, 1.0);
     return hsv;
 }
 
 
-inline float3 adjust_saturation(float3 hsv, float4 levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index)
+inline float3 adjust_saturation(float3 hsv, float levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index)
 {
-    float v = 1.0 + levelOut.y ;//* weightOf(hue,weights,index);
+    float v = 1.0 + levelOut * weightOf(hue,weights,index);
     hsv.y = clamp(hsv.y * v, 0.0, 1.0);
     return hsv;
 }
 
-inline float3 adjust_hue(float3 hsv, float4 levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index){
+inline float3 adjust_hue(float3 hsv, float levelOut, float hue, texture1d_array<float, access::sample>  weights, uint index){
     
     //
     // hue rotates with overlap ranages
     //
-    hsv.x  = hsv.x + 0.5 * levelOut.x * weightOf(hue,weights,index);
+    hsv.x  = hsv.x + 0.5 * levelOut * weightOf(hue,weights,index);
     return hsv;
 }
 
@@ -52,60 +52,30 @@ inline float4 adjustHSV(float4 input_color,
     
     float  hue = hsv.x;
     
-    float4 areds(adjust.reds);
-    float4 ayellows(adjust.yellows);
-    float4 agreens(adjust.greens);
-    float4 acyans(adjust.cyans);
-    float4 ablues(adjust.blues);
-    float4 amagentas(adjust.magentas);
-    
-    //
-    // LIGHTNESS photoshop changes before saturation!
-    //
-    hsv = adjust_lightness(hsv, areds,     hue, hueWeights, 0); // REDS
-    hsv = adjust_lightness(hsv, ayellows,  hue, hueWeights, 1); // YELLOWS
-    hsv = adjust_lightness(hsv, agreens,   hue, hueWeights, 2); // GREENS
-    hsv = adjust_lightness(hsv, acyans,    hue, hueWeights, 3); // CYANS
-    hsv = adjust_lightness(hsv, ablues,    hue, hueWeights, 4); // BLUES
-    hsv = adjust_lightness(hsv, amagentas, hue, hueWeights, 5); // MAGENTAS
-    
-    
-    //
-    // SATURATION!
-    //
-    hsv = adjust_saturation(hsv, areds,    hue, hueWeights, 0);  // REDS
-    hsv = adjust_saturation(hsv, ayellows, hue, hueWeights, 1);  // YELLOWS
-    hsv = adjust_saturation(hsv, agreens,  hue, hueWeights, 2);  // GREENS
-    hsv = adjust_saturation(hsv, acyans,   hue, hueWeights, 3);  // CYANS
-    hsv = adjust_saturation(hsv, ablues,   hue, hueWeights, 4);  // BLUES
-    hsv = adjust_saturation(hsv, amagentas,hue, hueWeights, 5);  // MAGENTAS
-    
-    
-    //
-    // HUES!
-    //
-//    hsv = adjust_hue(hsv, areds,     hue, hueWeights, 0); // REDS
-//    hsv = adjust_hue(hsv, ayellows,  hue, hueWeights, 1); // YELLOWS
-//    hsv = adjust_hue(hsv, agreens,   hue, hueWeights, 2); // GREENS
-//    hsv = adjust_hue(hsv, acyans,    hue, hueWeights, 3); // CYANS
-    hsv = adjust_hue(hsv, float4(-0.5,0,0,0),    hue, hueWeights, 4); // BLUES
-//    hsv = adjust_hue(hsv, amagentas, hue, hueWeights, 5); // MAGENTAS
-    
-    
+    for (uint i = 0; i<kIMP_Color_Ramps; i++){
+        hsv = adjust_lightness(hsv, adjust.levels[i].value,    hue, hueWeights, i); // BLUES
+    }
+
+    for (uint i = 0; i<kIMP_Color_Ramps; i++){
+        hsv = adjust_saturation(hsv, adjust.levels[i].saturation,    hue, hueWeights, i); // BLUES
+    }
+
+    for (uint i = 0; i<kIMP_Color_Ramps; i++){
+        hsv = adjust_hue(hsv, adjust.levels[i].hue,    hue, hueWeights, i); // BLUES
+    }
+
     float3 rgb(IMProcessing::HSV_2_rgb(hsv));
     
-//    if (adjust.blending.mode == 0)
-//        return IMProcessing::blendLuminosity(input_color, float4(rgb, adjust.blending.opacity));
-//    else
-//        return IMProcessing::blendNormal(input_color, float4(rgb, adjust.blending.opacity));
-    
-    return IMProcessing::blendNormal(input_color, float4(rgb, 1));
+    if (adjust.blending.mode == 0)
+        return IMProcessing::blendLuminosity(input_color, float4(rgb, adjust.blending.opacity));
+    else
+        return IMProcessing::blendNormal(input_color, float4(rgb, adjust.blending.opacity));    
 }
 
 kernel void kernel_adjustHSV(texture2d<float, access::sample>  inTexture         [[texture(0)]],
                              texture2d<float, access::write>   outTexture        [[texture(1)]],
                              texture1d_array<float, access::sample>  hueWeights  [[texture(2)]],
-                             constant IMPHSVAdjustment               &adjustment [[buffer(0)]],
+                             constant IMPHSVAdjustment               &adjustment  [[buffer(0)]],
                              uint2 gid [[thread_position_in_grid]]){
     
     

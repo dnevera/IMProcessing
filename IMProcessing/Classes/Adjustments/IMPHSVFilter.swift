@@ -26,7 +26,7 @@ public extension Float32{
             }
         }
         
-        return self.gaussianPoint(fi: 1, mu: mu, sigma: sigma)
+        return self.gaussianPoint(fi: 1, mu: mu, sigma: sigma*1.5)
     }
 }
 
@@ -53,19 +53,16 @@ public extension IMProcessing{
 
 public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
+    static var level:IMPHSVLevel = IMPHSVLevel(hue: 0.0, saturation: 0, value: 0)
+    
     public static let defaultAdjustment = IMPHSVAdjustment(
-        reds:     float4(0),
-        yellows:  float4(0),
-        greens:   float4(0),
-        cyans:    float4(0),
-        blues:    float4(0),
-        magentas: float4(0),
-        blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
+        levels:   (IMPHSVFilter.level,IMPHSVFilter.level,IMPHSVFilter.level,IMPHSVFilter.level,IMPHSVFilter.level,IMPHSVFilter.level),
+        blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1)
+    )
     
     public var adjustment:IMPHSVAdjustment!{
         didSet{
-            print(" --- hsv --- \(adjustment)")
-            self.updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPWBAdjustment))
+            self.updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
             self.dirty = true
         }
     }
@@ -89,8 +86,8 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
     public override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
         if kernel == function {
-            command.setBuffer(adjustmentBuffer, offset: 0, atIndex: 0)
             command.setTexture(hueWeights, atIndex: 2)
+            command.setBuffer(adjustmentBuffer, offset: 0, atIndex: 0)
         }
     }
     
@@ -113,13 +110,11 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         let region = MTLRegionMake2D(0, 0, width, 1);
         
         let hueWeights = context.device.newTextureWithDescriptor(textureDescriptor)
-
+        
         let hues = Float.range(0..<width)
         for i in 0..<IMProcessing.hueRamps.count{
             let ramp = IMProcessing.hueRamps[i]
             var data = hues.hueWeightsDistribution(ramp: ramp) as [Float32]
-            
-            NSLog(" ramp \(ramp) :  \(data)")
             hueWeights.replaceRegion(region, mipmapLevel:0, slice:i, withBytes:&data, bytesPerRow:sizeof(Float32) * width, bytesPerImage:0)
         }
         

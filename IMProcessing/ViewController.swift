@@ -35,13 +35,14 @@ class ViewController: NSViewController {
     var histogramView: IMPHistogramView!
     var histogramCDFView: IMPHistogramView!
     
+    var q = dispatch_queue_create("ViewController", DISPATCH_QUEUE_CONCURRENT)
     
     private func asyncChanges(block:()->Void) {
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+        dispatch_async(q, { () -> Void in
             //
             // немного того, но... :)
             //
-            dispatch_after(2, dispatch_get_main_queue()) { () -> Void in
+            dispatch_after(0, dispatch_get_main_queue()) { () -> Void in
                 block()
             }
         })
@@ -76,7 +77,7 @@ class ViewController: NSViewController {
 
     @IBAction func changeValue5(sender: NSSlider) {
         asyncChanges { () -> Void in
-            self.mainFilter.hsvFilter?.adjustment.blues.x = (sender.floatValue/100 - 0.5) * 2
+            self.mainFilter.hsvFilter?.adjustment.levels.4.hue = (sender.floatValue/100 - 0.5) * 2
         }
     }
     

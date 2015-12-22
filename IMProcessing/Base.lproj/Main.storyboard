@@ -661,7 +661,7 @@
                             </textField>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gMA-Td-sxw">
                                 <rect key="frame" x="976" y="67" width="282" height="20"/>
-                                <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" tickMarkPosition="above" sliderType="linear" id="Uup-ex-gfR"/>
+                                <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="Uup-ex-gfR"/>
                                 <connections>
                                     <action selector="changeValue5:" target="XfG-lQ-9wD" id="zgj-Eb-Qdg"/>
                                 </connections>

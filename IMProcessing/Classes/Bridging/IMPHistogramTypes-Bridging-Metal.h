@@ -44,10 +44,10 @@ typedef struct {
 
 struct IMPHistogramLayer {
 #ifdef __METAL_VERSION__
-    float4                      components[kIMP_HistogramMaxChannels];;
+    float4                      components[kIMP_HistogramMaxChannels];
     float4                      backgroundColor;
 #else
-    vector_float4               components[kIMP_HistogramMaxChannels];;
+    vector_float4               components[kIMP_HistogramMaxChannels];
     vector_float4               backgroundColor;
 #endif
     bool                        backgroundSource;

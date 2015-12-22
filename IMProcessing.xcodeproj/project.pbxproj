@@ -197,8 +197,8 @@
 			isa = PBXGroup;
 			children = (
 				3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */,
-				3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */,
 				31819C211C298A8A0037DA99 /* IMPConstants-Bridging-Metal.h */,
+				3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */,
 				3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */,
 				314403AB1C28412600BC06A7 /* IMProcessing.h */,
 			);

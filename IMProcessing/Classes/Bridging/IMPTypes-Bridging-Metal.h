@@ -9,25 +9,7 @@
 #ifndef IMPTypes_h
 #define IMPTypes_h
 
-#ifdef __METAL_VERSION__
-# include <metal_stdlib>
-using namespace metal;
-
-# define metal_float4 float4
-# define metal_float3 float3
-
-#else
-# include <stdlib.h>
-# include <simd/simd.h>
-
-# define constant const
-# define metal_float4 vector_float4
-# define metal_float3 vector_float3
-
-#endif
-
-# include <simd/simd.h>
-
+#include "IMPConstants-Bridging-Metal.h"
 
 struct IMPCropRegion {
     float top;
@@ -62,24 +44,14 @@ typedef struct{
     IMPBlending    blending;
 } IMPContrastAdjustment;
 
-
-//typedef struct {
-//    packed_float4 reds;
-//    packed_float4 yellows;
-//    packed_float4 greens;
-//    packed_float4 cyans;
-//    packed_float4 blues;
-//    packed_float4 magentas;
-//    IMPBlending   blending;
-//} IMPHSVAdjustment;
+typedef struct{
+    float hue;
+    float saturation;
+    float value;
+}IMPHSVLevel;
 
 typedef struct {
-    metal_float4 reds;
-    metal_float4 yellows;
-    metal_float4 greens;
-    metal_float4 cyans;
-    metal_float4 blues;
-    metal_float4 magentas;
+    IMPHSVLevel   levels[kIMP_Color_Ramps];
     IMPBlending   blending;
 } IMPHSVAdjustment;
 

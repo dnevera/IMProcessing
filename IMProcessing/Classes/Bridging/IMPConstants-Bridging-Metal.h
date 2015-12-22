@@ -51,12 +51,13 @@ static constant metal_float3 kIMP_Y_mean_factor = {0.3333, 0.3333, 0.3333};
 // sRGB luminance(Y) values
 static constant metal_float3 kIMP_Y_YUV_factor = {0.2125, 0.7154, 0.0721};
 
-static constant metal_float4 kIMP_Reds     = {315.0, 345.0, 15.0,   45.0};
-static constant metal_float4 kIMP_Yellows  = { 15.0,  45.0, 75.0,  105.0};
-static constant metal_float4 kIMP_Greens   = { 75.0, 105.0, 135.0, 165.0};
-static constant metal_float4 kIMP_Cyans    = {135.0, 165.0, 195.0, 225.0};
-static constant metal_float4 kIMP_Blues    = {195.0, 225.0, 255.0, 285.0};
-static constant metal_float4 kIMP_Magentas = {255.0, 285.0, 315.0, 345.0};
+static constant uint         kIMP_Color_Ramps = 6;
+static constant metal_float4 kIMP_Reds        = {315.0, 345.0, 15.0,   45.0};
+static constant metal_float4 kIMP_Yellows     = { 15.0,  45.0, 75.0,  105.0};
+static constant metal_float4 kIMP_Greens      = { 75.0, 105.0, 135.0, 165.0};
+static constant metal_float4 kIMP_Cyans       = {135.0, 165.0, 195.0, 225.0};
+static constant metal_float4 kIMP_Blues       = {195.0, 225.0, 255.0, 285.0};
+static constant metal_float4 kIMP_Magentas    = {255.0, 285.0, 315.0, 345.0};
 
 
 #endif /* IMPConstants_Bridging_Metal_h */
