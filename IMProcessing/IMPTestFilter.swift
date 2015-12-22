@@ -52,7 +52,10 @@ class IMPTestFilter:IMPFilter {
         
         contrastFilter.addDestinationObserver { (destination) -> Void in
             self.dominantAnalayzer.source = destination
-            self.colorAlizer.source = destination
+        }
+        
+        colorAlizer.addUpdateObserver { (histogram) -> Void in
+            print(" *** color weights = \(self.colorAlizer.solver.colorWeights, self.colorAlizer.solver.neutralWeights)")
         }
         
         addSourceObserver { (source) -> Void in
@@ -62,7 +65,8 @@ class IMPTestFilter:IMPFilter {
         addDestinationObserver { (destination) -> Void in
             histogramView.source = destination
             histogramCDFView.source = destination
-        }        
+            self.colorAlizer.source = destination
+        }
     }
     
     required init(context: IMPContext) {

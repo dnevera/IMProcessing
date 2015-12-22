@@ -177,8 +177,8 @@
 			isa = PBXGroup;
 			children = (
 				3112BCD01C281D9F00825078 /* IMPHistogramAverageSolver.swift */,
-				3112BCD11C281D9F00825078 /* IMPHistogramLayerSolver.swift */,
 				3112BCD21C281D9F00825078 /* IMPHistogramRangeSolver.swift */,
+				3112BCD11C281D9F00825078 /* IMPHistogramLayerSolver.swift */,
 			);
 			path = Solvers;
 			sourceTree = "<group>";
