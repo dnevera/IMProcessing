@@ -28,4 +28,23 @@ extension Float{
             self = Float(newValue)
         }
     }
+    var int:Int{
+        get{
+            return Int(self)
+        }
+        set(newValue){
+            self = Float(newValue)
+        }
+    }
+}
+
+extension Int {
+    var float:Float{
+        get{
+            return Float(self)
+        }
+        set(newValue){
+            self = Int(newValue)
+        }
+    }
 }

@@ -51,6 +51,7 @@ typedef struct{
 }IMPHSVLevel;
 
 typedef struct {
+    IMPHSVLevel   master;
     IMPHSVLevel   levels[kIMP_Color_Ramps];
     IMPBlending   blending;
 } IMPHSVAdjustment;
