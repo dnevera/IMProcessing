@@ -78,7 +78,7 @@ class ViewController: NSViewController {
 
     @IBAction func changeValue5(sender: NSSlider) {
         asyncChanges { () -> Void in
-            self.mainFilter.hsvFilter?.adjustment.reds.hue = (sender.floatValue/100 - 0.5) * 2
+            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
         }
     }
     

@@ -101,7 +101,7 @@ public class IMPColorWeightsAnalyzer: IMPHistogramAnalyzer {
         didSet{
             clippingBuffer = clippingBuffer ?? context.device.newBufferWithLength(sizeof(IMPColorWeightsClipping), options: .CPUCacheModeDefaultCache)
             if let b = clippingBuffer {
-                memcpy(b.contents(), &clippingBuffer, b.length)
+                memcpy(b.contents(), &clipping, b.length)
             }
             self.dirty = true
         }

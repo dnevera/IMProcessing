@@ -19,12 +19,12 @@ public struct IMPAutoWBPreferences{
     var hsvProfile = IMPHSVAdjustment(
         master: IMPHSVLevel.init(hue: 0, saturation: 0, value: 0),
         levels: (
-            IMPHSVLevel(hue: 0, saturation: 0,     value: 0),
-            IMPHSVLevel(hue: 0, saturation: -0.25, value: 0), // descrease yellow only in default AWB profile
-            IMPHSVLevel(hue: 0, saturation: 0,     value: 0),
-            IMPHSVLevel(hue: 0, saturation: 0,     value: 0),
-            IMPHSVLevel(hue: 0, saturation: 0,     value: 0),
-            IMPHSVLevel(hue: 0, saturation: 0,     value: 0)),
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
+            IMPHSVLevel(hue: 0, saturation: -0.15,  value:-0.05), // descrease yellows in default AWB profile
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0)),
         blending: IMPBlending.init(mode: IMPBlendingMode.NORMAL, opacity: 1))
 }
 
@@ -78,12 +78,9 @@ public class IMPAutoWBFilter:IMPFilter{
         colorWeightsAnalyzer.clipping = preferences.clipping
         
         addSourceObserver { (source) -> Void in
+            self.colorWeightsAnalyzer.source = source
             self.dominantColorAnalayzer.source = source
         }
-        
-        wbFilter.addDestinationObserver(destination: { (destination) -> Void in
-            self.colorWeightsAnalyzer.source = destination
-        })
         
         dominantColorAnalayzer.addUpdateObserver { (histogram) -> Void in
             self.wbFilter.adjustment.dominantColor = self.dominantColorSolver.color
@@ -107,6 +104,9 @@ public class IMPAutoWBFilter:IMPFilter{
             //
             wbFilter.adjustment.blending.opacity = adjustment.blending.opacity * ( preferences.threshold - solver.neutralWeights.neutrals) / preferences.threshold
         }
+        else{
+            wbFilter.adjustment.blending.opacity = 0
+        }
         
         let hue = (dominantColor?.rgb.rgb_2_HSV().hue)! * 360
         
@@ -119,7 +119,8 @@ public class IMPAutoWBFilter:IMPFilter{
             solver.colorWeights.blues +
             solver.colorWeights.magentas
         
-        if (other_colors < 0.03 /* 10% */) {
+        reds_yellows_weights -= other_colors
+        if (reds_yellows_weights < 0.0 /* 10% */) {
             reds_yellows_weights = 0.0; // it is a yellow/red image
         }
         
