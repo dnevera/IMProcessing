@@ -30,7 +30,7 @@ class IMPTestFilter:IMPFilter {
         addFunction(IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL))
         
         wbFilter = IMPWBFilter(context: self.context)
-        hsvFilter = IMPHSVFilter(context: self.context, optimization:.HIGH)
+        hsvFilter = IMPHSVFilter(context: self.context, optimization:.NORMAL)
         contrastFilter = IMPContrastFilter(context: self.context)        
         
         addFilter(contrastFilter)

@@ -53,7 +53,7 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             //self.textValueLabel.stringValue = String(format: "%2.5f", value);
-            self.mainFilter.hsvFilter?.adjustment.reds.hue = (value - 0.5) * 2
+            self.mainFilter.hsvFilter?.overlap = value*4
         }
     }
     
@@ -78,7 +78,7 @@ class ViewController: NSViewController {
 
     @IBAction func changeValue5(sender: NSSlider) {
         asyncChanges { () -> Void in
-            self.mainFilter.hsvFilter?.adjustment.master.value = (sender.floatValue/100 - 0.5) * 2
+            self.mainFilter.hsvFilter?.adjustment.reds.hue = (sender.floatValue/100 - 0.5) * 2
         }
     }
     

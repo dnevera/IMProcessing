@@ -11,13 +11,13 @@ import Metal
 import simd
 
 public extension IMProcessing{
-    struct hsv {
+    public struct hsv {
         /// Ramps of HSV hextants in the HSV color wheel with overlaping levels
-        static let hueRamps:[float4] = [kIMP_Reds, kIMP_Yellows, kIMP_Greens, kIMP_Cyans, kIMP_Blues, kIMP_Magentas]
+        public static let hueRamps:[float4] = [kIMP_Reds, kIMP_Yellows, kIMP_Greens, kIMP_Cyans, kIMP_Blues, kIMP_Magentas]
         /// Overlap factor
-        static let hueOverlapFactor  = 1.4
+        public static var hueOverlapFactor:Float  = 1.4
         /// Hue range of the HSV color wheel
-        static let hueRange = Range<Int>(0..<360)
+        private static let hueRange = Range<Int>(0..<360)
     }
 }
 
@@ -26,7 +26,7 @@ extension Float32{
     //
     // Get HSV weight for the hue overlap between two close colors in the HSV color wheel
     //
-    func hueWeight(ramp ramp:float4) -> Float32 {
+    func hueWeight(ramp ramp:float4, overlap:Float) -> Float32 {
         
         var sigma = (ramp.z-ramp.y)
         var mu    = (ramp.w+ramp.x)/2.0
@@ -40,22 +40,22 @@ extension Float32{
             }
         }
         
-        return self.gaussianPoint(fi: 1, mu: mu, sigma: sigma)
+        return self.gaussianPoint(fi: 1, mu: mu, sigma: sigma * overlap)
     }
 }
 
 public extension SequenceType where Generator.Element == Float32 {
     
-    public func hueWeightsDistribution(ramp ramp:float4) -> [Float32]{
+    public func hueWeightsDistribution(ramp ramp:float4, overlap:Float) -> [Float32]{
         var a = [Float32]()
         for i in self{
-            a.append(i.hueWeight(ramp: ramp))
+            a.append(i.hueWeight(ramp: ramp, overlap: overlap))
         }
         return a
     }
     
-    public func hueWeightsDistribution(ramp ramp:float4) -> NSData {
-        let f:[Float32] = hueWeightsDistribution(ramp: ramp) as [Float32]
+    public func hueWeightsDistribution(ramp ramp:float4, overlap:Float) -> NSData {
+        let f:[Float32] = hueWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
         return NSData(bytes: f, length: f.count)
     }
     
@@ -150,6 +150,19 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         }
     }
     
+    ///
+    /// Overlap colors in the HSV color wheel. Define the width of color overlaping.
+    ///
+    public var overlap:Float = IMProcessing.hsv.hueOverlapFactor {
+        didSet{
+            hueWeights = IMPHSVFilter.defaultHueWeights(self.context, overlap: overlap)
+            if self.optimization == .HIGH {
+                applyHsv3DLut()
+            }
+            dirty = true
+        }
+    }
+    
     ///  Create HSV adjustment filter. 
     ///
     ///  - .HIGH optimization level uses to reduce HSV adjustment computation per pixel.
@@ -179,7 +192,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         
         addFunction(kernel)
         
-        hueWeights = IMPHSVFilter.defaultHueWeights(self.context)
+        hueWeights = IMPHSVFilter.defaultHueWeights(self.context, overlap: IMProcessing.hsv.hueOverlapFactor)
         
         defer{
             adjustment = IMPHSVFilter.defaultAdjustment
@@ -213,7 +226,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     ///  - parameter context: device execution context
     ///
     ///  - returns: new overlaping weights
-    public static func defaultHueWeights(context:IMPContext) -> MTLTexture {
+    public static func defaultHueWeights(context:IMPContext, overlap:Float) -> MTLTexture {
         let width  = IMProcessing.hsv.hueRange.endIndex
         
         let textureDescriptor = MTLTextureDescriptor()
@@ -235,7 +248,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         let hues = Float.range(0..<width)
         for i in 0..<IMProcessing.hsv.hueRamps.count{
             let ramp = IMProcessing.hsv.hueRamps[i]
-            var data = hues.hueWeightsDistribution(ramp: ramp) as [Float32]
+            var data = hues.hueWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
             hueWeights.replaceRegion(region, mipmapLevel:0, slice:i, withBytes:&data, bytesPerRow:sizeof(Float32) * width, bytesPerImage:0)
         }
         
