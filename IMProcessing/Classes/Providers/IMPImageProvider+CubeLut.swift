@@ -172,7 +172,7 @@ extension IMPImageProvider{
         self.texture!.replaceRegion(region, mipmapLevel:0, slice:0, withBytes:data.bytes, bytesPerRow:bytesPerRow, bytesPerImage:bytesPerImage)
     }
     
-    private func updateBytes(words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: Description) -> IMPLutStatus {
+    private func updateBytes(var words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: Description) -> IMPLutStatus {
         
         let keyword = words[0];
         
@@ -181,7 +181,9 @@ extension IMPImageProvider{
         }
         else if keyword.uppercaseString.hasPrefix("DOMAIN_MIN") {
             if (words.count==4) {
-                description.domainMin = float3(colors: words)
+                var w = [String]()
+                for i in 1..<4 { w.append(words[i])}
+                description.domainMin = float3(colors: w)
             }
             else{
                 return .WRONG_FORMAT
@@ -189,7 +191,9 @@ extension IMPImageProvider{
         }
         else if keyword.uppercaseString.hasPrefix("DOMAIN_MAX") {
             if (words.count==4) {
-                description.domainMax = float3(colors: words)
+                var w = [String]()
+                for i in 1..<4 { w.append(words[i])}
+                description.domainMax = float3(colors: w)
             }
             else{
                 return .WRONG_FORMAT
