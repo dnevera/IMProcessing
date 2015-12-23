@@ -9,16 +9,10 @@
 #ifndef IMProcessing_h
 #define IMProcessing_h
 
-#if os(iOS)
-import UIKit
-#else
-import AppKit
-#endif
-
 //! Project version number for IMProcessing.
-FOUNDATION_EXPORT double IMProcessing;
+FOUNDATION_EXPORT double IMProcessingVersionNumber;
 
 //! Project version string for IMProcessing.
-FOUNDATION_EXPORT const unsigned char IMProcessing[];
+FOUNDATION_EXPORT const unsigned char IMProcessingVersionString[];
 
 #endif /* IMProcessing_h */

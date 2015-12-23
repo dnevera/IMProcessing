@@ -17,18 +17,12 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
     
     public var layer = IMPHistogramLayer(
         components: (
-            float4(x: 1, y: 0, z: 0, w: 0.8),
-            float4(x: 0, y: 1, z: 0, w: 0.4),
-            float4(x: 0, y: 0, z: 1, w: 0.5),
-            float4(x: 1, y: 1, z: 1, w: 0.3)),
-        backgroundColor: float4(x:0.1,y:0.1,z:0.1,w:1),
-        backgroundSource: false
-        ){
-        didSet{
-            memcpy(layerUniformBiffer.contents(), &layer, layerUniformBiffer.length)
-            self.dirty = true;
-        }
-    }
+            IMPHistogramLayerComponent(color: float4([1,0,0,0.5]), width: Float(UInt32.max)),
+            IMPHistogramLayerComponent(color: float4([0,1,0,0.6]), width: Float(UInt32.max)),
+            IMPHistogramLayerComponent(color: float4([0,0,1,0.7]), width: Float(UInt32.max)),
+            IMPHistogramLayerComponent(color: float4([0.8,0.8,0.8,0.8]), width: Float(UInt32.max))),
+        backgroundColor: float4([0.1, 0.1, 0.1, 0.7]),
+        backgroundSource: false)
     
     public var histogramType:(type:IMPHistogramType,power:Float) = (type:.PDF,power:1){
         didSet{

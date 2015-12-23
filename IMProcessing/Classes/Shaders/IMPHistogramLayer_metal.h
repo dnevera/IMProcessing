@@ -52,12 +52,13 @@ namespace IMProcessing
             result = layer.backgroundColor;
         }
         
-        for (uint c=0; c<channels; c++){
+        for (int c=channels-1; c>=0; c--){
             
-            float4 component = layer.components[c];
+            float4 component = layer.components[c].color;
             
-            uint   bin       = uint(histogram.channels[c][histogramBinIndex]*delim);   // red bin value
-            float  opacity   = y_position>=bin?0.0:1.0*component.a;
+            uint   bin       = uint(histogram.channels[c][histogramBinIndex]*delim);   // bin value
+            
+            float  opacity   = y_position>=bin || y_position<=bin-layer.components[c].width ? 0.0 : 1.0 * component.a;
             
             float4 color     = float4(component.r,component.g,component.b,opacity);
             

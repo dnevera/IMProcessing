@@ -9,14 +9,7 @@
 #ifndef IMPHistogramTypes_h
 #define IMPHistogramTypes_h
 
-#ifdef __METAL_VERSION__
-# include <metal_stdlib>
-#else
-# include <stdlib.h>
-# define constant const
-#endif
-
-# include <simd/simd.h>
+#include "IMPConstants-Bridging-Metal.h"
 
 
 ///  @brief Histogram width
@@ -39,17 +32,13 @@ typedef struct {
 
 ///  @brief Histogram visualization color options
 typedef struct {
-    float r,g,b,a;
+    metal_float4 color;
+    float        width;
 }IMPHistogramLayerComponent;
 
 struct IMPHistogramLayer {
-#ifdef __METAL_VERSION__
-    float4                      components[kIMP_HistogramMaxChannels];
-    float4                      backgroundColor;
-#else
-    vector_float4               components[kIMP_HistogramMaxChannels];
-    vector_float4               backgroundColor;
-#endif
+    IMPHistogramLayerComponent  components[kIMP_HistogramMaxChannels];
+    metal_float4                backgroundColor;
     bool                        backgroundSource;
 };
 

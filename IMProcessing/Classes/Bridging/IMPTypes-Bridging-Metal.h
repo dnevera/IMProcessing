@@ -34,13 +34,13 @@ typedef struct{
 
 
 typedef struct{
-    packed_float4  dominantColor;
+    metal_float4   dominantColor;
     IMPBlending    blending;
 } IMPWBAdjustment;
 
 typedef struct{
-    packed_float4  minimum;
-    packed_float4  maximum;
+    metal_float4   minimum;
+    metal_float4   maximum;
     IMPBlending    blending;
 } IMPContrastAdjustment;
 
