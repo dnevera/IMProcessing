@@ -37,6 +37,7 @@
 		3112BD101C2820B400825078 /* IMProcessing.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 3112BD0F1C2820B400825078 /* IMProcessing.podspec */; };
 		3112BD151C2821F200825078 /* IMPHistogramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BD131C2821F200825078 /* IMPHistogramView.swift */; };
 		3112BD161C2821F200825078 /* IMPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BD141C2821F200825078 /* IMPView.swift */; };
+		312B8E5E1C2AEC3300FFFD76 /* IMPColorSpaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */; };
 		31819C161C2863710037DA99 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C121C2863710037DA99 /* IMPDocument.swift */; };
 		31819C171C2863710037DA99 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C131C2863710037DA99 /* IMPMenuHandler.swift */; };
 		31819C181C2863710037DA99 /* IMPScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C141C2863710037DA99 /* IMPScrollView.swift */; };
@@ -75,12 +76,12 @@
 		3112BCE11C281D9F00825078 /* IMPImageProvider+IMPImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImageProvider+IMPImage.swift"; sourceTree = "<group>"; };
 		3112BCE31C281D9F00825078 /* IMPAdjustment_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPAdjustment_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3112BCE41C281D9F00825078 /* IMPBlending_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPBlending_metal.h; sourceTree = "<group>"; };
-		3112BCE51C281D9F00825078 /* IMPColorSpaces_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPColorSpaces_metal.h; sourceTree = "<group>"; };
+		3112BCE51C281D9F00825078 /* IMPColorSpaces_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPColorSpaces_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3112BCE61C281D9F00825078 /* IMPCommon_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPCommon_metal.h; sourceTree = "<group>"; };
 		3112BCE71C281D9F00825078 /* IMPConstants_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPConstants_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3112BCE81C281D9F00825078 /* IMPFlowControl_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPFlowControl_metal.h; sourceTree = "<group>"; };
 		3112BCE91C281D9F00825078 /* IMPHistogram_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogram_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
-		3112BCEA1C281D9F00825078 /* IMPHistogramLayer_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogramLayer_metal.h; sourceTree = "<group>"; };
+		3112BCEA1C281D9F00825078 /* IMPHistogramLayer_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogramLayer_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3112BCEC1C281D9F00825078 /* IMPMain_metal.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = IMPMain_metal.metal; sourceTree = "<group>"; };
 		3112BCED1C281D9F00825078 /* IMPStdlib_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPStdlib_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3112BCF01C281D9F00825078 /* CGRect+IMProcessing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGRect+IMProcessing.swift"; sourceTree = "<group>"; };
@@ -94,6 +95,8 @@
 		3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPHistogramTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPHistogramTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
 		3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMProcessing-Bridging-Header.h"; path = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
+		312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPColorSpaces.swift; path = Math/IMPColorSpaces.swift; sourceTree = "<group>"; };
+		312B8E5F1C2AEFB100FFFD76 /* IMPOperations-Bridgin-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "IMPOperations-Bridgin-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPOperations-Bridgin-Metal.h"; sourceTree = SOURCE_ROOT; };
 		314403AB1C28412600BC06A7 /* IMProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMProcessing.h; path = IMProcessing/Classes/IMProcessing.h; sourceTree = SOURCE_ROOT; };
 		31819C111C285E6B0037DA99 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		31819C121C2863710037DA99 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPDocument.swift; sourceTree = "<group>"; };
@@ -202,6 +205,7 @@
 				3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */,
 				31819C211C298A8A0037DA99 /* IMPConstants-Bridging-Metal.h */,
 				3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */,
+				312B8E5F1C2AEFB100FFFD76 /* IMPOperations-Bridgin-Metal.h */,
 				3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */,
 				314403AB1C28412600BC06A7 /* IMProcessing.h */,
 			);
@@ -324,6 +328,7 @@
 			isa = PBXGroup;
 			children = (
 				31819C251C299FC30037DA99 /* IMPMath.swift */,
+				312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */,
 				31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */,
 			);
 			name = Math;
@@ -407,6 +412,7 @@
 				3112BCB81C281CEB00825078 /* ViewController.swift in Sources */,
 				31819C241C2996FC0037DA99 /* IMPHSVFilter.swift in Sources */,
 				3112BCF81C281D9F00825078 /* IMPHistogram.swift in Sources */,
+				312B8E5E1C2AEC3300FFFD76 /* IMPColorSpaces.swift in Sources */,
 				3112BD021C281D9F00825078 /* IMPImageProvider.swift in Sources */,
 				31819C171C2863710037DA99 /* IMPMenuHandler.swift in Sources */,
 				3112BCB61C281CEB00825078 /* AppDelegate.swift in Sources */,

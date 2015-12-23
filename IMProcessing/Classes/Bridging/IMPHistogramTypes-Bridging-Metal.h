@@ -54,9 +54,9 @@ struct IMPHistogramLayer {
 };
 
 typedef struct{
-    float saturation;
-    float black;
     float white;
+    float black;
+    float saturation;
 } IMPColorWeightsClipping;
 
 

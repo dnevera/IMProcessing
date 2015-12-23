@@ -33,6 +33,7 @@ using namespace metal;
 # define constant const
 # define metal_float4 vector_float4
 # define metal_float3 vector_float3
+# define constexpr 
 
 #endif
 

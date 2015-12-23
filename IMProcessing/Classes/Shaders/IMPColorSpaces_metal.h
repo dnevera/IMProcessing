@@ -21,7 +21,8 @@ using namespace metal;
 namespace IMProcessing
 {
     
-    
+#include "IMPOperations-Bridgin-Metal.h"
+
     inline  float rgb_2_L(float3 color)
     {
         float fmin = min_component(color); //Min. value of RGB

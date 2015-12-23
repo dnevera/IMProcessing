@@ -14,6 +14,14 @@ public extension IMProcessing{
     public struct hsv {
         /// Ramps of HSV hextants in the HSV color wheel with overlaping levels
         public static let hueRamps:[float4] = [kIMP_Reds, kIMP_Yellows, kIMP_Greens, kIMP_Cyans, kIMP_Blues, kIMP_Magentas]
+        /// Hextants aliases
+        public static let reds     = hueRamps[0]
+        public static let yellows  = hueRamps[1]
+        public static let greens   = hueRamps[2]
+        public static let cyans    = hueRamps[3]
+        public static let blues    = hueRamps[4]
+        public static let magentas = hueRamps[5]
+        
         /// Overlap factor
         public static var hueOverlapFactor:Float  = 1.4
         /// Hue range of the HSV color wheel
@@ -21,12 +29,12 @@ public extension IMProcessing{
     }
 }
 
-extension Float32{
+public extension Float32{
     
     //
     // Get HSV weight for the hue overlap between two close colors in the HSV color wheel
     //
-    func hueWeight(ramp ramp:float4, overlap:Float) -> Float32 {
+    func overlapWeight(ramp ramp:float4, overlap:Float = IMProcessing.hsv.hueOverlapFactor) -> Float32 {
         
         var sigma = (ramp.z-ramp.y)
         var mu    = (ramp.w+ramp.x)/2.0
@@ -46,19 +54,23 @@ extension Float32{
 
 public extension SequenceType where Generator.Element == Float32 {
     
-    public func hueWeightsDistribution(ramp ramp:float4, overlap:Float) -> [Float32]{
+    public func overlapWeightsDistribution(ramp ramp:float4, overlap:Float = IMProcessing.hsv.hueOverlapFactor) -> [Float32]{
         var a = [Float32]()
         for i in self{
-            a.append(i.hueWeight(ramp: ramp, overlap: overlap))
+            a.append(i.overlapWeight(ramp: ramp, overlap: overlap))
         }
         return a
     }
     
-    public func hueWeightsDistribution(ramp ramp:float4, overlap:Float) -> NSData {
-        let f:[Float32] = hueWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
+    public func overlapWeightsDistribution(ramp ramp:float4, overlap:Float = IMProcessing.hsv.hueOverlapFactor) -> NSData {
+        let f:[Float32] = overlapWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
         return NSData(bytes: f, length: f.count)
     }
     
+}
+
+public func * (left:IMPHSVLevel,right:Float) -> IMPHSVLevel {
+    return IMPHSVLevel(hue: left.hue * right, saturation: left.saturation * right, value: left.value * right)
 }
 
 public extension IMPHSVAdjustment{
@@ -248,7 +260,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         let hues = Float.range(0..<width)
         for i in 0..<IMProcessing.hsv.hueRamps.count{
             let ramp = IMProcessing.hsv.hueRamps[i]
-            var data = hues.hueWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
+            var data = hues.overlapWeightsDistribution(ramp: ramp, overlap: overlap) as [Float32]
             hueWeights.replaceRegion(region, mipmapLevel:0, slice:i, withBytes:&data, bytesPerRow:sizeof(Float32) * width, bytesPerImage:0)
         }
         

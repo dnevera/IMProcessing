@@ -95,7 +95,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
 
 public class IMPColorWeightsAnalyzer: IMPHistogramAnalyzer {
 
-    public static var defaultClipping = IMPColorWeightsClipping(saturation: 0.1, black: 0.1, white: 0.1)
+    public static var defaultClipping = IMPColorWeightsClipping(white: 0.1, black: 0.1, saturation: 0.1)
     
     public var clipping:IMPColorWeightsClipping!{
         didSet{

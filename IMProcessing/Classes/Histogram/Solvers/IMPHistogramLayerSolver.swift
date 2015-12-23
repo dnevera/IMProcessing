@@ -17,8 +17,8 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
     
     public var layer = IMPHistogramLayer(
         components: (
-            float4(x: 1, y: 0, z: 0, w: 0.5),
-            float4(x: 0, y: 1, z: 0, w: 0.5),
+            float4(x: 1, y: 0, z: 0, w: 0.8),
+            float4(x: 0, y: 1, z: 0, w: 0.4),
             float4(x: 0, y: 0, z: 1, w: 0.5),
             float4(x: 1, y: 1, z: 1, w: 0.3)),
         backgroundColor: float4(x:0.1,y:0.1,z:0.1,w:1),
