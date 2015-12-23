@@ -27,7 +27,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
             cyans = weights[3]
             blues = weights[4]
             magentas = weights[5]
-        }
+        }        
     }
     
     public struct NeutralWeights{

@@ -39,7 +39,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
             }
         }
     }
-
+    
     
     public var dirty:Bool{
         set(newDirty){
@@ -98,7 +98,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
             self.dirty = true
         }
     }
-
+    
     public final func addSourceObserver(source observer:IMPFilterSourceHandler){
         sourceObservers.append(observer)
     }
@@ -106,7 +106,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
     public final func addDestinationObserver(destination observer:IMPFilterDestinationHandler){
         destinationObservers.append(observer)
     }
-
+    
     public final func addDirtyObserver(observer:IMPFilterDirtyHandler){
         dirtyHandlers.append(observer)
         for f in filterList{
@@ -150,76 +150,78 @@ public class IMPFilter: NSObject,IMPContextProvider {
     public func apply(){
         
         if dirty {
-
+            
             if self.source?.texture == nil {
                 dirty = false
                 return
             }
-
-            if  functionList.count > 0 {
-
-                executeSourceObservers(source)
-                
-                self.context.execute({ (commandBuffer) -> Void in
-                    
-                    var inputTexture:MTLTexture! = self.source?.texture
-
-                    for function in self.functionList {
-                        
-                        var width  = inputTexture.width
-                        var height = inputTexture.height
-                        
-                        if let s = self.destinationSize {
-                            width = s.width
-                            height = s.height
-                        }
-                        
-                        let threadgroupCounts = MTLSizeMake(function.groupSize.width, function.groupSize.height, 1);
-                        let threadgroups = MTLSizeMake(
-                            (width  + threadgroupCounts.width ) / threadgroupCounts.width ,
-                            (height + threadgroupCounts.height) / threadgroupCounts.height,
-                            1);
-                        
-                        if self.texture?.width != width || self.texture?.height != height {
-                            let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(inputTexture.pixelFormat, width: width, height: height, mipmapped: false)
-                            self.texture = self.context.device.newTextureWithDescriptor(descriptor)
-                        }
-                        
-                        let commandEncoder = commandBuffer.computeCommandEncoder()
-                        
-                        commandEncoder.setComputePipelineState(function.pipeline!)
-                        
-                        commandEncoder.setTexture(inputTexture, atIndex:0)
-                        commandEncoder.setTexture(self.texture, atIndex:1)
-                        
-                        self.configure(function, command: commandEncoder)
-                        
-                        commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts)
-                        commandEncoder.endEncoding()
-                        
-                        inputTexture = self.texture
-                    }
-                })
-            }
-            else if filterList.count > 0 {
-                executeSourceObservers(source)
+            
+            var inputTexture:MTLTexture! = self.source?.texture
+            
+            var width  = inputTexture.width
+            var height = inputTexture.height
+            
+            if functionList.count == 0 {
+                //
+                // copy source to destination
+                //
+                addFunction(IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL))
             }
             
-            if self.texture == nil{
-                self.texture = self.source?.texture
-            }
+            
+            executeSourceObservers(source)
+            
+            self.context.execute({ (commandBuffer) -> Void in
+                
+                for function in self.functionList {
+                    
+                    if let s = self.destinationSize {
+                        width = s.width
+                        height = s.height
+                    }
+                    
+                    let threadgroupCounts = MTLSizeMake(function.groupSize.width, function.groupSize.height, 1);
+                    let threadgroups = MTLSizeMake(
+                        (width  + threadgroupCounts.width ) / threadgroupCounts.width ,
+                        (height + threadgroupCounts.height) / threadgroupCounts.height,
+                        1);
+                    
+                    if self.texture?.width != width || self.texture?.height != height {
+                        let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(inputTexture.pixelFormat, width: width, height: height, mipmapped: false)
+                        self.texture = self.context.device.newTextureWithDescriptor(descriptor)
+                    }
+                    
+                    let commandEncoder = commandBuffer.computeCommandEncoder()
+                    
+                    commandEncoder.setComputePipelineState(function.pipeline!)
+                    
+                    commandEncoder.setTexture(inputTexture, atIndex:0)
+                    commandEncoder.setTexture(self.texture, atIndex:1)
+                    
+                    self.configure(function, command: commandEncoder)
+                    
+                    commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts)
+                    commandEncoder.endEncoding()
+                    
+                    inputTexture = self.texture
+                }
+            })
             
             if filterList.count > 0 {
                 
+                var l_texture = self.getDestination() ?? self.source
+                
                 for filter in self.filterList {
-
-                    filter.source = self.getDestination()
-                    self.texture  = filter.destination?.texture
                     
-                    if self.texture == nil {
+                    filter.source = l_texture
+                    l_texture  = filter.destination
+                    
+                    if l_texture == nil {
                         fatalError("IMPFilter \(filter) did not return valid texture...")
                     }
                 }
+                
+                self.texture = l_texture?.texture
                 
                 executeDestinationObservers(getDestination())
                 

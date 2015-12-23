@@ -51,8 +51,8 @@ class ViewController: NSViewController {
     @IBAction func changeValue1(sender: NSSlider) {
         let value = sender.floatValue/100
         asyncChanges { () -> Void in
-            //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
-            //self.textValueLabel.stringValue = String(format: "%2.5f", value);
+            self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
+            self.textValueLabel.stringValue = String(format: "%2.5f", value);
             self.mainFilter.hsvFilter?.overlap = value*4
         }
     }
@@ -66,7 +66,7 @@ class ViewController: NSViewController {
     
     @IBAction func changeValue3(sender: NSSlider) {
         asyncChanges { () -> Void in
-            self.mainFilter.wbFilter.adjustment.blending.opacity = sender.floatValue/100
+            self.mainFilter.awbFilter.adjustment.blending.opacity = sender.floatValue/100
         }
     }
     
@@ -113,10 +113,12 @@ class ViewController: NSViewController {
             })
         }
         
-        mainFilter.dominantAnalayzer.addUpdateObserver { (histogram) -> Void in
+        mainFilter.addDestinationObserver { (destination) -> Void in
             self.asyncChanges({ () -> Void in
-                let c = self.mainFilter.dominantSolver.color*255
-                self.dominantColorLabel.stringValue = String(format: "%3.0f,%3.0f,%3.0f:%3.0f", c.x, c.y, c.z, c.w)
+                if var c = self.mainFilter.awbFilter.dominantColor {
+                    c *= 255
+                    self.dominantColorLabel.stringValue = String(format: "%3.0f,%3.0f,%3.0f:%3.0f", c.x, c.y, c.z, c.w)
+                }
             })
         }
         

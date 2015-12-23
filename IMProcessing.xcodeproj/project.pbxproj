@@ -45,6 +45,7 @@
 		31819C1E1C2953BD0037DA99 /* IMPDistribution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */; };
 		31819C241C2996FC0037DA99 /* IMPHSVFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */; };
 		31819C261C299FC30037DA99 /* IMPMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C251C299FC30037DA99 /* IMPMath.swift */; };
+		31CBB5FD1C2AC88E002AE689 /* IMPAutoWBFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CBB5FC1C2AC88E002AE689 /* IMPAutoWBFilter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -105,6 +106,7 @@
 		31819C221C2995C30037DA99 /* IMPAdjustmentHSV_metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IMPAdjustmentHSV_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHSVFilter.swift; sourceTree = "<group>"; };
 		31819C251C299FC30037DA99 /* IMPMath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMath.swift; path = Math/IMPMath.swift; sourceTree = "<group>"; };
+		31CBB5FC1C2AC88E002AE689 /* IMPAutoWBFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPAutoWBFilter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +169,7 @@
 				3112BCC91C281D9F00825078 /* IMPContrastFilter.swift */,
 				3112BCCA1C281D9F00825078 /* IMPLutFilter.swift */,
 				3112BCCB1C281D9F00825078 /* IMPWBFilter.swift */,
+				31CBB5FC1C2AC88E002AE689 /* IMPAutoWBFilter.swift */,
 				31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */,
 			);
 			path = Adjustments;
@@ -411,6 +414,7 @@
 				3112BCF61C281D9F00825078 /* IMPLutFilter.swift in Sources */,
 				3112BCBA1C281CEB00825078 /* Document.swift in Sources */,
 				3112BCF41C281D9F00825078 /* IMPAdjustment.swift in Sources */,
+				31CBB5FD1C2AC88E002AE689 /* IMPAutoWBFilter.swift in Sources */,
 				3112BCFB1C281D9F00825078 /* IMPHistogramLayerSolver.swift in Sources */,
 				31819C161C2863710037DA99 /* IMPDocument.swift in Sources */,
 				3112BD151C2821F200825078 /* IMPHistogramView.swift in Sources */,
