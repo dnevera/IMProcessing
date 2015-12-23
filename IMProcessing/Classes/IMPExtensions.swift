@@ -24,6 +24,13 @@ public enum IMProcessing{
     struct names {
         static let prefix = "com.improcessing."
     }
+    struct colors {
+        #if os(iOS)
+        static let pixelFormat = MTLPixelFormat.RGBA8Unorm
+        #else
+        static let pixelFormat = MTLPixelFormat.RGBA16Unorm
+        #endif
+    }
 }
 
 public extension IMPColor{

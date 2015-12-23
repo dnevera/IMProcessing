@@ -8,6 +8,7 @@
 
 import Cocoa
 import Metal
+import Accelerate
 
 extension IMPImage{
         
@@ -43,20 +44,20 @@ extension IMPImage{
         
         
         let rawData  = calloc(resultHeight * resultWidth * 4, sizeof(uint8));
-        let bytesPerPixel = 4;
-        let bytesPerRow   = bytesPerPixel * resultWidth;
-        let bitsPerComponent = 8;
+        let componentsPerPixel = 4;
+        let componentsPerRow   = componentsPerPixel * resultWidth;
+        let bitsPerComponent   = 8;
         
         let colorSpace = CGColorSpaceCreateDeviceRGB();
         
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.PremultipliedLast.rawValue | CGBitmapInfo.ByteOrder32Big.rawValue)
 
         let bitmapContext = CGBitmapContextCreate(rawData, resultWidth, resultHeight,
-            bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo.rawValue);
+            bitsPerComponent, componentsPerRow, colorSpace, bitmapInfo.rawValue);
                 
         CGContextDrawImage(bitmapContext, CGRectMake(0, 0, CGFloat(resultWidth), CGFloat(resultHeight)), imageRef);
         
-        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(MTLPixelFormat.RGBA8Unorm,
+        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(IMProcessing.colors.pixelFormat,
             width:resultWidth,
             height:resultHeight,
             mipmapped:false);
@@ -64,7 +65,21 @@ extension IMPImage{
         let texture = context.device?.newTextureWithDescriptor(textureDescriptor)
         
         if let t = texture {
-            t.replaceRegion(MTLRegionMake2D(0, 0, resultWidth, resultHeight), mipmapLevel:0, withBytes:rawData, bytesPerRow:bytesPerRow)
+            let region = MTLRegionMake2D(0, 0, resultWidth, resultHeight)
+            
+            if IMProcessing.colors.pixelFormat == .RGBA16Unorm {
+                var u16:[UInt16] = [UInt16](count: componentsPerRow*resultHeight, repeatedValue: 0)
+                for var i=0; i < componentsPerRow*resultHeight; i++ {
+                    var pixel = UInt16()
+                    let address = UnsafePointer<UInt8>(rawData)+i
+                    memcpy(&pixel, address, sizeof(UInt8))
+                    u16[i] = pixel<<8
+                }
+                t.replaceRegion(region, mipmapLevel:0, withBytes:u16, bytesPerRow:componentsPerRow*sizeof(UInt16)/sizeof(UInt8))
+            }
+            else {
+                t.replaceRegion(region, mipmapLevel:0, withBytes:rawData, bytesPerRow:componentsPerRow)
+            }
         }
         
         free(rawData);

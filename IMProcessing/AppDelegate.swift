@@ -101,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         openPanel.canChooseFiles  = true;
         openPanel.resolvesAliases = true;
         openPanel.extensionHidden = false;
-        openPanel.allowedFileTypes = ["jpg", "tiff", "png"]
+        openPanel.allowedFileTypes = ["jpg", "tif", "tiff", "png"]
         
         let result = openPanel.runModal()
         

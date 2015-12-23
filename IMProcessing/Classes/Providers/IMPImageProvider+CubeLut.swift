@@ -160,7 +160,7 @@ extension IMPImageProvider{
         textureDescriptor.height = height
         textureDescriptor.depth  = depth
         
-        textureDescriptor.pixelFormat = .RGBA8Unorm;
+        textureDescriptor.pixelFormat =  .RGBA8Unorm //IMProcessing.colors.pixelFormat;
         
         textureDescriptor.arrayLength = 1;
         textureDescriptor.mipmapLevelCount = 1;
@@ -235,14 +235,14 @@ extension IMPImageProvider{
             
             isData = true
             
-            let denom:Float = 255.0
+            let denom:Float = Float(UInt8.max)
             
             let rgb    = float3(colors: words)/(description.domainMax.x-description.domainMin.x)*denom
             var color  = float4(rgb:rgb, a: denom)
             
             for i in 0..<4 {
                 var c = UInt8(color[i])
-                dataBytes.appendBytes(&c, length: sizeof(UInt8))
+                dataBytes.appendBytes(&c, length: sizeofValue(c))
             }
         }
         
