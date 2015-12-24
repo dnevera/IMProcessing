@@ -6,13 +6,21 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
+
 import simd
 import Metal
 
 #if os(iOS)
     public typealias IMPImage = UIImage
     public typealias IMPColor = UIColor
+    public typealias NSRect   = CGRect
+    public typealias NSSize   = CGSize
+        
 #else
     public typealias IMPImage = NSImage
     public typealias IMPColor = NSColor

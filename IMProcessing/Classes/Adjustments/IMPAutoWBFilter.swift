@@ -6,17 +6,17 @@
 //  Copyright © 2015 Dehancer.photo. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import Metal
 
 public struct IMPAutoWBAdjustment{
-    var blending = IMPBlending.init(mode: IMPBlendingMode.NORMAL, opacity: 1)
+    public var blending:IMPBlending = IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1)
 }
 
-
 public struct IMPAutoWBPreferences{
-    var threshold  = Float(0.25)
-    var clipping   = IMPColorWeightsClipping(white: 0.05, black: 0.1, saturation: 0.07)
-    var hsvProfile = IMPHSVAdjustment(
+    public var threshold  = Float(0.25)
+    public var clipping   = IMPColorWeightsClipping(white: 0.05, black: 0.1, saturation: 0.07)
+    public var hsvProfile = IMPHSVAdjustment(
         master: IMPHSVLevel.init(hue: 0, saturation: 0, value: 0),
         levels: (
             IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
@@ -30,14 +30,16 @@ public struct IMPAutoWBPreferences{
 
 public class IMPAutoWBFilter:IMPFilter{
     
-    public var preferences = IMPAutoWBPreferences() {
+    public var preferences:IMPAutoWBPreferences = IMPAutoWBPreferences() {
         didSet{
             colorWeightsAnalyzer.clipping = preferences.clipping
             self.dirty = true
         }
     }
     
-    public var adjustment = IMPAutoWBAdjustment() {
+    public static var defaultAdjustment = IMPAutoWBAdjustment(blending: IMPBlending.init(mode: IMPBlendingMode.NORMAL, opacity: 1))
+    
+    public var adjustment:IMPAutoWBAdjustment!{
         didSet{
             wbFilter.adjustment.blending = adjustment.blending
             hsvFilter.adjustment.blending = adjustment.blending
@@ -64,6 +66,10 @@ public class IMPAutoWBFilter:IMPFilter{
     
     public required init(context: IMPContext, optimization:IMPHSVFilter.optimizationLevel) {
         super.init(context: context)
+        
+        defer{
+            adjustment = IMPAutoWBFilter.defaultAdjustment
+        }
         
         wbFilter = IMPWBFilter(context: context)
         self.addFilter(wbFilter)

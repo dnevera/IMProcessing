@@ -6,12 +6,27 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
 import Metal
 import Accelerate
 
 extension IMPImage{
-        
+    
+    #if os(iOS)
+    public convenience init(image: IMPImage, size:IMPSize){
+        let scale = min(size.width/image.size.width, size.height/image.size.height)
+        self.init(CGImage: image.CGImage!, scale:1.0/scale, orientation:image.imageOrientation)
+    }
+    #else
+    public convenience init(image: IMPImage, size:IMPSize){
+        self.init(CGImage: image.CGImage!, size:size)
+    }
+    #endif
+    
     func newTexture(context:IMPContext, maxSize:Float = 0) -> MTLTexture? {
         
         let imageRef  = self.CGImage
@@ -34,33 +49,33 @@ extension IMPImage{
             imageAdjustedSize = CGSize(width: width, height: height)
         }
         
-        let image = IMPImage(CGImage: self.CGImage!, size:imageAdjustedSize);
+        let image = IMPImage(image: self, size:imageAdjustedSize)
         
-        width  = Float(floor(image.size.width));
-        height = Float(floor(image.size.height));
+        width  = Float(floor(image.size.width))
+        height = Float(floor(image.size.height))
         
-        let resultWidth  = Int(width);
-        let resultHeight = Int(height);
+        let resultWidth  = Int(width)
+        let resultHeight = Int(height)
         
         
-        let rawData  = calloc(resultHeight * resultWidth * 4, sizeof(uint8));
-        let componentsPerPixel = 4;
-        let componentsPerRow   = componentsPerPixel * resultWidth;
-        let bitsPerComponent   = 8;
+        let rawData  = calloc(resultHeight * resultWidth * 4, sizeof(UInt8))
+        let componentsPerPixel = 4
+        let componentsPerRow   = componentsPerPixel * resultWidth
+        let bitsPerComponent   = 8
         
-        let colorSpace = CGColorSpaceCreateDeviceRGB();
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
         
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.PremultipliedLast.rawValue | CGBitmapInfo.ByteOrder32Big.rawValue)
-
+        
         let bitmapContext = CGBitmapContextCreate(rawData, resultWidth, resultHeight,
-            bitsPerComponent, componentsPerRow, colorSpace, bitmapInfo.rawValue);
-                
-        CGContextDrawImage(bitmapContext, CGRectMake(0, 0, CGFloat(resultWidth), CGFloat(resultHeight)), imageRef);
+            bitsPerComponent, componentsPerRow, colorSpace, bitmapInfo.rawValue)
+        
+        CGContextDrawImage(bitmapContext, CGRectMake(0, 0, CGFloat(resultWidth), CGFloat(resultHeight)), imageRef)
         
         let textureDescriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(IMProcessing.colors.pixelFormat,
             width:resultWidth,
             height:resultHeight,
-            mipmapped:false);
+            mipmapped:false)
         
         let texture = context.device?.newTextureWithDescriptor(textureDescriptor)
         
@@ -82,7 +97,7 @@ extension IMPImage{
             }
         }
         
-        free(rawData);
+        free(rawData)
         
         return texture
     }

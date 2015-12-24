@@ -6,14 +6,19 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
-import AppKit
+#if os(iOS)
+    import UIKit
+    public typealias IMPViewBase = UIView
+#else
+    import AppKit
+    public typealias IMPViewBase = NSView
+#endif
 import Metal
 import GLKit.GLKMath
 import QuartzCore
 
 
-public class IMPView: NSView, IMPContextProvider {
+public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var context:IMPContext!
     
@@ -83,18 +88,24 @@ public class IMPView: NSView, IMPContextProvider {
         }
     }
     
+    #if os(OSX)
     public var backgroundColor:IMPColor = IMPColor.clearColor(){
         didSet{
             metalLayer.backgroundColor = backgroundColor.CGColor
         }
     }
+    #endif
     
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
-        self.wantsLayer = true
-        metalLayer = CAMetalLayer()
-        self.layer = metalLayer
+        #if os(iOS)
+            metalLayer = CAMetalLayer(layer: self.layer)
+        #else
+            self.wantsLayer = true
+            metalLayer = CAMetalLayer()
+            self.layer = metalLayer
+        #endif
         
         let library:MTLLibrary!  = self.context.device.newDefaultLibrary()
         
@@ -106,26 +117,47 @@ public class IMPView: NSView, IMPContextProvider {
         //
         // Теперь создаем основной объект который будет ссылаться на исполняемый код нашего фильтра.
         //
-        pipeline = try! self.context.device.newComputePipelineStateWithFunction(function)                
+        pipeline = try! self.context.device.newComputePipelineStateWithFunction(function)
     }
     
-    //
-    // TODO: iOS version
-    //
-    //    class func layerClass() -> AnyClass {
-    //        return CAMetalLayer.self;
-    //    }
+    #if os(iOS)
+    public override class func layerClass() -> AnyClass {
+        return CAMetalLayer.self;
+    }
+    #endif
     
+    #if os(iOS)
+    private var timer:CADisplayLink!
+    #else
     private var timer:IMPDisplayLink!
+    #endif
     
     private var metalLayer:CAMetalLayer!{
         didSet{
             metalLayer.device = self.context.device
             metalLayer.framebufferOnly = false
             metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm
-            metalLayer.backgroundColor = self.backgroundColor.CGColor
-            timer = IMPDisplayLink(selector: refresh)
+            
+            #if os(iOS)
+                metalLayer.backgroundColor = self.backgroundColor!.CGColor
+            #else
+                metalLayer.backgroundColor = self.backgroundColor.CGColor
+            #endif
+            
+            #if os(iOS)
+                if timer != nil {
+                    timer.removeFromRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
+                }
+                timer = CADisplayLink(target: self, selector: "refresh")
+            #else
+                timer = IMPDisplayLink(selector: refresh)
+            #endif
             timer?.paused = self.isPaused
+            
+            #if os(iOS)
+                timer.addToRunLoop(NSRunLoop.mainRunLoop(), forMode:NSDefaultRunLoopMode)
+            #endif
+            
             layerNeedUpdate = true
         }
     }
@@ -136,18 +168,23 @@ public class IMPView: NSView, IMPContextProvider {
     
     var scaleFactor:Float{
         get {
-            let screen = self.window?.screen ?? NSScreen.mainScreen()
-            let scaleFactor = screen?.backingScaleFactor ?? 1.0
+            #if os(iOS)
+                let screen = self.window?.screen ?? UIScreen.mainScreen()
+                let scaleFactor = screen.scale ?? 1.0
+            #else
+                let screen = self.window?.screen ?? NSScreen.mainScreen()
+                let scaleFactor = screen?.backingScaleFactor ?? 1.0
+            #endif
             return Float(scaleFactor)
         }
     }
     
     private func refresh() {
-                
+        
         if layerNeedUpdate {
             
             layerNeedUpdate = false
-                        
+            
             autoreleasepool({ () -> () in
                 
                 var drawableSize = self.bounds.size
@@ -158,11 +195,11 @@ public class IMPView: NSView, IMPContextProvider {
                 metalLayer.drawableSize = drawableSize
                 
                 self.context.execute { (commandBuffer) -> Void in
-                                        
+                    
                     if let actualImageTexture = self.texture {
-                
+                        
                         dispatch_semaphore_wait(self.inflightSemaphore, DISPATCH_TIME_FOREVER);
-
+                        
                         commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
                             dispatch_semaphore_signal(self.inflightSemaphore);
                         })
@@ -186,17 +223,31 @@ public class IMPView: NSView, IMPContextProvider {
                             dispatch_semaphore_signal(self.inflightSemaphore);
                         }
                     }
-                }  
+                }
             })
         }
     }
     
-    override public func display() {
-        self.refresh()
-    }
+    #if os(iOS)
+        public func display() {
+            self.refresh()
+        }
+    #else
+        override public func display() {
+            self.refresh()
+        }
+    #endif
     
     internal var layerNeedUpdate:Bool = true
     
+    #if os(iOS)
+
+    override public func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        layerNeedUpdate = true
+    }
+    
+    #else
     override public func setFrameSize(newSize: NSSize) {
         super.setFrameSize(CGSize(width: newSize.width/CGFloat(self.scaleFactor), height: newSize.height/CGFloat(self.scaleFactor)))
         layerNeedUpdate = true
@@ -210,8 +261,10 @@ public class IMPView: NSView, IMPContextProvider {
         super.viewDidChangeBackingProperties()
         layerNeedUpdate = true
     }
+    #endif
 }
 
+#if os(OSX)
 
 private class IMPDisplayLink {
     
@@ -274,3 +327,4 @@ private class IMPDisplayLink {
     }
     
 }
+#endif

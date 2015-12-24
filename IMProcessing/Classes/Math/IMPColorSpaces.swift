@@ -6,7 +6,12 @@
 //  Copyright © 2015 Dehancer.photo. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
+
 import simd
 
 func IMPstep(edge:Float, _ x:Float) -> Float {
@@ -37,18 +42,27 @@ public extension float3{
     var hue:Float       { set{ x = hue } get{ return x } }
     var saturation:Float{ set{ y = saturation } get{ return y } }
     var value:Float     { set{ z = value } get{ return z } }
-        
+    
     var r:Float{ set{ x = r } get{ return x } }
     var g:Float{ set{ y = g } get{ return y } }
     var b:Float{ set{ z = b } get{ return z } }
     
     var bg:float2 { get{ return float2(b,g) } }
     var gb:float2 { get{ return float2(g,b) } }
-
+    
     var xxx:float3 { get{ return float3(x,x,x) } }
-
+    
     init(color:IMPColor){
-        self.init(Float(color.redComponent),Float(color.greenComponent),Float(color.blueComponent))
+        #if os(iOS)
+            var r = CGFloat(0)
+            var g = CGFloat(0)
+            var b = CGFloat(0)
+            var a = CGFloat(0)
+            color.getRed(&r, green:&g, blue:&b, alpha:&a)
+            self.init(Float(r),Float(g),Float(b))
+        #else
+            self.init(Float(color.redComponent),Float(color.greenComponent),Float(color.blueComponent))
+        #endif
     }
     
     init(colors:[String]){
@@ -73,25 +87,25 @@ public extension float4{
             return float3(x,y,z)
         }
     }
-
+    
     var bg:float2 { get{ return float2(b,g) } }
     var gb:float2 { get{ return float2(g,b) } }
     var xy:float2 { get{ return float2(x,y) } }
     var wz:float2 { get{ return float2(w,z) } }
-
+    
     var xxx:float3 { get{ return float3(x,x,x) } }
     var yyy:float3 { get{ return float3(y,y,y) } }
     var zzz:float3 { get{ return float3(z,z,z) } }
     var www:float3 { get{ return float3(w,w,w) } }
-
+    
     var xyw:float3 { get{ return float3(x,y,w) } }
     var yzx:float3 { get{ return float3(y,z,x) } }
     var xyz:float3 { get{ return float3(x,y,z) } }
-
+    
     init(_ bg:float2, _ wz:float2){
         self.init(bg.x,bg.y,wz.x,wz.y)
     }
-
+    
     init(_ r:Float, _ xyz:float3){
         self.init(r,xyz.x,xyz.y,xyz.z)
     }
@@ -101,7 +115,16 @@ public extension float4{
     }
     
     init(color:IMPColor){
-        self.init(Float(color.redComponent),Float(color.greenComponent),Float(color.blueComponent),Float(color.alphaComponent))
+        #if os(iOS)
+            var r = CGFloat(0)
+            var g = CGFloat(0)
+            var b = CGFloat(0)
+            var a = CGFloat(0)
+            color.getRed(&r, green:&g, blue:&b, alpha:&a)
+            self.init(Float(r),Float(g),Float(b),Float(a))
+        #else
+            self.init(Float(color.redComponent),Float(color.greenComponent),Float(color.blueComponent),Float(color.alphaComponent))
+        #endif
     }
     
     init(colors:[String]){
