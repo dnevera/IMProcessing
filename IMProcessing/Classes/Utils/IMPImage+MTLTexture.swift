@@ -99,7 +99,7 @@ public extension IMPImage{
             else {
                 t.replaceRegion(region, mipmapLevel:0, withBytes:rawData, bytesPerRow:componentsPerRow)
             }
-        }        
+        }
         return texture
     }
 }
@@ -107,7 +107,7 @@ public extension IMPImage{
 public extension IMPImage{
     
     #if os(OSX)
-
+    
     public convenience init (provider: IMPImageProvider){
         var imageRef:CGImageRef?
         var width  = 0
@@ -129,13 +129,13 @@ public extension IMPImage{
             let imageByteCount  = bytesPerRow * height
             
             let imageBuffer = provider.context.device.newBufferWithLength( imageByteCount, options: MTLResourceOptions.CPUCacheModeDefaultCache)
-
+            
             //
             // Currently, OSX does not have work version of texture.getBytes version.
             // Use blit encoder to copy data from device memory
             //
             provider.context.execute({ (commandBuffer) -> Void in
-
+                
                 let blitEncoder = commandBuffer.blitCommandEncoder()
                 
                 blitEncoder.copyFromTexture(texture,
@@ -164,7 +164,7 @@ public extension IMPImage{
             else{
                 memcpy(&rawData, imageBuffer.contents(), imageBuffer.length)
             }
-
+            
             let cgprovider = CGDataProviderCreateWithData(nil, &rawData, imageByteCount, nil)
             
             if texture.pixelFormat == .RGBA16Unorm {
@@ -190,20 +190,21 @@ public extension IMPImage{
                 false,
                 .RenderingIntentDefault)
         }
-
+        
         self.init(CGImage: imageRef!, size: IMPSize(width: width, height: height))
     }
     
-    public func saveAsJpeg(fileName fileName:String){
-        // Cache the reduced image
-        if var imageData = self.TIFFRepresentation{
-            let imageRep = NSBitmapImageRep(data: imageData)
-            let imageProps = [NSImageCompressionFactor: 1]
-            imageData =  (imageRep?.representationUsingType(.NSJPEGFileType, properties: imageProps))!
-            imageData.writeToFile(fileName, atomically:true)
-        }
+    func saveJPEGImage(compression compressionQ:Float, path:String) {
+        
+        let dr:CGImageDestination! = CGImageDestinationCreateWithURL(
+            NSURL(fileURLWithPath: path), "public.jpeg" as CFStringRef , 1, nil)
+        
+        CGImageDestinationAddImage(dr, self.CGImage!,
+            [kCGImageDestinationLossyCompressionQuality as String: 0.9])
+        
+        CGImageDestinationFinalize(dr);
     }
-
+    
     #endif
     
 }
