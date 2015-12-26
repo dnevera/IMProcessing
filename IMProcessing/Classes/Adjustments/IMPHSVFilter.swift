@@ -93,7 +93,7 @@ public extension IMPHSVAdjustment{
         case 3:
             return levels.3
         case 4:
-            return levels.0
+            return levels.4
         case 5:
             return levels.5
         default:
@@ -112,7 +112,7 @@ public extension IMPHSVAdjustment{
         case 3:
             levels.3.hue = newValue
         case 4:
-            levels.0.hue  = newValue
+            levels.4.hue  = newValue
         case 5:
             levels.5.hue  = newValue
         default:
@@ -131,7 +131,7 @@ public extension IMPHSVAdjustment{
         case 3:
             levels.3.saturation = newValue
         case 4:
-            levels.0.saturation  = newValue
+            levels.4.saturation  = newValue
         case 5:
             levels.5.saturation  = newValue
         default:
@@ -150,7 +150,7 @@ public extension IMPHSVAdjustment{
         case 3:
             levels.3.value = newValue
         case 4:
-            levels.0.value  = newValue
+            levels.4.value  = newValue
         case 5:
             levels.5.value  = newValue
         default:

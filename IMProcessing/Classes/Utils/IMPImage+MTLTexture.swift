@@ -11,6 +11,7 @@
 #else
     import Cocoa
 #endif
+
 import Metal
 import Accelerate
 
@@ -19,8 +20,8 @@ extension IMPImage{
     #if os(iOS)
     
     public convenience init(image: IMPImage, size:IMPSize){
-        let scale = min(size.width/image.size.width, size.height/image.size.height)
-        self.init(CGImage: image.CGImage!, scale:1.0/scale, orientation:image.imageOrientation)
+    let scale = min(size.width/image.size.width, size.height/image.size.height)
+    self.init(CGImage: image.CGImage!, scale:1.0/scale, orientation:image.imageOrientation)
     }
     
     #else
@@ -105,4 +106,69 @@ extension IMPImage{
         
         return texture
     }
+}
+
+public extension IMPImage{
+    
+    convenience init (provider: IMPImageProvider){
+        var imageRef:CGImageRef?
+        var width  = 0
+        var height = 0
+        
+        if let texture = provider.texture {
+            width  = texture.width
+            height = texture.height
+            
+            let bytesPerRow     = width * 4
+            let imageByteCount  = bytesPerRow * height
+            let imageBytes      = malloc(imageByteCount)
+            
+            let region = MTLRegionMake2D(0, 0, width, height)
+            
+            texture.getBytes(imageBytes, bytesPerRow:bytesPerRow, fromRegion:region, mipmapLevel:0)
+            
+            let cgprovider = CGDataProviderCreateWithData(nil, imageBytes, imageByteCount, nil)
+            
+            let bitsPerComponent = 8
+            
+            //if texture.pixelFormat == .RGBA16Unorm {
+            //    bitsPerComponent = 16
+            //}
+            
+            let bitsPerPixel     = bitsPerComponent * 4
+            
+            let colorSpaceRef  = CGColorSpaceCreateDeviceRGB();
+            
+            let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.PremultipliedLast.rawValue | CGBitmapInfo.ByteOrder32Big.rawValue)
+            
+            imageRef = CGImageCreate(width,
+                height,
+                bitsPerComponent,
+                bitsPerPixel,
+                bytesPerRow,
+                colorSpaceRef,
+                bitmapInfo,
+                cgprovider,
+                nil,
+                false,
+                .RenderingIntentDefault)
+            
+            free(imageBytes)
+        }
+        self.init(CGImage: imageRef!, size: IMPSize(width: width, height: height))
+    }
+    
+    #if os(OSX)
+    public func saveAsJpeg(fileName fileName:String){
+        // Cache the reduced image
+        if var imageData = self.TIFFRepresentation{
+            let imageRep = NSBitmapImageRep(data: imageData)
+            let imageProps = [NSImageCompressionFactor: 1]
+            imageData =  (imageRep?.representationUsingType(.NSJPEGFileType, properties: imageProps))!
+            imageData.writeToFile(fileName, atomically:true)
+        }
+    }
+
+    #endif
+    
 }
