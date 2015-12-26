@@ -44,16 +44,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                 
-                if let f = self.filter{
-                    f.source = source
-                }
-                
                 #if os(iOS)
                     orientation = currentDeviceOrientation
                     updateLayer()
                 #endif
-                
-                layerNeedUpdate = true
+
+                if let f = self.filter{
+                    f.source = source
+                }
+                else{
+                    layerNeedUpdate = true
+                }
             }
         }
     }
@@ -309,7 +310,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
                             
                             encoder.endEncoding()
+                            
                             commandBuffer.presentDrawable(drawable)
+                            
                         }
                         else{
                             dispatch_semaphore_signal(self.inflightSemaphore);

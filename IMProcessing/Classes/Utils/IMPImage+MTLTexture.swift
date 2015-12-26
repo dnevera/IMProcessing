@@ -15,7 +15,7 @@
 import Metal
 import Accelerate
 
-extension IMPImage{
+public extension IMPImage{
     
     #if os(iOS)
     
@@ -62,8 +62,7 @@ extension IMPImage{
         let resultWidth  = Int(width)
         let resultHeight = Int(height)
         
-        
-        let rawData  = calloc(resultHeight * resultWidth * 4, sizeof(UInt8))
+        var rawData = [UInt8](count: resultHeight * resultWidth * 4, repeatedValue: 0)
         let componentsPerPixel = 4
         let componentsPerRow   = componentsPerPixel * resultWidth
         let bitsPerComponent   = 8
@@ -72,7 +71,7 @@ extension IMPImage{
         
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.PremultipliedLast.rawValue | CGBitmapInfo.ByteOrder32Big.rawValue)
         
-        let bitmapContext = CGBitmapContextCreate(rawData, resultWidth, resultHeight,
+        let bitmapContext = CGBitmapContextCreate(&rawData, resultWidth, resultHeight,
             bitsPerComponent, componentsPerRow, colorSpace, bitmapInfo.rawValue)
         
         CGContextDrawImage(bitmapContext, CGRectMake(0, 0, CGFloat(resultWidth), CGFloat(resultHeight)), imageRef)
@@ -100,40 +99,77 @@ extension IMPImage{
             else {
                 t.replaceRegion(region, mipmapLevel:0, withBytes:rawData, bytesPerRow:componentsPerRow)
             }
-        }
-        
-        free(rawData)
-        
+        }        
         return texture
     }
 }
 
 public extension IMPImage{
     
-    convenience init (provider: IMPImageProvider){
+    #if os(OSX)
+
+    public convenience init (provider: IMPImageProvider){
         var imageRef:CGImageRef?
         var width  = 0
         var height = 0
         
         if let texture = provider.texture {
+            
             width  = texture.width
             height = texture.height
             
-            let bytesPerRow     = width * 4
-            let imageByteCount  = bytesPerRow * height
-            let imageBytes      = malloc(imageByteCount)
-            
-            let region = MTLRegionMake2D(0, 0, width, height)
-            
-            texture.getBytes(imageBytes, bytesPerRow:bytesPerRow, fromRegion:region, mipmapLevel:0)
-            
-            let cgprovider = CGDataProviderCreateWithData(nil, imageBytes, imageByteCount, nil)
-            
+            let components       = 4
             let bitsPerComponent = 8
             
-            //if texture.pixelFormat == .RGBA16Unorm {
-            //    bitsPerComponent = 16
-            //}
+            var bytesPerRow      = width * components
+            if texture.pixelFormat == .RGBA16Unorm {
+                bytesPerRow *= 2
+            }
+            
+            let imageByteCount  = bytesPerRow * height
+            
+            let imageBuffer = provider.context.device.newBufferWithLength( imageByteCount, options: MTLResourceOptions.CPUCacheModeDefaultCache)
+
+            //
+            // Currently, OSX does not have work version of texture.getBytes version.
+            // Use blit encoder to copy data from device memory
+            //
+            provider.context.execute({ (commandBuffer) -> Void in
+
+                let blitEncoder = commandBuffer.blitCommandEncoder()
+                
+                blitEncoder.copyFromTexture(texture,
+                    sourceSlice: 0,
+                    sourceLevel: 0,
+                    sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                    sourceSize: MTLSize(width: width, height: height, depth: 1),
+                    toBuffer: imageBuffer,
+                    destinationOffset: 0,
+                    destinationBytesPerRow: bytesPerRow,
+                    destinationBytesPerImage: 0)
+                
+                blitEncoder.endEncoding()
+                
+            })
+            
+            var rawData   = [UInt8](count: width*height*components, repeatedValue: 0)
+            if texture.pixelFormat == .RGBA16Unorm {
+                for var i=0; i < rawData.count; i++ {
+                    var pixel = UInt16()
+                    let address =  UnsafePointer<UInt16>(imageBuffer.contents())+i
+                    memcpy(&pixel, address, sizeof(UInt16))
+                    rawData[i] = UInt8(pixel>>8)
+                }
+            }
+            else{
+                memcpy(&rawData, imageBuffer.contents(), imageBuffer.length)
+            }
+
+            let cgprovider = CGDataProviderCreateWithData(nil, &rawData, imageByteCount, nil)
+            
+            if texture.pixelFormat == .RGBA16Unorm {
+                bytesPerRow /= 2
+            }
             
             let bitsPerPixel     = bitsPerComponent * 4
             
@@ -141,7 +177,8 @@ public extension IMPImage{
             
             let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.PremultipliedLast.rawValue | CGBitmapInfo.ByteOrder32Big.rawValue)
             
-            imageRef = CGImageCreate(width,
+            imageRef = CGImageCreate(
+                width,
                 height,
                 bitsPerComponent,
                 bitsPerPixel,
@@ -152,13 +189,11 @@ public extension IMPImage{
                 nil,
                 false,
                 .RenderingIntentDefault)
-            
-            free(imageBytes)
         }
+
         self.init(CGImage: imageRef!, size: IMPSize(width: width, height: height))
     }
     
-    #if os(OSX)
     public func saveAsJpeg(fileName fileName:String){
         // Cache the reduced image
         if var imageData = self.TIFFRepresentation{
