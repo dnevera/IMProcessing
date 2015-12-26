@@ -74,50 +74,87 @@ public func * (left:IMPHSVLevel,right:Float) -> IMPHSVLevel {
 }
 
 public extension IMPHSVAdjustment{
-    public var reds:    IMPHSVLevel{ get { return levels.0 } set(newValue){ levels.0 = newValue }}
-    public var yellows: IMPHSVLevel{ get { return levels.1 } set(newValue){ levels.1 = newValue }}
-    public var greens:  IMPHSVLevel{ get { return levels.2 } set(newValue){ levels.2 = newValue }}
-    public var cyans:   IMPHSVLevel{ get { return levels.3 } set(newValue){ levels.3 = newValue }}
-    public var blues:   IMPHSVLevel{ get { return levels.4 } set(newValue){ levels.4 = newValue }}
-    public var magentas:IMPHSVLevel{ get { return levels.5 } set(newValue){ levels.5 = newValue }}
+    
+    public var reds:    IMPHSVLevel{ get { return levels.0 } set{ levels.0 = newValue }}
+    public var yellows: IMPHSVLevel{ get { return levels.1 } set{ levels.1 = newValue }}
+    public var greens:  IMPHSVLevel{ get { return levels.2 } set{ levels.2 = newValue }}
+    public var cyans:   IMPHSVLevel{ get { return levels.3 } set{ levels.3 = newValue }}
+    public var blues:   IMPHSVLevel{ get { return levels.4 } set{ levels.4 = newValue }}
+    public var magentas:IMPHSVLevel{ get { return levels.5 } set{ levels.5 = newValue }}
+    
     public subscript(index:Int) -> IMPHSVLevel {
-        get{
-            var i = IMPHSVLevel()
-            switch(index){
-            case 0:
-                i=reds
-            case 1:
-                i=yellows
-            case 2:
-                i=greens
-            case 3:
-                i=cyans
-            case 4:
-                i=blues
-            case 5:
-                i=magentas
-            default:
-                i = master
-            }
-            return i
+        switch(index){
+        case 0:
+            return levels.0
+        case 1:
+            return levels.1
+        case 2:
+            return levels.2
+        case 3:
+            return levels.3
+        case 4:
+            return levels.0
+        case 5:
+            return levels.5
+        default:
+            return master
         }
-        set(newValue){
-            switch(index){
-            case 0:
-                reds = newValue
-            case 1:
-                yellows = newValue
-            case 2:
-                greens = newValue
-            case 3:
-                cyans  = newValue
-            case 4:
-                blues  = newValue
-            case 5:
-                magentas  = newValue
-            default:
-                master  = newValue
-            }
+    }
+    
+    public mutating func hue(index index:Int, value newValue:Float){
+        switch(index){
+        case 0:
+            levels.0.hue = newValue
+        case 1:
+            levels.1.hue = newValue
+        case 2:
+            levels.2.hue = newValue
+        case 3:
+            levels.3.hue = newValue
+        case 4:
+            levels.0.hue  = newValue
+        case 5:
+            levels.5.hue  = newValue
+        default:
+            master.hue  = newValue
+        }
+    }
+    
+    public mutating func saturation(index index:Int, value newValue:Float){
+        switch(index){
+        case 0:
+            levels.0.saturation = newValue
+        case 1:
+            levels.1.saturation = newValue
+        case 2:
+            levels.2.saturation = newValue
+        case 3:
+            levels.3.saturation = newValue
+        case 4:
+            levels.0.saturation  = newValue
+        case 5:
+            levels.5.saturation  = newValue
+        default:
+            master.saturation  = newValue
+        }
+    }
+    
+    public mutating func value(index index:Int, value newValue:Float){
+        switch(index){
+        case 0:
+            levels.0.value = newValue
+        case 1:
+            levels.1.value = newValue
+        case 2:
+            levels.2.value = newValue
+        case 3:
+            levels.3.value = newValue
+        case 4:
+            levels.0.value  = newValue
+        case 5:
+            levels.5.value  = newValue
+        default:
+            master.value  = newValue
         }
     }
 }
