@@ -54,7 +54,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         self.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[button(44)]", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: ["button" : albumButton]))
         
         IMPMotionManager.sharedInstance.addRotationObserver { (orientation) -> Void in
-            print(" *** orientation ---> \(orientation.rawValue)")
             self.imageView.setOrientation(orientation, animate:true)
         }
     }
@@ -84,7 +83,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         if let actualImage = chosenImage{
             
-            let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1000)
+            let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 0)
             imageView?.source = image
         }
     }

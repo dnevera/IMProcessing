@@ -48,8 +48,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     f.source = source
                 }
                 
-                updateLayer()
-
+                #if os(iOS)
+                    orientation = currentDeviceOrientation
+                    updateLayer()
+                #endif
+                
                 layerNeedUpdate = true
             }
         }
@@ -73,17 +76,43 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     #if os(iOS)
-    private var __orientation = UIDeviceOrientation.Portrait
+    
+    func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
+        
+        var angle:CGFloat = 0
+        
+        if let orientation = source?.orientation{
+
+            switch orientation {
+                
+            case .Left, .LeftMirrored:
+                angle = Float(90.0).radians.cgloat
+
+            case .Right, .RightMirrored:
+                angle = Float(-90.0).radians.cgloat
+
+            case .Down, .DownMirrored:
+                angle = Float(180.0).radians.cgloat
+                
+            default: break
+            
+            }
+        }
+        
+        return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+    }
+    
+    private var currentDeviceOrientation = UIDeviceOrientation.Portrait
     public var orientation:UIDeviceOrientation{
         get{
-            return __orientation
+            return currentDeviceOrientation
         }
         set{
             setOrientation(orientation, animate: false)
         }
     }
     public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-        __orientation = orientation
+        currentDeviceOrientation = orientation
         let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
 
         UIView.animateWithDuration(
@@ -100,20 +129,26 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     
                     transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
                     
+                    var angle:CGFloat = 0
+                    
                     switch (orientation) {
+                        
                     case .LandscapeLeft:
-                            transform = CATransform3DRotate(transform,Float(-90.0).radians.cgloat, 0.0, 0.0, -1.0)
+                        angle = Float(-90.0).radians.cgloat
                         
                     case .LandscapeRight:
-                            transform = CATransform3DRotate(transform,Float(90.0).radians.cgloat,  0.0, 0.0, -1.0)
+                        angle = Float(90.0).radians.cgloat
                         
                     case .PortraitUpsideDown:
-                        transform = CATransform3DRotate(transform,Float(180.0).radians.cgloat,  0.0, 0.0, -1.0)
+                        angle = Float(180.0).radians.cgloat
+                        
                     default:
                         break
                     }
                     
-                    layer.transform = transform;
+                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                    
+                    layer.transform = self.correctImageOrientation(transform);
 
                     self.layerNeedUpdate = true
                 }
