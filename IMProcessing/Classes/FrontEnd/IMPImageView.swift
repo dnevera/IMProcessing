@@ -81,17 +81,6 @@
             }
         }
         
-        private var contentBounds:CGRect{
-            get {
-                var frame = bounds
-                if let texture = imageView?.source?.texture {
-                    let size  = texture.size / imageView.scaleFactor
-                    frame = CGRect( origin: CGPointZero, size: size )
-                }
-                return frame
-            }
-        }
-        
         public var source:IMPImageProvider?{
             get{
                 return imageView.source
@@ -102,11 +91,27 @@
             }
         }
         
-        public func configure(){
+        #if os(iOS)
+        public var orientation:UIDeviceOrientation {
+            get{
+                return imageView.orientation
+            }
+            set {
+                imageView.orientation = newValue
+            }
+        }
+        
+        public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
+            imageView.setOrientation(orientation, animate: animate)
+        }
+        
+        #endif
+        
+        private func configure(){
             
             scrollView = IMPScrollView(frame: bounds)
             
-            scrollView?.backgroundColor = IMPColor(red: 0.5, green: 0.0, blue: 0.0, alpha: 0.4)
+            scrollView?.backgroundColor = IMPColor.clearColor()
             scrollView?.showsVerticalScrollIndicator   = false
             scrollView?.showsHorizontalScrollIndicator = false
             scrollView?.scrollEnabled=true
@@ -119,7 +124,7 @@
             
             imageView = IMPView(context: self.context, frame: self.bounds)
             imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-            imageView.backgroundColor = IMPColor(red: 0.5, green: 0.5, blue: 0.0, alpha: 0.4)
+            imageView.backgroundColor = IMPColor.clearColor()
             
             scrollView.addSubview(imageView)
         }
@@ -144,10 +149,6 @@
             }
         }
         
-        override public func layoutSubviews() {
-            super.layoutSubviews()
-            scrollView.frame = bounds
-        }
         
         public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
             return imageView

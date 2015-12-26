@@ -72,6 +72,58 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
+    #if os(iOS)
+    private var __orientation = UIDeviceOrientation.Portrait
+    public var orientation:UIDeviceOrientation{
+        get{
+            return __orientation
+        }
+        set{
+            setOrientation(orientation, animate: false)
+        }
+    }
+    public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
+        __orientation = orientation
+        let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+
+        UIView.animateWithDuration(
+            duration,
+            delay: 0,
+            usingSpringWithDamping: 1.0,
+            initialSpringVelocity: 0,
+            options: .CurveEaseIn,
+            animations: { () -> Void in
+                
+                if let layer = self.metalLayer {
+                    
+                    var transform = CATransform3DIdentity
+                    
+                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                    
+                    switch (orientation) {
+                    case .LandscapeLeft:
+                            transform = CATransform3DRotate(transform,Float(-90.0).radians.cgloat, 0.0, 0.0, -1.0)
+                        
+                    case .LandscapeRight:
+                            transform = CATransform3DRotate(transform,Float(90.0).radians.cgloat,  0.0, 0.0, -1.0)
+                        
+                    case .PortraitUpsideDown:
+                        transform = CATransform3DRotate(transform,Float(180.0).radians.cgloat,  0.0, 0.0, -1.0)
+                    default:
+                        break
+                    }
+                    
+                    layer.transform = transform;
+
+                    self.layerNeedUpdate = true
+                }
+                
+            },
+            completion:  nil
+        )
+    }
+    #endif
+    
     public init(context contextIn:IMPContext, frame: NSRect){
         super.init(frame: frame)
         context = contextIn
@@ -105,7 +157,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     private func configure(){
         
         #if os(iOS)
-            metalLayer = self.layer as! CAMetalLayer
+            metalLayer = CAMetalLayer()
+            layer.addSublayer(metalLayer)
         #else
             self.wantsLayer = true
             metalLayer = CAMetalLayer()
@@ -126,12 +179,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     #if os(iOS)
-    public override class func layerClass() -> AnyClass {
-        return CAMetalLayer.self;
-    }
-    #endif
-    
-    #if os(iOS)
     private var timer:CADisplayLink!
     #else
     private var timer:IMPDisplayLink!
@@ -147,8 +194,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             metalLayer.bounds = originalBounds!
             
             #if os(iOS)
-                //metalLayer.backgroundColor = self.backgroundColor?.CGColor
-                metalLayer.backgroundColor = IMPColor.greenColor().CGColor
+                metalLayer.backgroundColor = self.backgroundColor?.CGColor
             #else
                 metalLayer.backgroundColor = self.backgroundColor.CGColor
             #endif
@@ -258,9 +304,18 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             var adjustedSize = bounds.size
 
             if let t = texture{
+                
                 l.drawableSize = t.size
-                let size = t.width > t.height ? originalBounds?.width : originalBounds?.height
-                adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+                
+                var size:CGFloat!
+                if UIDeviceOrientationIsLandscape(self.orientation)  {
+                    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
+                }
+                else{
+                    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+                }
             }
             
             var origin = CGPointZero
@@ -271,10 +326,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 origin.x = ( bounds.width - adjustedSize.width ) / 2
             }
             
-            l.bounds = CGRect(origin: origin, size: adjustedSize)
+            l.frame = CGRect(origin: origin, size: adjustedSize)
             
-            
-            print(" ---> frame = \(l.bounds) f -> \(l.drawableSize) \(scaleFactor)")
+            print(" ---> bounds = \(l.bounds) frame -> \(l.frame) \(scaleFactor)  adjustedSize = \(adjustedSize)")
         }
     }
     

@@ -17,14 +17,18 @@ import Accelerate
 extension IMPImage{
     
     #if os(iOS)
+    
     public convenience init(image: IMPImage, size:IMPSize){
         let scale = min(size.width/image.size.width, size.height/image.size.height)
         self.init(CGImage: image.CGImage!, scale:1.0/scale, orientation:image.imageOrientation)
     }
+    
     #else
+    
     public convenience init(image: IMPImage, size:IMPSize){
         self.init(CGImage: image.CGImage!, size:size)
     }
+    
     #endif
     
     func newTexture(context:IMPContext, maxSize:Float = 0) -> MTLTexture? {

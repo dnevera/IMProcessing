@@ -14,6 +14,10 @@
 import Metal
 
 public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
+
+    #if os(iOS)
+    public var orientation = UIImageOrientation.Up
+    #endif
     
     public var context:IMPContext!
     public var texture:MTLTexture?

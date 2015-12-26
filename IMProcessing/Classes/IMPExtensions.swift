@@ -72,6 +72,12 @@ public extension String {
     }
 }
 
+public extension CGSize{
+    public func swap() -> CGSize {
+        return CGSize(width: height,height: width)
+    }
+}
+
 public extension MTLSize{
     public init(cgsize:CGSize){
         self.init(width: Int(cgsize.width), height: Int(cgsize.height), depth: 1)

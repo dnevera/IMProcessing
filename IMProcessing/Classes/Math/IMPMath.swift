@@ -7,9 +7,10 @@
 //
 
 import Foundation
+import GLKit
 
-extension Double{
-    var float:Float{
+public extension Double{
+    public var float:Float{
         get{
             return Float(self)
         }
@@ -17,7 +18,7 @@ extension Double{
             self = Double(newValue)
         }
     }
-    var cgloat:CGFloat{
+    public var cgloat:CGFloat{
         get{
             return CGFloat(self)
         }
@@ -27,8 +28,8 @@ extension Double{
     }
 }
 
-extension Float{
-    var double:Double{
+public extension Float{
+    public var double:Double{
         get{
             return Double(self)
         }
@@ -36,7 +37,7 @@ extension Float{
             self = Float(newValue)
         }
     }
-    var int:Int{
+    public var int:Int{
         get{
             return Int(self)
         }
@@ -44,12 +45,24 @@ extension Float{
             self = Float(newValue)
         }
     }
-    var cgloat:CGFloat{
+    public var cgloat:CGFloat{
         get{
             return CGFloat(self)
         }
         set(newValue){
             self = Float(newValue)
+        }
+    }
+    
+    public var deegres:Float {
+        get{
+            return GLKMathRadiansToDegrees(self)
+        }
+    }
+    
+    public var radians:Float{
+        get{
+            return GLKMathDegreesToRadians(self)
         }
     }
 }
@@ -149,4 +162,3 @@ public func / (left:Int, right:Float) -> Float {
 public func * (left:Int, right:Float) -> Float {
     return left.float*right
 }
-
