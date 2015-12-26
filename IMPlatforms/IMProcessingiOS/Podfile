@@ -8,5 +8,6 @@ use_frameworks!
 
 target 'IMProcessingiOS' do
     pod 'IMProcessing', :path => '../../'
+    pod "SMScrollView"
 end
 

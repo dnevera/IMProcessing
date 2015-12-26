@@ -47,6 +47,12 @@ public extension IMPColor{
     }
 }
 
+public extension IMPBlendingMode{
+    static let LUMNINOSITY = IMPBlendingMode(0)
+    static let NORMAL      = IMPBlendingMode(1)
+}
+
+
 public extension String {
     
     var floatValue: Float {
@@ -66,30 +72,16 @@ public extension String {
     }
 }
 
-extension MTLSize{
-    init(cgsize:CGSize){
+public extension MTLSize{
+    public init(cgsize:CGSize){
         self.init(width: Int(cgsize.width), height: Int(cgsize.height), depth: 1)
     }
 }
 
-public func * (left:MTLSize,right:(Float,Float,Float)) -> MTLSize {
-    return MTLSize(
-        width: Int(Float(left.width)*right.0),
-        height: Int(Float(left.height)*right.1),
-        depth: Int(Float(left.height)*right.2))
+public extension MTLTexture{
+    public var size:CGSize{
+        get{
+            return CGSize(width: width, height: height)
+        }
+    }
 }
-
-public func != (left:MTLSize,right:MTLSize) ->Bool {
-    return (left.width != right.width && left.height != right.height && left.depth != right.depth)
-}
-
-public func == (left:MTLSize,right:MTLSize) ->Bool {
-    return !(left != right)
-}
-
-public extension IMPBlendingMode{
-    static let LUMNINOSITY = IMPBlendingMode(0)
-    static let NORMAL      = IMPBlendingMode(1)
-}
-
-

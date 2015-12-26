@@ -7,6 +7,14 @@
 //
 
 import UIKit
+import IMProcessing
+
+enum IMProcessing{
+    struct css {
+        static let background = IMPColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 0.8)
+    }
+}
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

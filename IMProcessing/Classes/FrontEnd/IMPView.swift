@@ -8,6 +8,7 @@
 
 #if os(iOS)
     import UIKit
+    import QuartzCore
     public typealias IMPViewBase = UIView
 #else
     import AppKit
@@ -24,9 +25,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var filter:IMPFilter?{
         didSet{
+            
             if let s = self.source{
                 self.filter?.source = s
             }
+            
             filter?.addDirtyObserver({ () -> Void in
                 self.layerNeedUpdate = true
             })
@@ -37,8 +40,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         didSet{
             if let texture = source?.texture{
                 
-                layerNeedUpdate = true
-                
                 self.threadGroups = MTLSizeMake(
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
@@ -47,6 +48,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     f.source = source
                 }
                 
+                updateLayer()
+
+                layerNeedUpdate = true
             }
         }
     }
@@ -96,11 +100,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
+    private var originalBounds:CGRect?
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
         #if os(iOS)
-            metalLayer = CAMetalLayer(layer: self.layer)
+            metalLayer = self.layer as! CAMetalLayer
         #else
             self.wantsLayer = true
             metalLayer = CAMetalLayer()
@@ -132,14 +137,18 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     private var timer:IMPDisplayLink!
     #endif
     
-    private var metalLayer:CAMetalLayer!{
+    internal var metalLayer:CAMetalLayer!{
         didSet{
             metalLayer.device = self.context.device
             metalLayer.framebufferOnly = false
             metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm
             
+            originalBounds = self.bounds
+            metalLayer.bounds = originalBounds!
+            
             #if os(iOS)
-                metalLayer.backgroundColor = self.backgroundColor!.CGColor
+                //metalLayer.backgroundColor = self.backgroundColor?.CGColor
+                metalLayer.backgroundColor = IMPColor.greenColor().CGColor
             #else
                 metalLayer.backgroundColor = self.backgroundColor.CGColor
             #endif
@@ -166,20 +175,29 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     private var threadGroups : MTLSize!
     private let inflightSemaphore = dispatch_semaphore_create(3)
     
-    var scaleFactor:Float{
+    
+    #if os(iOS)
+    public var screenSize:CGSize{
+        get {
+            let screen = self.window?.screen ?? UIScreen.mainScreen()
+            return screen.bounds.size
+        }
+    }
+    #endif
+    
+    public var scaleFactor:Float{
         get {
             #if os(iOS)
-                let screen = self.window?.screen ?? UIScreen.mainScreen()
-                let scaleFactor = screen.scale ?? 1.0
+                return  Float(UIScreen.mainScreen().scale) //Float(self.contentScaleFactor)
             #else
                 let screen = self.window?.screen ?? NSScreen.mainScreen()
                 let scaleFactor = screen?.backingScaleFactor ?? 1.0
+                return Float(scaleFactor)
             #endif
-            return Float(scaleFactor)
         }
     }
     
-    private func refresh() {
+    internal func refresh() {
         
         if layerNeedUpdate {
             
@@ -187,16 +205,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             autoreleasepool({ () -> () in
                 
-                var drawableSize = self.bounds.size
-                
-                drawableSize.width *= CGFloat(self.scaleFactor)
-                drawableSize.height *= CGFloat(self.scaleFactor)
-                
-                metalLayer.drawableSize = drawableSize
-                
-                self.context.execute { (commandBuffer) -> Void in
-                    
-                    if let actualImageTexture = self.texture {
+                if let actualImageTexture = self.texture {
+                                        
+                    self.context.execute { (commandBuffer) -> Void in
                         
                         dispatch_semaphore_wait(self.inflightSemaphore, DISPATCH_TIME_FOREVER);
                         
@@ -229,21 +240,47 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     #if os(iOS)
-        public func display() {
-            self.refresh()
-        }
+    public func display() {
+        self.refresh()
+    }
     #else
-        override public func display() {
-            self.refresh()
-        }
+    override public func display() {
+        self.refresh()
+    }
     #endif
     
     internal var layerNeedUpdate:Bool = true
     
     #if os(iOS)
+    
+    func updateLayer(){
+        if let l = metalLayer {
+            var adjustedSize = bounds.size
 
-    override public func layoutIfNeeded() {
-        super.layoutIfNeeded()
+            if let t = texture{
+                l.drawableSize = t.size
+                let size = t.width > t.height ? originalBounds?.width : originalBounds?.height
+                adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+            }
+            
+            var origin = CGPointZero
+            if adjustedSize.height < bounds.height {
+                origin.y = ( bounds.height - adjustedSize.height ) / 2
+            }
+            if adjustedSize.width < bounds.width {
+                origin.x = ( bounds.width - adjustedSize.width ) / 2
+            }
+            
+            l.bounds = CGRect(origin: origin, size: adjustedSize)
+            
+            
+            print(" ---> frame = \(l.bounds) f -> \(l.drawableSize) \(scaleFactor)")
+        }
+    }
+    
+    override public func layoutSubviews() {
+        super.layoutSubviews()
+        updateLayer()
         layerNeedUpdate = true
     }
     
@@ -265,66 +302,66 @@ public class IMPView: IMPViewBase, IMPContextProvider {
 }
 
 #if os(OSX)
-
-private class IMPDisplayLink {
     
-    private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
-    
-    private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
-    {
-        let block:DisplayLinkCallback = callback
-        let myImp = imp_implementationWithBlock( unsafeBitCast( block, AnyObject.self ) )
-        let callback = unsafeBitCast( myImp, CVDisplayLinkOutputCallback.self )
+    private class IMPDisplayLink {
         
-        CVDisplayLinkSetOutputCallback( displayLink, callback, UnsafeMutablePointer<Void>() )
-    }
-    
-    
-    private var displayLink:CVDisplayLink
-    
-    var paused:Bool = false {
-        didSet(oldValue){
-            if  paused {
-                if CVDisplayLinkIsRunning(displayLink) {
-                    CVDisplayLinkStop( displayLink)
+        private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
+        
+        private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
+        {
+            let block:DisplayLinkCallback = callback
+            let myImp = imp_implementationWithBlock( unsafeBitCast( block, AnyObject.self ) )
+            let callback = unsafeBitCast( myImp, CVDisplayLinkOutputCallback.self )
+            
+            CVDisplayLinkSetOutputCallback( displayLink, callback, UnsafeMutablePointer<Void>() )
+        }
+        
+        
+        private var displayLink:CVDisplayLink
+        
+        var paused:Bool = false {
+            didSet(oldValue){
+                if  paused {
+                    if CVDisplayLinkIsRunning(displayLink) {
+                        CVDisplayLinkStop( displayLink)
+                    }
                 }
-            }
-            else{
-                if !CVDisplayLinkIsRunning(displayLink) {
-                    CVDisplayLinkStart( displayLink )
+                else{
+                    if !CVDisplayLinkIsRunning(displayLink) {
+                        CVDisplayLinkStart( displayLink )
+                    }
                 }
             }
         }
-    }
-    
-    
-    required init(selector: ()->Void ){
         
-        displayLink = {
-            var linkRef:CVDisplayLink?
-            CVDisplayLinkCreateWithActiveCGDisplays( &linkRef )
-            
-            return linkRef!
-            
-            }()
         
-        let callback = { (
-            _:CVDisplayLink!,
-            _:UnsafePointer<CVTimeStamp>,
-            _:UnsafePointer<CVTimeStamp>,
-            _:CVOptionFlags,
-            _:UnsafeMutablePointer<CVOptionFlags>,
-            _:UnsafeMutablePointer<Void>)->Void in
+        required init(selector: ()->Void ){
             
-            selector()
+            displayLink = {
+                var linkRef:CVDisplayLink?
+                CVDisplayLinkCreateWithActiveCGDisplays( &linkRef )
+                
+                return linkRef!
+                
+                }()
+            
+            let callback = { (
+                _:CVDisplayLink!,
+                _:UnsafePointer<CVTimeStamp>,
+                _:UnsafePointer<CVTimeStamp>,
+                _:CVOptionFlags,
+                _:UnsafeMutablePointer<CVOptionFlags>,
+                _:UnsafeMutablePointer<Void>)->Void in
+                
+                selector()
+            }
+            
+            displayLinkSetOutputCallback( displayLink, callback: callback )
         }
         
-        displayLinkSetOutputCallback( displayLink, callback: callback )
+        deinit{
+            self.paused = true
+        }
+        
     }
-    
-    deinit{
-        self.paused = true
-    }
-    
-}
 #endif
