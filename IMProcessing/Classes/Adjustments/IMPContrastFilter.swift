@@ -23,8 +23,8 @@ public class IMPContrastFilter:IMPFilter,IMPAdjustmentProtocol{
         }
     }
     
-    internal var adjustmentBuffer:MTLBuffer?
-    internal var kernel:IMPFunction!
+    public var adjustmentBuffer:MTLBuffer?
+    public var kernel:IMPFunction!
     
     public required init(context: IMPContext) {
         super.init(context: context)

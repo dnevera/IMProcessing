@@ -67,8 +67,8 @@ public extension Float{
     }
 }
 
-extension Int {
-    var float:Float{
+public extension Int {
+    public var float:Float{
         get{
             return Float(self)
         }
@@ -76,7 +76,7 @@ extension Int {
             self = Int(newValue)
         }
     }
-    var cgloat:CGFloat{
+    public var cgloat:CGFloat{
         get{
             return CGFloat(self)
         }
@@ -86,8 +86,8 @@ extension Int {
     }
 }
 
-extension CGFloat{
-    var float:Float{
+public extension CGFloat{
+    public var float:Float{
         get{
             return Float(self)
         }

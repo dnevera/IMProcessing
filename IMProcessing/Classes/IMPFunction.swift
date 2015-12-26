@@ -17,8 +17,8 @@ import simd
 public class IMPFunction: NSObject, IMPContextProvider {
 
     public struct GroupSize {
-        var width:Int  = 16
-        var height:Int = 16
+        public var width:Int  = 16
+        public var height:Int = 16
     }
 
     public let kernel:MTLFunction?

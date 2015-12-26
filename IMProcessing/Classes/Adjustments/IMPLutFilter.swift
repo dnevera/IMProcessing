@@ -19,8 +19,8 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
         }
     }
     
-    internal var adjustmentBuffer:MTLBuffer?
-    internal var kernel:IMPFunction!
+    public var adjustmentBuffer:MTLBuffer?
+    public var kernel:IMPFunction!
     internal var lut:IMPImageProvider?
     internal var lutDescription = IMPImageProvider.Description()
     
