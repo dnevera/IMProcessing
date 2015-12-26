@@ -6,7 +6,11 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
 
 public typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
 

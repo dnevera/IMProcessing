@@ -6,12 +6,16 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+    import OpenGL.GL
+#endif
 import Metal
-import OpenGL.GL
 
 ///
-///  @brief Context provider protocol. 
+///  @brief Context provider protocol.
 ///  All filter classes should conform to the protocol to get access current filter context.
 ///
 public protocol IMPContextProvider{
@@ -21,9 +25,9 @@ public protocol IMPContextProvider{
 /// Context execution closure
 public typealias IMPContextExecution = ((commandBuffer:MTLCommandBuffer) -> Void)
 
-/// 
-/// The IMProcessing framework supports GPU-accelerated advanced data-parallel computation workloads. 
-/// IMPContext instance is created to connect curren GPU device and resources are allocated in order to 
+///
+/// The IMProcessing framework supports GPU-accelerated advanced data-parallel computation workloads.
+/// IMPContext instance is created to connect curren GPU device and resources are allocated in order to
 /// do computation.
 ///
 /// IMPContext is a container bring together GPU-device, current command queue and default kernel functions library
@@ -36,13 +40,17 @@ public class IMPContext {
         var currentMaximumTextureSize:Int?
         func deviceMaximumTextureSize()->Int{
             dispatch_once(&sharedContainerType.pred) {
-                var pixelAttributes:[NSOpenGLPixelFormatAttribute] = [UInt32(NSOpenGLPFADoubleBuffer), UInt32(NSOpenGLPFAAccelerated), 0]
-                let pixelFormat = NSOpenGLPixelFormat(attributes: &pixelAttributes)
-                let context = NSOpenGLContext(format: pixelFormat!, shareContext: nil)
-                
-                context?.makeCurrentContext()
-                
-                glGetIntegerv(GLenum(GL_MAX_TEXTURE_SIZE), &sharedContainerType.maxTextureSize)
+                #if os(iOS)
+                    let glContext =  EAGLContext(API: .OpenGLES2)
+                    EAGLContext.setCurrentContext(glContext)
+                    glGetIntegerv(GLenum(GL_MAX_TEXTURE_SIZE), &sharedContainerType.maxTextureSize);
+                #else
+                    var pixelAttributes:[NSOpenGLPixelFormatAttribute] = [UInt32(NSOpenGLPFADoubleBuffer), UInt32(NSOpenGLPFAAccelerated), 0]
+                    let pixelFormat = NSOpenGLPixelFormat(attributes: &pixelAttributes)
+                    let context = NSOpenGLContext(format: pixelFormat!, shareContext: nil)
+                    context?.makeCurrentContext()
+                    glGetIntegerv(GLenum(GL_MAX_TEXTURE_SIZE), &sharedContainerType.maxTextureSize)
+                #endif
             }
             return Int(sharedContainerType.maxTextureSize)
         }
@@ -108,12 +116,12 @@ public class IMPContext {
     public static var maximumTextureSize:Int{
         
         set(newMaximumTextureSize){
-            IMPContext.sharedContainer.currentMaximumTextureSize = 0
-            var size = IMPContext.sharedContainer.deviceMaximumTextureSize()
-            if newMaximumTextureSize <= size {
-                size = newMaximumTextureSize
-            }
-            IMPContext.sharedContainer.currentMaximumTextureSize = size
+        IMPContext.sharedContainer.currentMaximumTextureSize = 0
+        var size = IMPContext.sharedContainer.deviceMaximumTextureSize()
+        if newMaximumTextureSize <= size {
+        size = newMaximumTextureSize
+        }
+        IMPContext.sharedContainer.currentMaximumTextureSize = size
         }
         
         get {

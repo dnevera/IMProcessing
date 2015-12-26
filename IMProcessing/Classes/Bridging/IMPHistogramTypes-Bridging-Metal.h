@@ -13,10 +13,10 @@
 
 
 ///  @brief Histogram width
-static constant uint kIMP_HistogramSize        = 256;
+#define kIMP_HistogramSize  256
 
 ///  @brief Maximum channels histogram may contain
-static constant uint kIMP_HistogramMaxChannels = 4;
+#define kIMP_HistogramMaxChannels 4
 
 ///  @brief Interchangeable integral buffer between Metal host implementation and
 /// Metal Shading Language shaders

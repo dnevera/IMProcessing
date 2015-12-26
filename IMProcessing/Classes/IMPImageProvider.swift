@@ -6,10 +6,18 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
 import Metal
 
 public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
+
+    #if os(iOS)
+    public var orientation = UIImageOrientation.Up
+    #endif
     
     public var context:IMPContext!
     public var texture:MTLTexture?

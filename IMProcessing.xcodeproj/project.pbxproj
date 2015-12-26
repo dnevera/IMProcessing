@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3112BCB61C281CEB00825078 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCB51C281CEB00825078 /* AppDelegate.swift */; };
-		3112BCB81C281CEB00825078 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCB71C281CEB00825078 /* ViewController.swift */; };
-		3112BCBA1C281CEB00825078 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCB91C281CEB00825078 /* Document.swift */; };
 		3112BCBC1C281CEB00825078 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBB1C281CEB00825078 /* Assets.xcassets */; };
 		3112BCBF1C281CEB00825078 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBD1C281CEB00825078 /* Main.storyboard */; };
 		3112BCF41C281D9F00825078 /* IMPAdjustment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCC81C281D9F00825078 /* IMPAdjustment.swift */; };
@@ -37,23 +34,24 @@
 		3112BD101C2820B400825078 /* IMProcessing.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 3112BD0F1C2820B400825078 /* IMProcessing.podspec */; };
 		3112BD151C2821F200825078 /* IMPHistogramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BD131C2821F200825078 /* IMPHistogramView.swift */; };
 		3112BD161C2821F200825078 /* IMPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BD141C2821F200825078 /* IMPView.swift */; };
+		311690D61C2D1D1700904FBF /* IMPImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 311690D51C2D1D1700904FBF /* IMPImageView.swift */; };
 		312B8E5E1C2AEC3300FFFD76 /* IMPColorSpaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */; };
-		31819C161C2863710037DA99 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C121C2863710037DA99 /* IMPDocument.swift */; };
-		31819C171C2863710037DA99 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C131C2863710037DA99 /* IMPMenuHandler.swift */; };
-		31819C181C2863710037DA99 /* IMPScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C141C2863710037DA99 /* IMPScrollView.swift */; };
-		31819C191C2863710037DA99 /* IMPTestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C151C2863710037DA99 /* IMPTestFilter.swift */; };
 		31819C1B1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C1A1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift */; };
 		31819C1E1C2953BD0037DA99 /* IMPDistribution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */; };
 		31819C241C2996FC0037DA99 /* IMPHSVFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */; };
 		31819C261C299FC30037DA99 /* IMPMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C251C299FC30037DA99 /* IMPMath.swift */; };
 		31CBB5FD1C2AC88E002AE689 /* IMPAutoWBFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CBB5FC1C2AC88E002AE689 /* IMPAutoWBFilter.swift */; };
+		31D4A7951C2C138F00A7C278 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A78E1C2C138F00A7C278 /* AppDelegate.swift */; };
+		31D4A7961C2C138F00A7C278 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A78F1C2C138F00A7C278 /* Document.swift */; };
+		31D4A7971C2C138F00A7C278 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7901C2C138F00A7C278 /* IMPDocument.swift */; };
+		31D4A7981C2C138F00A7C278 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */; };
+		31D4A7991C2C138F00A7C278 /* IMPScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */; };
+		31D4A79A1C2C138F00A7C278 /* IMPTestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */; };
+		31D4A79B1C2C138F00A7C278 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7941C2C138F00A7C278 /* ViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		3112BCB21C281CEB00825078 /* IMProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3112BCB51C281CEB00825078 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		3112BCB71C281CEB00825078 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		3112BCB91C281CEB00825078 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		3112BCBB1C281CEB00825078 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3112BCBE1C281CEB00825078 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3112BCC01C281CEB00825078 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -95,21 +93,25 @@
 		3112BD211C28284900825078 /* IMPHistogramTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPHistogramTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPHistogramTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
 		3112BD221C28284900825078 /* IMProcessing-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMProcessing-Bridging-Header.h"; path = "IMProcessing/Classes/Bridging/IMProcessing-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		3112BD231C28284900825078 /* IMPTypes-Bridging-Metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "IMPTypes-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPTypes-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
+		311690D51C2D1D1700904FBF /* IMPImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPImageView.swift; path = FrontEnd/IMPImageView.swift; sourceTree = "<group>"; };
 		312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPColorSpaces.swift; path = Math/IMPColorSpaces.swift; sourceTree = "<group>"; };
 		312B8E5F1C2AEFB100FFFD76 /* IMPOperations-Bridgin-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "IMPOperations-Bridgin-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPOperations-Bridgin-Metal.h"; sourceTree = SOURCE_ROOT; };
 		314403AB1C28412600BC06A7 /* IMProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMProcessing.h; path = IMProcessing/Classes/IMProcessing.h; sourceTree = SOURCE_ROOT; };
 		31819C111C285E6B0037DA99 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		31819C121C2863710037DA99 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPDocument.swift; sourceTree = "<group>"; };
-		31819C131C2863710037DA99 /* IMPMenuHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPMenuHandler.swift; sourceTree = "<group>"; };
-		31819C141C2863710037DA99 /* IMPScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPScrollView.swift; sourceTree = "<group>"; };
-		31819C151C2863710037DA99 /* IMPTestFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPTestFilter.swift; sourceTree = "<group>"; };
 		31819C1A1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPColorWeightsAnalyzer.swift; sourceTree = "<group>"; };
 		31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPDistribution.swift; path = Math/IMPDistribution.swift; sourceTree = "<group>"; };
-		31819C211C298A8A0037DA99 /* IMPConstants-Bridging-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "IMPConstants-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPConstants-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; };
+		31819C211C298A8A0037DA99 /* IMPConstants-Bridging-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "IMPConstants-Bridging-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPConstants-Bridging-Metal.h"; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		31819C221C2995C30037DA99 /* IMPAdjustmentHSV_metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IMPAdjustmentHSV_metal.h; sourceTree = "<group>"; };
 		31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHSVFilter.swift; sourceTree = "<group>"; };
 		31819C251C299FC30037DA99 /* IMPMath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMath.swift; path = Math/IMPMath.swift; sourceTree = "<group>"; };
 		31CBB5FC1C2AC88E002AE689 /* IMPAutoWBFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPAutoWBFilter.swift; sourceTree = "<group>"; };
+		31D4A78E1C2C138F00A7C278 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Example/AppDelegate.swift; sourceTree = "<group>"; };
+		31D4A78F1C2C138F00A7C278 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Document.swift; path = Example/Document.swift; sourceTree = "<group>"; };
+		31D4A7901C2C138F00A7C278 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPDocument.swift; path = Example/IMPDocument.swift; sourceTree = "<group>"; };
+		31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMenuHandler.swift; path = Example/IMPMenuHandler.swift; sourceTree = "<group>"; };
+		31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPScrollView.swift; path = Example/IMPScrollView.swift; sourceTree = "<group>"; };
+		31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPTestFilter.swift; path = Example/IMPTestFilter.swift; sourceTree = "<group>"; };
+		31D4A7941C2C138F00A7C278 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ViewController.swift; path = Example/ViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,7 +146,9 @@
 			children = (
 				3112BD0D1C28209300825078 /* Pods */,
 				3112BCC61C281D9F00825078 /* Classes */,
+				31D4A78D1C2C136600A7C278 /* Resources */,
 				3112BD0E1C28209A00825078 /* Example */,
+				3112BCC01C281CEB00825078 /* Info.plist */,
 			);
 			path = IMProcessing;
 			sourceTree = "<group>";
@@ -257,16 +261,13 @@
 		3112BD0E1C28209A00825078 /* Example */ = {
 			isa = PBXGroup;
 			children = (
-				31819C151C2863710037DA99 /* IMPTestFilter.swift */,
-				3112BCB51C281CEB00825078 /* AppDelegate.swift */,
-				3112BCB71C281CEB00825078 /* ViewController.swift */,
-				31819C121C2863710037DA99 /* IMPDocument.swift */,
-				31819C131C2863710037DA99 /* IMPMenuHandler.swift */,
-				31819C141C2863710037DA99 /* IMPScrollView.swift */,
-				3112BCB91C281CEB00825078 /* Document.swift */,
-				3112BCBB1C281CEB00825078 /* Assets.xcassets */,
-				3112BCBD1C281CEB00825078 /* Main.storyboard */,
-				3112BCC01C281CEB00825078 /* Info.plist */,
+				31D4A78E1C2C138F00A7C278 /* AppDelegate.swift */,
+				31D4A78F1C2C138F00A7C278 /* Document.swift */,
+				31D4A7901C2C138F00A7C278 /* IMPDocument.swift */,
+				31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */,
+				31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */,
+				31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */,
+				31D4A7941C2C138F00A7C278 /* ViewController.swift */,
 			);
 			name = Example;
 			sourceTree = "<group>";
@@ -289,6 +290,7 @@
 			children = (
 				3112BD131C2821F200825078 /* IMPHistogramView.swift */,
 				3112BD141C2821F200825078 /* IMPView.swift */,
+				311690D51C2D1D1700904FBF /* IMPImageView.swift */,
 			);
 			name = FrontEnd;
 			sourceTree = "<group>";
@@ -332,6 +334,15 @@
 				31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */,
 			);
 			name = Math;
+			sourceTree = "<group>";
+		};
+		31D4A78D1C2C136600A7C278 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3112BCBB1C281CEB00825078 /* Assets.xcassets */,
+				3112BCBD1C281CEB00825078 /* Main.storyboard */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -409,36 +420,37 @@
 				3112BD091C281D9F00825078 /* CGRect+IMProcessing.swift in Sources */,
 				3112BD081C281D9F00825078 /* IMPMain_metal.metal in Sources */,
 				3112BD0A1C281D9F00825078 /* CGSize+IMProcessing.swift in Sources */,
-				3112BCB81C281CEB00825078 /* ViewController.swift in Sources */,
 				31819C241C2996FC0037DA99 /* IMPHSVFilter.swift in Sources */,
 				3112BCF81C281D9F00825078 /* IMPHistogram.swift in Sources */,
 				312B8E5E1C2AEC3300FFFD76 /* IMPColorSpaces.swift in Sources */,
 				3112BD021C281D9F00825078 /* IMPImageProvider.swift in Sources */,
-				31819C171C2863710037DA99 /* IMPMenuHandler.swift in Sources */,
-				3112BCB61C281CEB00825078 /* AppDelegate.swift in Sources */,
+				31D4A7961C2C138F00A7C278 /* Document.swift in Sources */,
 				3112BD061C281D9F00825078 /* IMPImageProvider+CubeLut.swift in Sources */,
 				3112BCF61C281D9F00825078 /* IMPLutFilter.swift in Sources */,
-				3112BCBA1C281CEB00825078 /* Document.swift in Sources */,
 				3112BCF41C281D9F00825078 /* IMPAdjustment.swift in Sources */,
 				31CBB5FD1C2AC88E002AE689 /* IMPAutoWBFilter.swift in Sources */,
 				3112BCFB1C281D9F00825078 /* IMPHistogramLayerSolver.swift in Sources */,
-				31819C161C2863710037DA99 /* IMPDocument.swift in Sources */,
 				3112BD151C2821F200825078 /* IMPHistogramView.swift in Sources */,
-				31819C181C2863710037DA99 /* IMPScrollView.swift in Sources */,
 				3112BD001C281D9F00825078 /* IMPFunction.swift in Sources */,
+				311690D61C2D1D1700904FBF /* IMPImageView.swift in Sources */,
 				3112BCFD1C281D9F00825078 /* IMPContext.swift in Sources */,
 				31819C1E1C2953BD0037DA99 /* IMPDistribution.swift in Sources */,
+				31D4A79B1C2C138F00A7C278 /* ViewController.swift in Sources */,
 				3112BCFC1C281D9F00825078 /* IMPHistogramRangeSolver.swift in Sources */,
 				3112BD031C281D9F00825078 /* IMPTexturePovider.swift in Sources */,
+				31D4A7981C2C138F00A7C278 /* IMPMenuHandler.swift in Sources */,
+				31D4A7991C2C138F00A7C278 /* IMPScrollView.swift in Sources */,
 				3112BCFE1C281D9F00825078 /* IMPExtensions.swift in Sources */,
+				31D4A7971C2C138F00A7C278 /* IMPDocument.swift in Sources */,
 				3112BCF71C281D9F00825078 /* IMPWBFilter.swift in Sources */,
 				3112BCF91C281D9F00825078 /* IMPHistogramAnalyzer.swift in Sources */,
+				31D4A7951C2C138F00A7C278 /* AppDelegate.swift in Sources */,
 				31819C261C299FC30037DA99 /* IMPMath.swift in Sources */,
 				3112BD0B1C281D9F00825078 /* IMPImage+CGImage.swift in Sources */,
 				3112BD071C281D9F00825078 /* IMPImageProvider+IMPImage.swift in Sources */,
+				31D4A79A1C2C138F00A7C278 /* IMPTestFilter.swift in Sources */,
 				3112BCF51C281D9F00825078 /* IMPContrastFilter.swift in Sources */,
 				3112BD161C2821F200825078 /* IMPView.swift in Sources */,
-				31819C191C2863710037DA99 /* IMPTestFilter.swift in Sources */,
 				3112BD0C1C281D9F00825078 /* IMPImage+MTLTexture.swift in Sources */,
 				31819C1B1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift in Sources */,
 				3112BCFF1C281D9F00825078 /* IMPFilter.swift in Sources */,

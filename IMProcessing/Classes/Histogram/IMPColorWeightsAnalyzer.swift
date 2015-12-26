@@ -6,7 +6,12 @@
 //  Copyright © 2015 Dehancer.photo. All rights reserved.
 //
 
-import Cocoa
+#if os(iOS)
+    import UIKit
+#else
+    import Cocoa
+#endif
+
 import Accelerate
 
 public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {

@@ -11,6 +11,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => 'https://bitbucket.org/degrader/improcessing.git', :tag => '0.0.2'}
 
   s.osx.deployment_target = "10.11"
+  s.ios.deployment_target = "8.3"
   s.frameworks   = 'Metal'
   s.requires_arc = true
 

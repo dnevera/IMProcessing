@@ -6,22 +6,30 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
-import AppKit
+#if os(iOS)
+    import UIKit
+    import QuartzCore
+    public typealias IMPViewBase = UIView
+#else
+    import AppKit
+    public typealias IMPViewBase = NSView
+#endif
 import Metal
 import GLKit.GLKMath
 import QuartzCore
 
 
-public class IMPView: NSView, IMPContextProvider {
+public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var context:IMPContext!
     
     public var filter:IMPFilter?{
         didSet{
+            
             if let s = self.source{
                 self.filter?.source = s
             }
+            
             filter?.addDirtyObserver({ () -> Void in
                 self.layerNeedUpdate = true
             })
@@ -32,16 +40,21 @@ public class IMPView: NSView, IMPContextProvider {
         didSet{
             if let texture = source?.texture{
                 
-                layerNeedUpdate = true
-                
                 self.threadGroups = MTLSizeMake(
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                 
+                #if os(iOS)
+                    orientation = currentDeviceOrientation
+                    updateLayer()
+                #endif
+
                 if let f = self.filter{
                     f.source = source
                 }
-                
+                else{
+                    layerNeedUpdate = true
+                }
             }
         }
     }
@@ -63,6 +76,90 @@ public class IMPView: NSView, IMPContextProvider {
         }
     }
     
+    #if os(iOS)
+    
+    func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
+        
+        var angle:CGFloat = 0
+        
+        if let orientation = source?.orientation{
+
+            switch orientation {
+                
+            case .Left, .LeftMirrored:
+                angle = Float(90.0).radians.cgloat
+
+            case .Right, .RightMirrored:
+                angle = Float(-90.0).radians.cgloat
+
+            case .Down, .DownMirrored:
+                angle = Float(180.0).radians.cgloat
+                
+            default: break
+            
+            }
+        }
+        
+        return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+    }
+    
+    private var currentDeviceOrientation = UIDeviceOrientation.Portrait
+    public var orientation:UIDeviceOrientation{
+        get{
+            return currentDeviceOrientation
+        }
+        set{
+            setOrientation(orientation, animate: false)
+        }
+    }
+    public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
+        currentDeviceOrientation = orientation
+        let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+
+        UIView.animateWithDuration(
+            duration,
+            delay: 0,
+            usingSpringWithDamping: 1.0,
+            initialSpringVelocity: 0,
+            options: .CurveEaseIn,
+            animations: { () -> Void in
+                
+                if let layer = self.metalLayer {
+                    
+                    var transform = CATransform3DIdentity
+                    
+                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                    
+                    var angle:CGFloat = 0
+                    
+                    switch (orientation) {
+                        
+                    case .LandscapeLeft:
+                        angle = Float(-90.0).radians.cgloat
+                        
+                    case .LandscapeRight:
+                        angle = Float(90.0).radians.cgloat
+                        
+                    case .PortraitUpsideDown:
+                        angle = Float(180.0).radians.cgloat
+                        
+                    default:
+                        break
+                    }
+                    
+                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                    
+                    layer.transform = self.correctImageOrientation(transform);
+
+                    self.layerNeedUpdate = true
+                }
+                
+            },
+            completion:  nil
+        )
+    }
+    #endif
+    
     public init(context contextIn:IMPContext, frame: NSRect){
         super.init(frame: frame)
         context = contextIn
@@ -83,18 +180,26 @@ public class IMPView: NSView, IMPContextProvider {
         }
     }
     
+    #if os(OSX)
     public var backgroundColor:IMPColor = IMPColor.clearColor(){
         didSet{
             metalLayer.backgroundColor = backgroundColor.CGColor
         }
     }
+    #endif
     
+    private var originalBounds:CGRect?
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
-        self.wantsLayer = true
-        metalLayer = CAMetalLayer()
-        self.layer = metalLayer
+        #if os(iOS)
+            metalLayer = CAMetalLayer()
+            layer.addSublayer(metalLayer)
+        #else
+            self.wantsLayer = true
+            metalLayer = CAMetalLayer()
+            self.layer = metalLayer
+        #endif
         
         let library:MTLLibrary!  = self.context.device.newDefaultLibrary()
         
@@ -106,26 +211,44 @@ public class IMPView: NSView, IMPContextProvider {
         //
         // Теперь создаем основной объект который будет ссылаться на исполняемый код нашего фильтра.
         //
-        pipeline = try! self.context.device.newComputePipelineStateWithFunction(function)                
+        pipeline = try! self.context.device.newComputePipelineStateWithFunction(function)
     }
     
-    //
-    // TODO: iOS version
-    //
-    //    class func layerClass() -> AnyClass {
-    //        return CAMetalLayer.self;
-    //    }
-    
+    #if os(iOS)
+    private var timer:CADisplayLink!
+    #else
     private var timer:IMPDisplayLink!
+    #endif
     
-    private var metalLayer:CAMetalLayer!{
+    internal var metalLayer:CAMetalLayer!{
         didSet{
             metalLayer.device = self.context.device
             metalLayer.framebufferOnly = false
             metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm
-            metalLayer.backgroundColor = self.backgroundColor.CGColor
-            timer = IMPDisplayLink(selector: refresh)
+            
+            originalBounds = self.bounds
+            metalLayer.bounds = originalBounds!
+            
+            #if os(iOS)
+                metalLayer.backgroundColor = self.backgroundColor?.CGColor
+            #else
+                metalLayer.backgroundColor = self.backgroundColor.CGColor
+            #endif
+            
+            #if os(iOS)
+                if timer != nil {
+                    timer.removeFromRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
+                }
+                timer = CADisplayLink(target: self, selector: "refresh")
+            #else
+                timer = IMPDisplayLink(selector: refresh)
+            #endif
             timer?.paused = self.isPaused
+            
+            #if os(iOS)
+                timer.addToRunLoop(NSRunLoop.mainRunLoop(), forMode:NSDefaultRunLoopMode)
+            #endif
+            
             layerNeedUpdate = true
         }
     }
@@ -134,35 +257,42 @@ public class IMPView: NSView, IMPContextProvider {
     private var threadGroups : MTLSize!
     private let inflightSemaphore = dispatch_semaphore_create(3)
     
-    var scaleFactor:Float{
+    
+    #if os(iOS)
+    public var screenSize:CGSize{
         get {
-            let screen = self.window?.screen ?? NSScreen.mainScreen()
-            let scaleFactor = screen?.backingScaleFactor ?? 1.0
-            return Float(scaleFactor)
+            let screen = self.window?.screen ?? UIScreen.mainScreen()
+            return screen.bounds.size
+        }
+    }
+    #endif
+    
+    public var scaleFactor:Float{
+        get {
+            #if os(iOS)
+                return  Float(UIScreen.mainScreen().scale) //Float(self.contentScaleFactor)
+            #else
+                let screen = self.window?.screen ?? NSScreen.mainScreen()
+                let scaleFactor = screen?.backingScaleFactor ?? 1.0
+                return Float(scaleFactor)
+            #endif
         }
     }
     
-    private func refresh() {
-                
+    internal func refresh() {
+        
         if layerNeedUpdate {
             
             layerNeedUpdate = false
-                        
+            
             autoreleasepool({ () -> () in
                 
-                var drawableSize = self.bounds.size
-                
-                drawableSize.width *= CGFloat(self.scaleFactor)
-                drawableSize.height *= CGFloat(self.scaleFactor)
-                
-                metalLayer.drawableSize = drawableSize
-                
-                self.context.execute { (commandBuffer) -> Void in
+                if let actualImageTexture = self.texture {
                                         
-                    if let actualImageTexture = self.texture {
-                
+                    self.context.execute { (commandBuffer) -> Void in
+                        
                         dispatch_semaphore_wait(self.inflightSemaphore, DISPATCH_TIME_FOREVER);
-
+                        
                         commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
                             dispatch_semaphore_signal(self.inflightSemaphore);
                         })
@@ -180,23 +310,73 @@ public class IMPView: NSView, IMPContextProvider {
                             encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
                             
                             encoder.endEncoding()
+                            
                             commandBuffer.presentDrawable(drawable)
+                            
                         }
                         else{
                             dispatch_semaphore_signal(self.inflightSemaphore);
                         }
                     }
-                }  
+                }
             })
         }
     }
     
+    #if os(iOS)
+    public func display() {
+        self.refresh()
+    }
+    #else
     override public func display() {
         self.refresh()
     }
+    #endif
     
     internal var layerNeedUpdate:Bool = true
     
+    #if os(iOS)
+    
+    func updateLayer(){
+        if let l = metalLayer {
+            var adjustedSize = bounds.size
+
+            if let t = texture{
+                
+                l.drawableSize = t.size
+                
+                var size:CGFloat!
+                if UIDeviceOrientationIsLandscape(self.orientation)  {
+                    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
+                }
+                else{
+                    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+                }
+            }
+            
+            var origin = CGPointZero
+            if adjustedSize.height < bounds.height {
+                origin.y = ( bounds.height - adjustedSize.height ) / 2
+            }
+            if adjustedSize.width < bounds.width {
+                origin.x = ( bounds.width - adjustedSize.width ) / 2
+            }
+            
+            l.frame = CGRect(origin: origin, size: adjustedSize)
+            
+            print(" ---> bounds = \(l.bounds) frame -> \(l.frame) \(scaleFactor)  adjustedSize = \(adjustedSize)")
+        }
+    }
+    
+    override public func layoutSubviews() {
+        super.layoutSubviews()
+        updateLayer()
+        layerNeedUpdate = true
+    }
+    
+    #else
     override public func setFrameSize(newSize: NSSize) {
         super.setFrameSize(CGSize(width: newSize.width/CGFloat(self.scaleFactor), height: newSize.height/CGFloat(self.scaleFactor)))
         layerNeedUpdate = true
@@ -210,67 +390,70 @@ public class IMPView: NSView, IMPContextProvider {
         super.viewDidChangeBackingProperties()
         layerNeedUpdate = true
     }
+    #endif
 }
 
-
-private class IMPDisplayLink {
+#if os(OSX)
     
-    private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
-    
-    private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
-    {
-        let block:DisplayLinkCallback = callback
-        let myImp = imp_implementationWithBlock( unsafeBitCast( block, AnyObject.self ) )
-        let callback = unsafeBitCast( myImp, CVDisplayLinkOutputCallback.self )
+    private class IMPDisplayLink {
         
-        CVDisplayLinkSetOutputCallback( displayLink, callback, UnsafeMutablePointer<Void>() )
-    }
-    
-    
-    private var displayLink:CVDisplayLink
-    
-    var paused:Bool = false {
-        didSet(oldValue){
-            if  paused {
-                if CVDisplayLinkIsRunning(displayLink) {
-                    CVDisplayLinkStop( displayLink)
+        private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
+        
+        private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
+        {
+            let block:DisplayLinkCallback = callback
+            let myImp = imp_implementationWithBlock( unsafeBitCast( block, AnyObject.self ) )
+            let callback = unsafeBitCast( myImp, CVDisplayLinkOutputCallback.self )
+            
+            CVDisplayLinkSetOutputCallback( displayLink, callback, UnsafeMutablePointer<Void>() )
+        }
+        
+        
+        private var displayLink:CVDisplayLink
+        
+        var paused:Bool = false {
+            didSet(oldValue){
+                if  paused {
+                    if CVDisplayLinkIsRunning(displayLink) {
+                        CVDisplayLinkStop( displayLink)
+                    }
                 }
-            }
-            else{
-                if !CVDisplayLinkIsRunning(displayLink) {
-                    CVDisplayLinkStart( displayLink )
+                else{
+                    if !CVDisplayLinkIsRunning(displayLink) {
+                        CVDisplayLinkStart( displayLink )
+                    }
                 }
             }
         }
-    }
-    
-    
-    required init(selector: ()->Void ){
         
-        displayLink = {
-            var linkRef:CVDisplayLink?
-            CVDisplayLinkCreateWithActiveCGDisplays( &linkRef )
-            
-            return linkRef!
-            
-            }()
         
-        let callback = { (
-            _:CVDisplayLink!,
-            _:UnsafePointer<CVTimeStamp>,
-            _:UnsafePointer<CVTimeStamp>,
-            _:CVOptionFlags,
-            _:UnsafeMutablePointer<CVOptionFlags>,
-            _:UnsafeMutablePointer<Void>)->Void in
+        required init(selector: ()->Void ){
             
-            selector()
+            displayLink = {
+                var linkRef:CVDisplayLink?
+                CVDisplayLinkCreateWithActiveCGDisplays( &linkRef )
+                
+                return linkRef!
+                
+                }()
+            
+            let callback = { (
+                _:CVDisplayLink!,
+                _:UnsafePointer<CVTimeStamp>,
+                _:UnsafePointer<CVTimeStamp>,
+                _:CVOptionFlags,
+                _:UnsafeMutablePointer<CVOptionFlags>,
+                _:UnsafeMutablePointer<Void>)->Void in
+                
+                selector()
+            }
+            
+            displayLinkSetOutputCallback( displayLink, callback: callback )
         }
         
-        displayLinkSetOutputCallback( displayLink, callback: callback )
+        deinit{
+            self.paused = true
+        }
+        
     }
-    
-    deinit{
-        self.paused = true
-    }
-    
-}
+#endif

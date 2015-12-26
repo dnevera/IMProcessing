@@ -6,7 +6,8 @@
 //  Copyright © 2015 IMetalling. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import Metal
 
 public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
     public static let defaultAdjustment = IMPAdjustment(blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
