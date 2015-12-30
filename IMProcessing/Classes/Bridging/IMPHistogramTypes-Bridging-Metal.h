@@ -12,16 +12,16 @@
 #include "IMPConstants-Bridging-Metal.h"
 
 
-///  @brief Histogram width
+/// @brief Histogram width
 #define kIMP_HistogramSize  256
 
-///  @brief Maximum channels histogram may contain
+/// @brief Maximum channels histogram may contain
 #define kIMP_HistogramMaxChannels 4
 
-///  @brief Interchangeable integral buffer between Metal host implementation and
+/// @brief Interchangeable integral buffer between Metal host implementation and
 /// Metal Shading Language shaders
 ///
-typedef struct IMPHistogramBuffer {
+typedef struct {
     uint channels[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
 }IMPHistogramBuffer;
 
@@ -36,18 +36,29 @@ typedef struct {
     float        width;
 }IMPHistogramLayerComponent;
 
+///  @brief Histogram layer presentation
 struct IMPHistogramLayer {
     IMPHistogramLayerComponent  components[kIMP_HistogramMaxChannels];
     metal_float4                backgroundColor;
     bool                        backgroundSource;
 };
 
+///  @brief Color weights clipping preferences
 typedef struct{
     float white;
     float black;
     float saturation;
 } IMPColorWeightsClipping;
 
+
+#define kIMP_HistogramCubeThreads      512
+#define kIMP_HistogramCubeSize         4096
+#define kIMP_HistogramCubeResolution   16
+#define kIMP_HistogramCubeIndex(rgb) uint(rgb.r+rgb.g*kIMP_HistogramCubeResolution+rgb.b*kIMP_HistogramCubeResolution*kIMP_HistogramCubeResolution)
+
+typedef struct {
+    uint cells[kIMP_HistogramCubeSize];
+}IMPHistogramCubeBuffer;
 
 
 #endif /* IMPHistogramTypes_h */

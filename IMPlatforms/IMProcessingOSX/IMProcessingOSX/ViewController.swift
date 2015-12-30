@@ -106,7 +106,7 @@ class ViewController: NSViewController {
         mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, histogramCDFView: histogramCDFView)
         imageView.filter = mainFilter
         
-        mainFilter.sourceAnalayzer.addUpdateObserver { (histogram) -> Void in
+        mainFilter.sourceAnalyzer.addUpdateObserver { (histogram) -> Void in
             self.asyncChanges({ () -> Void in
                 self.minRangeLabel.stringValue = String(format: "%2.3f", self.mainFilter.rangeSolver.minimum.z)
                 self.maxRangeLabel.stringValue = String(format: "%2.3f", self.mainFilter.rangeSolver.maximum.z)
@@ -139,7 +139,7 @@ class ViewController: NSViewController {
                     self.imageView.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
                     self.imageView.source = IMPImageProvider(context: self.imageView.context, image: image)
                     self.asyncChanges({ () -> Void in
-                        self.zoomOne()                        
+                        self.zoom100()
                     })
                 }
             }
@@ -191,7 +191,7 @@ class ViewController: NSViewController {
     private func zoomOne(){
         is100 = false
         asyncChanges { () -> Void in
-            self.scrollView.magnifyToFitRect(self.scrollView.bounds)
+            self.scrollView.magnifyToFitRect(self.view.bounds)
         }
     }
     

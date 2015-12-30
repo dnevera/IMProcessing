@@ -65,8 +65,8 @@ public class IMPHistogram {
     
     ///  Метод обновления сборки данных гистограммы из частичных гистограмм.
     ///
-    ///  - parameter dataIn:    <#dataIn description#>
-    ///  - parameter dataCount: <#dataCount description#>
+    ///  - parameter dataIn:
+    ///  - parameter dataCount:
     public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
         self.clearHistogram()
         for i in 0..<dataCount{

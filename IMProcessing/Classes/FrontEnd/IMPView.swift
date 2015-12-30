@@ -39,7 +39,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var source:IMPImageProvider?{
         didSet{
             if let texture = source?.texture{
-                
+                            
                 self.threadGroups = MTLSizeMake(
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
@@ -52,9 +52,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if let f = self.filter{
                     f.source = source
                 }
-                else{
-                    layerNeedUpdate = true
-                }
+
+                layerNeedUpdate = true
             }
         }
     }
@@ -196,9 +195,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             metalLayer = CAMetalLayer()
             layer.addSublayer(metalLayer)
         #else
-            self.wantsLayer = true
+            wantsLayer = true
             metalLayer = CAMetalLayer()
-            self.layer = metalLayer
+            layerContentsRedrawPolicy = .DuringViewResize
+            layer?.addSublayer(metalLayer)
         #endif
         
         let library:MTLLibrary!  = self.context.device.newDefaultLibrary()
@@ -365,8 +365,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
             
             l.frame = CGRect(origin: origin, size: adjustedSize)
-            
-            print(" ---> bounds = \(l.bounds) frame -> \(l.frame) \(scaleFactor)  adjustedSize = \(adjustedSize)")
         }
     }
     
@@ -377,19 +375,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     #else
-    override public func setFrameSize(newSize: NSSize) {
-        super.setFrameSize(CGSize(width: newSize.width/CGFloat(self.scaleFactor), height: newSize.height/CGFloat(self.scaleFactor)))
+    
+    override public func updateLayer(){
+        if let l = metalLayer {
+            if let t = texture{
+                l.drawableSize = t.size
+            }
+            l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+        }
         layerNeedUpdate = true
     }
     
-    override public func setBoundsSize(newSize: NSSize) {
-        super.setBoundsSize(newSize)
-        layerNeedUpdate = true
-    }
-    override public func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        layerNeedUpdate = true
-    }
     #endif
 }
 

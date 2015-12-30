@@ -24,6 +24,7 @@ using namespace metal;
 
 # define metal_float4 float4
 # define metal_float3 float3
+# define metal_uint3  uint3
 
 #else
 
@@ -33,6 +34,7 @@ using namespace metal;
 # define constant const
 # define metal_float4 vector_float4
 # define metal_float3 vector_float3
+# define metal_uint3  vector_uint3
 # define constexpr 
 
 #endif
