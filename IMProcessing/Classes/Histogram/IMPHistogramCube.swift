@@ -116,7 +116,7 @@ public class IMPHistogramCube{
                         
                         var isMaxima = true
                         
-                        for n in 0..<Int(kIMP_HistogramCubeResolution)-3{
+                        for n in 0..<27{
                             
                             let redIndex   = r+IMPHistogramCube.neighbours[n][0]
                             let greenIndex = g+IMPHistogramCube.neighbours[n][1]

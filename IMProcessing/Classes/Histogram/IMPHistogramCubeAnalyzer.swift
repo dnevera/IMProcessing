@@ -27,7 +27,18 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
     public var downScaleFactor:Float!{
         didSet{
             scaleUniformBuffer = scaleUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(Float), options: .CPUCacheModeDefaultCache)
-            memcpy(scaleUniformBuffer.contents(), &downScaleFactor, sizeof(Float))
+            memcpy(scaleUniformBuffer.contents(), &downScaleFactor, scaleUniformBuffer.length)
+        }
+    }
+    
+    public static var defaultClipping = IMPHistogramCubeClipping(shadows: float3(0.2,0.2,0.2), highlights: float3(0.2,0.2,0.2))
+    
+    private var clippingBuffer:MTLBuffer!
+    public var clipping:IMPHistogramCubeClipping!{
+        didSet{
+            clippingBuffer = clippingBuffer ?? context.device.newBufferWithLength(sizeof(IMPHistogramCubeClipping), options: .CPUCacheModeDefaultCache)
+            memcpy(clippingBuffer.contents(), &clipping, clippingBuffer.length)
+
         }
     }
     
@@ -41,7 +52,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
     public var region:IMPCropRegion!{
         didSet{
             regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPCropRegion), options: .CPUCacheModeDefaultCache)
-            memcpy(regionUniformBuffer.contents(), &region, sizeof(IMPCropRegion))
+            memcpy(regionUniformBuffer.contents(), &region, regionUniformBuffer.length)
         }
     }
     internal var regionUniformBuffer:MTLBuffer!
@@ -67,6 +78,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         defer{
             region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
             downScaleFactor = 1.0
+            clipping = IMPHistogramCubeAnalyzer.defaultClipping
         }
     }
     
@@ -113,6 +125,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
             commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
             commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:1)
             commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:2)
+            commandEncoder.setBuffer(self.clippingBuffer,         offset:0, atIndex:3)
             
             self.configure(self.kernel_impHistogramCounter, command: commandEncoder)
             

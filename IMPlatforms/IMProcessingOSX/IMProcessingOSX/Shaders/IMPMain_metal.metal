@@ -53,10 +53,11 @@ inline IMPHistogramCubeValue cube_binIndex(
 ///  @brief Kernel compute partial histograms
 ///
 kernel void kernel_impHistogramCubePartial(
-                                           texture2d<float, access::sample>   inTexture  [[texture(0)]],
-                                           device   IMPHistogramCubeAtomicBuffer    *outArray  [[ buffer(0)]],
-                                           constant IMPCropRegion             &regionIn  [[ buffer(1)]],
-                                           constant float                     &scale     [[ buffer(2)]],
+                                           texture2d<float, access::sample>      inTexture  [[texture(0)]],
+                                           device   IMPHistogramCubeAtomicBuffer *outArray  [[ buffer(0)]],
+                                           constant IMPCropRegion                 &regionIn [[ buffer(1)]],
+                                           constant float                         &scale    [[ buffer(2)]],
+                                           constant IMPHistogramCubeClipping      &clipping [[ buffer(3)]],
                                            uint tid       [[thread_index_in_threadgroup]],
                                            uint2 groupid  [[threadgroup_position_in_grid]],
                                            uint2 groupSize[[threadgroups_per_grid]],
@@ -83,6 +84,18 @@ kernel void kernel_impHistogramCubePartial(
         uint2 gid(j%w+groupid.x*w,j/w);
         
         IMPHistogramCubeValue  rgby = cube_binIndex(inTexture,regionIn,scale,gid);
+    
+        float3 shadows    = (float3(rgby.value.rgb)/float(kIMP_HistogramSize-1));
+        float3 highlights = 1.0-(float3(rgby.value.rgb)/float(kIMP_HistogramSize-1));
+
+        if (clipping.shadows.r>shadows.r && clipping.shadows.g>shadows.g && clipping.shadows.b>shadows.b){
+            continue;
+        }
+
+        if (clipping.highlights.r>highlights.r && clipping.highlights.g>highlights.g && clipping.highlights.b>highlights.b){
+            continue;
+        }
+
         
         if (rgby.index.a>0){
             uint index = kIMP_HistogramCubeIndex(rgby.index);
