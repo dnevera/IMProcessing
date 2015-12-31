@@ -125,19 +125,10 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         
         if let texture = source?.texture{
             
-            //let tm1 = NSDate.timeIntervalSinceReferenceDate()
-            
             apply( texture, buffer: histogramUniformBuffer)
             
             histogram.updateWithData(histogramUniformBuffer.contents(), dataCount: threadgroups.width)
-
-            //let tm2 = NSDate.timeIntervalSinceReferenceDate()
             
-            //let t = tm2-tm1
-            //let s = Float((source?.texture?.width)!*(source?.texture?.height)!*4)/Float(t)/1024/1024
-            //print(" ---->>>>    \(t, s)Mb/s")
-            
-
             for s in solvers {
                 let size = CGSizeMake(CGFloat(texture.width), CGFloat(texture.height))
                 s.analizerDidUpdate(self, histogram: self.histogram, imageSize: size)

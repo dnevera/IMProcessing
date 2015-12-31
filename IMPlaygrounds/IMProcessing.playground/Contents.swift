@@ -69,3 +69,14 @@ for i in v.sort(>){
 print("--")
 print(v.median)
 
+let h      = Float(3024)
+let c      = Float(16)
+let offset = h/c
+
+Int(2000/offset)
+Int(3024/offset)
+
+
+
+
+

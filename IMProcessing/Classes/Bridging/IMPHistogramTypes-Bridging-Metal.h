@@ -52,13 +52,22 @@ typedef struct{
 
 
 #define kIMP_HistogramCubeThreads      512
-#define kIMP_HistogramCubeSize         4096
-#define kIMP_HistogramCubeResolution   16
+#define kIMP_HistogramCubeSize         32768
+#define kIMP_HistogramCubeResolution   32
 #define kIMP_HistogramCubeIndex(rgb) uint(rgb.r+rgb.g*kIMP_HistogramCubeResolution+rgb.b*kIMP_HistogramCubeResolution*kIMP_HistogramCubeResolution)
 
 typedef struct {
     uint cells[kIMP_HistogramCubeSize];
 }IMPHistogramCubeBuffer;
+
+typedef struct{
+    metal_float4 color;
+}IMPPaletteBuffer;
+
+typedef struct{
+    metal_float4     backgroundColor;
+    bool             backgroundSource;
+}IMPPaletteLayerBuffer;
 
 
 #endif /* IMPHistogramTypes_h */

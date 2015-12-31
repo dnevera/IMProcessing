@@ -37,16 +37,44 @@ public func >= (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool{
     return lhs.maxSide().dimension >= rhs.maxSide().dimension
 }
 
+extension IMPHistogramCube.Cell:Comparable{}
+
+ func == (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.value == rhs.value
+}
+
+ func <= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.value <= rhs.value
+}
+
+ func > (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.value > rhs.value
+}
+
+ func < (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.value < rhs.value
+}
+
+ func >= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool{
+    return lhs.value >= rhs.value
+}
+
 public class IMPHistogramCube{
     
-    public struct Cell{
+    internal struct Cell{
         var index:Int
         var value:Float
     }
     
     public struct Cube {
-        var counts:[Float]
-        let dimensions:[Int]
+        public var rmin  = 0
+        public var rmax  = Int(kIMP_HistogramCubeResolution)
+        public var gmin  = 0
+        public var gmax  = Int(kIMP_HistogramCubeResolution)
+        public var bmin  = 0
+        public var bmax  = Int(kIMP_HistogramCubeResolution)
+        public var counts:[Float]
+        public let dimensions:[Int]
         
         public init(){
             dimensions = [Int(kIMP_HistogramCubeResolution),Int(kIMP_HistogramCubeResolution),Int(kIMP_HistogramCubeResolution)]
@@ -86,28 +114,58 @@ public class IMPHistogramCube{
             }
         }
         
-        private func sum(red red:Int) -> Float {
-            var sum = Float(0)
-            for g in 0..<dimensions[1]{
-                for b in 0..<dimensions[2]{ sum += self[red, g, b] }
-            }
-            return sum
+        private func red(red:Int) -> Float {
+            return self[red, 0, 0]
         }
         
-        private func sum(green green:Int) -> Float {
-            var sum = Float(0)
-            for r in 0..<dimensions[0]{
-                for b in 0..<dimensions[2]{  sum += self[r, green, b] }
-            }
-            return sum
+        private func green(green:Int) -> Float {
+            return self[0, green, 0]
         }
 
-        private func sum(blue blue:Int) -> Float {
-            var sum = Float(0)
+        private func blue(blue:Int) -> Float {
+            return self[0, 0, blue]
+        }
+
+        private func sumRed() -> Float {
+            var asum = Float(0)
+            var rm = Float(rmin)
             for r in 0..<dimensions[0]{
-                for g in 0..<dimensions[1]{ sum += self[r, g, blue] }
+                for g in 0..<dimensions[1]{
+                    for b in 0..<dimensions[2]{
+                        asum += self[r,g,b]*(rm/Float(kIMP_HistogramCubeResolution))
+                    }
+                }
+                rm += 1
             }
-            return sum
+            return asum
+        }
+
+        private func sumGreen() -> Float {
+            var asum = Float(0)
+            var rm = Float(gmin)
+            for g in 0..<dimensions[1]{
+                for r in 0..<dimensions[0]{
+                    for b in 0..<dimensions[2]{
+                        asum += self[r,g,b]*(rm/Float(kIMP_HistogramCubeResolution))
+                    }
+                }
+                rm += 1
+            }
+            return asum
+        }
+
+        private func sumBlue() -> Float {
+            var asum = Float(0)
+            var rm = Float(bmin)
+            for b in 0..<dimensions[2]{
+                for r in 0..<dimensions[0]{
+                    for g in 0..<dimensions[1]{
+                        asum += self[r,g,b]*(rm/Float(kIMP_HistogramCubeResolution))
+                    }
+                }
+                rm += 1
+            }
+            return asum
         }
 
         private func median(side side:Int) -> Cell {
@@ -117,17 +175,17 @@ public class IMPHistogramCube{
             for i in 0..<dimensions[side]{
                 v[i].index = i
                 if side == 0 {
-                    v[i].value = sum(red: i)
+                    v[i].value = red(i)
                 }
                 else if side == 1 {
-                    v[i].value = sum(green: i)
+                    v[i].value = green(i)
                 }
                 else if side == 2 {
-                    v[i].value = sum(blue: i)
+                    v[i].value = blue(i)
                 }
                 asum += v[i].value
             }
-            
+
             asum /= 2
             
             var count = Float(0)
@@ -148,8 +206,17 @@ public class IMPHistogramCube{
             var newDimensions1 = [Int](dimensions)
             var newDimensions2 = [Int](dimensions)
             newDimensions1[side.0]=index
-            newDimensions2[side.0]=newDimensions2[side.0]-index
+            newDimensions2[side.0]=newDimensions2[side.0]-index-1
+            
             var cube1 = Cube(dimensions: newDimensions1)
+            
+            cube1.rmin = self.rmin
+            cube1.gmin = self.gmin
+            cube1.bmin = self.bmin
+
+            cube1.rmax = cube1.rmin+newDimensions1[0]
+            cube1.gmax = cube1.gmin+newDimensions1[1]
+            cube1.bmax = cube1.bmin+newDimensions1[2]
             
             for r in 0..<cube1.dimensions[0] {
                 for g in 0..<cube1.dimensions[1] {
@@ -163,16 +230,25 @@ public class IMPHistogramCube{
             var sg = 0
             var sb = 0
             if side.0 == 0 {
-                sr = index
+                sr = index+1
             }
             else if side.0 == 1 {
-                sg = index
+                sg = index+1
             }
             else if side.0 == 2 {
-                sb = index
+                sb = index+1
             }
             
             var cube2 = Cube(dimensions: newDimensions2)
+
+            cube2.rmin = sr
+            cube2.gmin = sg
+            cube2.bmin = sb
+            
+            cube2.rmax = cube2.rmin+newDimensions2[0]
+            cube2.gmax = cube2.gmin+newDimensions2[1]
+            cube2.bmax = cube2.bmin+newDimensions2[2]
+            
 
             for r in 0..<cube2.dimensions[0] {
                 for g in 0..<cube2.dimensions[1] {
@@ -188,14 +264,55 @@ public class IMPHistogramCube{
         public func split(number:Int) -> [Cube] {
             var cubes = [Cube]()
             cubes.append(self)
-            while cubes.count<number && cubes.count<Int(kIMP_HistogramCubeResolution) {
+            while cubes.count > 0 && cubes.count<number && cubes.count<Int(kIMP_HistogramCubeResolution) {
                 cubes = cubes.sort(>)
                 let current = cubes.removeFirst()
                 let list = current.split()
-                cubes.append(list[0])
-                cubes.append(list[1])
+                for l in list {
+                    if l.count > 0 {
+                        cubes.append(l)
+                    }
+                }
+            }
+            if cubes.count == 0 {
+                cubes.append(self)
             }
             return cubes
+        }
+        
+        var count : Float {
+            get{
+                var rsum = Float(0)
+                for r in 0..<self.dimensions[0] {
+                    for g in 0..<self.dimensions[1] {
+                        for b in 0..<self.dimensions[2] {
+                            rsum += self[r,g,b]
+                        }
+                    }
+                }
+                return rsum
+            }
+        }
+        
+        var average : float3 {
+            get {
+                let c = count
+                let rsum = sumRed()/c
+                let gsum = sumGreen()/c
+                let bsum = sumBlue()/c
+                return float3((rmin+rmax)*rsum,(gmin+gmax)*gsum,(bmin+bmax)*bsum)/Float(kIMP_HistogramCubeResolution)
+            }
+        }
+        
+        public func pallete(count count: Int) -> [float3] {
+            var p = [float3]()
+            let cubes = split(count)
+            
+            for cube in cubes {
+                p.append(cube.average*Float(cubes.count))
+            }
+            
+            return p
         }
         
     }
@@ -217,7 +334,6 @@ public class IMPHistogramCube{
             self.addFromData(&data, to: &cube.counts)
         }
     }
-    
     
     
     private let dim = sizeof(UInt32)/sizeof(simd.uint);
