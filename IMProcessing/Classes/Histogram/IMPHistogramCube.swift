@@ -103,6 +103,10 @@ public class IMPHistogramCube{
         
         private var localMaxima:[LocalMaximum]{
             
+            //
+            // the main idea has been taken from: https://github.com/pixelogik/ColorCube
+            //
+            
             var maxima = [LocalMaximum]()
             
             for r in 0..<dimensions[0]{
