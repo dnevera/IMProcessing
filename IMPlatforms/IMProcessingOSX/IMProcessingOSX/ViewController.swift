@@ -109,6 +109,7 @@ class ViewController: NSViewController {
         imageView = IMPView(frame: scrollView.bounds)
         
         mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: paletteView)
+        //mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: nil)
         imageView.filter = mainFilter
         
         mainFilter.sourceAnalyzer.addUpdateObserver { (histogram) -> Void in

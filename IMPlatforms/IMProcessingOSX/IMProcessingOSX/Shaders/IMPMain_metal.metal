@@ -10,23 +10,41 @@
 
 
 typedef struct {
-    atomic_uint cells[kIMP_HistogramCubeSize];
+    atomic_uint count;
+    atomic_uint reds;
+    atomic_uint greens;
+    atomic_uint blues;
+} IMPHistogramCubeCellAtomic;
+
+typedef struct {
+    IMPHistogramCubeCellAtomic cells[kIMP_HistogramCubeSize];
 }IMPHistogramCubeAtomicBuffer;
 
+//typedef struct {
+//    IMPHistogramCubeCell cells[kIMP_HistogramCubeSize];
+//}IMPHistogramCubeBuffer;
 
 ///
 ///  @brief Kernel compute partial histograms
 ///
 
-inline uint4 cube_binIndex(
-                           texture2d<float, access::sample>  inTexture,
-                           constant IMPCropRegion          &regionIn,
-                           constant float                    &scale,
-                           uint2 gid
-                           ){
+typedef struct{
+    uint4 index;
+    uint4 value;
+}IMPHistogramCubeValue;
+
+inline IMPHistogramCubeValue cube_binIndex(
+                                           texture2d<float, access::sample>  inTexture,
+                                           constant IMPCropRegion          &regionIn,
+                                           constant float                    &scale,
+                                           uint2 gid
+                                           ){
     
     float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
-    return uint4(uint3(inColor.rgb * (kIMP_HistogramCubeResolution-1)),inColor.a * (kIMP_HistogramCubeResolution-1));
+    IMPHistogramCubeValue value;
+    value.index = uint4(uint3(inColor.rgb * (kIMP_HistogramCubeResolution-1)),inColor.a * (kIMP_HistogramCubeResolution-1));
+    value.value = uint4(uint3(inColor.rgb * (kIMP_HistogramSize-1)),inColor.a * (kIMP_HistogramSize-1));
+    return value;
 }
 
 
@@ -51,44 +69,47 @@ kernel void kernel_impHistogramCubePartial(
     uint h      = uint(float(inTexture.get_height())*scale);
     uint size   = w*h;
     uint offset = thsize.x;
-    uint blocks = kIMP_HistogramCubeSize/thsize.x;
+    //uint blocks = kIMP_HistogramCubeSize/thsize.x;
     
-//    for (uint i=0; i<blocks; i++){
-//        atomic_store_explicit(&(temp[tid + i*thsize.x]),0,memory_order_relaxed);
-//    }
-//
-//    threadgroup_barrier(mem_flags::mem_threadgroup);
+    //    for (uint i=0; i<blocks; i++){
+    //        atomic_store_explicit(&(temp[tid + i*thsize.x]),0,memory_order_relaxed);
+    //    }
+    //
+    //    threadgroup_barrier(mem_flags::mem_threadgroup);
     
     for (uint i=0; i<size; i+=offset){
         
         uint  j = i+tid;
         uint2 gid(j%w+groupid.x*w,j/w);
         
-        uint4  rgby = cube_binIndex(inTexture,regionIn,scale,gid);
+        IMPHistogramCubeValue  rgby = cube_binIndex(inTexture,regionIn,scale,gid);
         
-        if (rgby.a>0){
-            uint index = kIMP_HistogramCubeIndex(rgby.rgb);
+        if (rgby.index.a>0){
+            uint index = kIMP_HistogramCubeIndex(rgby.index);
             //atomic_fetch_add_explicit(&(temp[index]), 1, memory_order_relaxed);
-            atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index]), 1, memory_order_relaxed);
+            atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].count),  1, memory_order_relaxed);
+            atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].reds),   rgby.value.r, memory_order_relaxed);
+            atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].greens), rgby.value.g, memory_order_relaxed);
+            atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].blues),  rgby.value.b, memory_order_relaxed);
         }
     }
     
-//    threadgroup_barrier(mem_flags::mem_threadgroup);
-//    
-//    for (uint i=0; i<blocks; i++){
-//        outArray[groupid.x].cells[tid + i*thsize.x] = atomic_load_explicit(&(temp[tid + i*thsize.x]), memory_order_relaxed);
-//    }
+    //    threadgroup_barrier(mem_flags::mem_threadgroup);
+    //
+    //    for (uint i=0; i<blocks; i++){
+    //        outArray[groupid.x].cells[tid + i*thsize.x] = atomic_load_explicit(&(temp[tid + i*thsize.x]), memory_order_relaxed);
+    //    }
 }
 
 
 namespace IMProcessing
 {
     kernel void kernel_paletteLayer(texture2d<float, access::sample>    inTexture   [[texture(0)]],
-                                      texture2d<float, access::write>   outTexture  [[texture(1)]],
-                                      constant IMPPaletteBuffer        *palette     [[buffer(0)]],
-                                      constant uint                     &count      [[buffer(1)]],
-                                      constant IMPPaletteLayerBuffer    &layer      [[buffer(2)]],
-                                      uint2 gid [[thread_position_in_grid]])
+                                    texture2d<float, access::write>   outTexture  [[texture(1)]],
+                                    constant IMPPaletteBuffer        *palette     [[buffer(0)]],
+                                    constant uint                     &count      [[buffer(1)]],
+                                    constant IMPPaletteLayerBuffer    &layer      [[buffer(2)]],
+                                    uint2 gid [[thread_position_in_grid]])
     {
         
         float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);

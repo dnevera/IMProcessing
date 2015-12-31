@@ -40,9 +40,7 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
         var paletteLayer = [IMPPaletteBuffer](count: palette.count, repeatedValue: IMPPaletteBuffer(color: vector_float4()))
         for i in 0..<palette.count {
             paletteLayer[i].color = float4(rgb: palette[i], a: 1)
-            print(" ... update p=\(paletteLayer[i].color)")
         }
-        // print(" ---  -- --  ---- -- \(histogram.cube)")
         let length = palette.count * sizeof(IMPPaletteBuffer)
         var count = palette.count
         
