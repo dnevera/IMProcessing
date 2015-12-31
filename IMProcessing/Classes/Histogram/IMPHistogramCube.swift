@@ -38,6 +38,29 @@ extension Array where Element: Comparable {
 //    return lhs.value >= rhs.value
 //}
 
+extension IMPHistogramCubeCellFloat:Comparable{}
+
+public func == (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+    return lhs.count == rhs.count
+}
+
+public func <= (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+    return lhs.count <= rhs.count
+}
+
+public func > (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+    return lhs.count > rhs.count
+}
+
+public func < (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+    return lhs.count < rhs.count
+}
+
+public func >= (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool{
+    return lhs.count >= rhs.count
+}
+
+
 extension SequenceType where Generator.Element == IMPHistogramCube.LocalMaximum {
     var colors:[float3]{
         get{
