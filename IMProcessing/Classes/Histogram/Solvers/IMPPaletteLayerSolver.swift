@@ -12,14 +12,23 @@
     import Cocoa
 #endif
 
+/// Palette layer representasion in IMPFilter context
 public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
 
+    /// Layer preferences
     public var layer = IMPPaletteLayerBuffer(backgroundColor: float4([0,0,0,1]), backgroundSource: false) {
         didSet{
             memcpy(layerBuffer.contents(), &layer, layerBuffer.length)
         }
     }
     
+    /// Palette color number represents on layer.
+    public var colorNumber:Int = 8
+    
+    ///  Create palette layer object
+    ///
+    ///  - parameter context: current IMPContext
+    ///
     public required init(context: IMPContext) {
         super.init(context: context)
         
@@ -35,12 +44,20 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
         self.addFunction(kernel)
     }
     
+    ///  Analizer handler
+    ///
+    ///  - parameter analizer:  analizer object
+    ///  - parameter histogram: cube histogram object
+    ///  - parameter imageSize: current image size
     public func analizerDidUpdate(analizer: IMPHistogramCubeAnalyzer, histogram: IMPHistogramCube, imageSize: CGSize) {
-        let palette      = histogram.cube.palette(count: 8)
+        
+        let palette      = histogram.cube.palette(count: colorNumber)
         var paletteLayer = [IMPPaletteBuffer](count: palette.count, repeatedValue: IMPPaletteBuffer(color: vector_float4()))
+        
         for i in 0..<palette.count {
             paletteLayer[i].color = float4(rgb: palette[i], a: 1)
         }
+        
         let length = palette.count * sizeof(IMPPaletteBuffer)
         var count = palette.count
         
@@ -60,6 +77,7 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
             command.setBuffer(layerBuffer,     offset: 0, atIndex: 2)
         }
     }
+    
     private var kernel:IMPFunction!
     private var palleteBuffer:MTLBuffer!
     private var palleteCountBuffer:MTLBuffer!

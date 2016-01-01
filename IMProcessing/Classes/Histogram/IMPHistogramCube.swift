@@ -60,25 +60,25 @@ func == (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
     return lhs.count >= rhs.count
 }
 
-extension IMPHistogramCubeCellFloat:Comparable{}
+extension IMPHistogramCubeCell:Comparable{}
 
-public func == (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+public func == (lhs: IMPHistogramCubeCell, rhs: IMPHistogramCubeCell) -> Bool {
     return lhs.count == rhs.count
 }
 
-public func <= (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+public func <= (lhs: IMPHistogramCubeCell, rhs: IMPHistogramCubeCell) -> Bool {
     return lhs.count <= rhs.count
 }
 
-public func > (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+public func > (lhs: IMPHistogramCubeCell, rhs: IMPHistogramCubeCell) -> Bool {
     return lhs.count > rhs.count
 }
 
-public func < (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool {
+public func < (lhs: IMPHistogramCubeCell, rhs: IMPHistogramCubeCell) -> Bool {
     return lhs.count < rhs.count
 }
 
-public func >= (lhs: IMPHistogramCubeCellFloat, rhs: IMPHistogramCubeCellFloat) -> Bool{
+public func >= (lhs: IMPHistogramCubeCell, rhs: IMPHistogramCubeCell) -> Bool{
     return lhs.count >= rhs.count
 }
 
@@ -117,15 +117,15 @@ public class IMPHistogramCube{
         public var gmax:Int = Int(kIMP_HistogramCubeResolution)
         public var bmin:Int = 0
         public var bmax:Int = Int(kIMP_HistogramCubeResolution)
-        public var cells:[IMPHistogramCubeCellFloat]
+        public var cells:[IMPHistogramCubeCell]
         public let dimensions:[Int]
         
         public init(){
             dimensions = [Int(kIMP_HistogramCubeResolution),Int(kIMP_HistogramCubeResolution),Int(kIMP_HistogramCubeResolution)]
             let size = Int(dimensions[0]*dimensions[1]*dimensions[2])
-            cells = [IMPHistogramCubeCellFloat](
+            cells = [IMPHistogramCubeCell](
                 count: size,
-                repeatedValue: IMPHistogramCubeCellFloat()
+                repeatedValue: IMPHistogramCubeCell()
             )
         }
         
@@ -140,9 +140,9 @@ public class IMPHistogramCube{
             self.bmax = bmin+dimensions[2]
 
             let size = Int(dimensions[0]*dimensions[1]*dimensions[2])
-            cells = [IMPHistogramCubeCellFloat](
+            cells = [IMPHistogramCubeCell](
                 count: size,
-                repeatedValue: IMPHistogramCubeCellFloat()
+                repeatedValue: IMPHistogramCubeCell()
             )
         }
         
@@ -150,7 +150,7 @@ public class IMPHistogramCube{
             return red+green*dimensions[0]+blue*dimensions[0]*dimensions[1]
         }
         
-        public subscript(red:Int, green:Int, blue:Int) -> IMPHistogramCubeCellFloat {
+        public subscript(red:Int, green:Int, blue:Int) -> IMPHistogramCubeCell {
             get{
                 return cells[index(red,green: green,blue: blue)]
             }
@@ -439,11 +439,10 @@ public class IMPHistogramCube{
                         }
                     }
                 }
-                
                 return float3(rsum,gsum,bsum)/count/Float(kIMP_HistogramSize-1)
             }
         }
-
+        
         public func dominantColors(count count: Int) -> [float3] {
             let maximas = filteredMaxima(localMaxima,count: count)
             return maximas.colors
@@ -469,7 +468,7 @@ public class IMPHistogramCube{
     
     public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
         clearHistogram()
-        var buffer = [IMPHistogramCubeCellFloat](count: size, repeatedValue: IMPHistogramCubeCellFloat())
+        var buffer = [IMPHistogramCubeCell](count: size, repeatedValue: IMPHistogramCubeCell())
         for i in 0..<dataCount {
             let dataIn = UnsafePointer<IMPHistogramCubeBuffer>(dataIn)+i
             clear(&buffer)
@@ -480,19 +479,19 @@ public class IMPHistogramCube{
     
     private let dim = sizeof(UInt32)/sizeof(simd.uint);
     
-    private func updateCells(inout cells:[IMPHistogramCubeCellFloat], address:UnsafePointer<IMPHistogramCubeBuffer>){
+    private func updateCells(inout cells:[IMPHistogramCubeCell], address:UnsafePointer<IMPHistogramCubeBuffer>){
         let p = UnsafePointer<UInt32>(address)
         let to = UnsafeMutablePointer<Float>(cells)
         vDSP_vfltu32(p, 1, to, 1, vDSP_Length(cells.count*4))
     }
     
-    private func addCells(inout from from:[IMPHistogramCubeCellFloat], inout to:[IMPHistogramCubeCellFloat]){
+    private func addCells(inout from from:[IMPHistogramCubeCell], inout to:[IMPHistogramCubeCell]){
         let tobuffer   = UnsafeMutablePointer<Float>(to)
         let frombuffer = UnsafeMutablePointer<Float>(from)
         vDSP_vadd(tobuffer, 1, frombuffer, 1, tobuffer, 1, vDSP_Length(to.count*4))
     }
     
-    private func clear(inout cells:[IMPHistogramCubeCellFloat]){
+    private func clear(inout cells:[IMPHistogramCubeCell]){
         let buffer = UnsafeMutablePointer<Float>(cells)
         vDSP_vclr(buffer, 1, vDSP_Length(cells.count*4))
     }
