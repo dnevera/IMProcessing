@@ -15,28 +15,50 @@ extension Array where Element: Comparable {
     }
 }
 
-//extension IMPHistogramCube.Cube:Comparable{}
-//extension IMPHistogramCube.Cell:Comparable{}
+extension IMPHistogramCube.Cube:Comparable{}
 
-// func == (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
-//    return lhs.value == rhs.value
-//}
-//
-// func <= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
-//    return lhs.value <= rhs.value
-//}
-//
-// func > (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
-//    return lhs.value > rhs.value
-//}
-//
-// func < (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
-//    return lhs.value < rhs.value
-//}
-//
-// func >= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool{
-//    return lhs.value >= rhs.value
-//}
+public func == (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool {
+    return lhs.maxDimension.dimension == rhs.maxDimension.dimension
+}
+
+public func <= (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool {
+    return lhs.maxDimension.dimension <= rhs.maxDimension.dimension
+}
+
+public func > (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool {
+    return lhs.maxDimension.dimension > rhs.maxDimension.dimension
+}
+
+public func < (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool {
+    return lhs.maxDimension.dimension < rhs.maxDimension.dimension
+}
+
+public func >= (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool{
+    return lhs.maxDimension.dimension >= rhs.maxDimension.dimension
+}
+
+
+extension IMPHistogramCube.Cell:Comparable{}
+
+func == (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.count == rhs.count
+}
+
+ func <= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.count <= rhs.count
+}
+
+ func > (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.count > rhs.count
+}
+
+ func < (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+    return lhs.count < rhs.count
+}
+
+ func >= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool{
+    return lhs.count >= rhs.count
+}
 
 extension IMPHistogramCubeCellFloat:Comparable{}
 
@@ -77,7 +99,7 @@ public class IMPHistogramCube{
     
     internal struct Cell{
         var index:Int
-        var value:Float
+        var count:Float
     }
     
     internal struct LocalMaximum{
@@ -89,6 +111,12 @@ public class IMPHistogramCube{
     
     public struct Cube {
         
+        public var rmin:Int = 0
+        public var rmax:Int = Int(kIMP_HistogramCubeResolution)
+        public var gmin:Int = 0
+        public var gmax:Int = Int(kIMP_HistogramCubeResolution)
+        public var bmin:Int = 0
+        public var bmax:Int = Int(kIMP_HistogramCubeResolution)
         public var cells:[IMPHistogramCubeCellFloat]
         public let dimensions:[Int]
         
@@ -101,8 +129,16 @@ public class IMPHistogramCube{
             )
         }
         
-        public init(dimensions:[Int]){
+        public init(dimensions:[Int], rmin:Int, gmin:Int, bmin:Int){
             self.dimensions = dimensions
+            
+            self.rmin = rmin
+            self.gmin = gmin
+            self.bmin = bmin
+            self.rmax = rmin+dimensions[0]
+            self.gmax = gmin+dimensions[1]
+            self.bmax = bmin+dimensions[2]
+
             let size = Int(dimensions[0]*dimensions[1]*dimensions[2])
             cells = [IMPHistogramCubeCellFloat](
                 count: size,
@@ -227,11 +263,205 @@ public class IMPHistogramCube{
             return [LocalMaximum](filtered[0..<count])
         }
         
-        public func pallete(count count: Int) -> [float3] {
+        
+        private var maxDimension:(index:Int,dimension:Int) {
+            if dimensions[0] >= dimensions[1] && dimensions[0] >= dimensions[2] {
+                return (0,dimensions[0])
+            }
+            else if dimensions[1] >= dimensions[0] && dimensions[1] >= dimensions[2] {
+                return (1,dimensions[1])
+            }
+            else {
+                return (2,dimensions[2])
+            }
+        }
+        
+        private func sumRedSide(index:Int) -> Float {
+            var asum = Float(0)
+            for g in 0..<dimensions[1]{
+                for b in 0..<dimensions[2]{
+                    asum += self[index,g,b].count
+                }
+            }
+            return asum
+        }
+        
+        private func sumGreenSide(index:Int) -> Float {
+            var asum = Float(0)
+            for r in 0..<dimensions[0]{
+                for b in 0..<dimensions[2]{
+                    asum += self[r,index,b].count
+                }
+            }
+            return asum
+        }
+        
+        private func sumBlueSide(index:Int) -> Float {
+            var asum = Float(0)
+            for r in 0..<dimensions[0]{
+                for g in 0..<dimensions[1]{
+                    asum += self[r,g,index].count
+                }
+            }
+            return asum
+        }
+        
+        private func median(side side:Int) -> Cell {
+            
+            var v = [Cell]()
+            
+            var asum = Float(0)
+            
+            for i in 0..<dimensions[side]{
+                var count = Float(0)
+                if side == 0 {
+                    count = sumRedSide(i)
+                }
+                else if side == 1 {
+                    count = sumGreenSide(i)
+                }
+                else if side == 2 {
+                    count = sumBlueSide(i)
+                }
+                asum += count
+                let c = Cell(index: i, count: count)
+                v.append(c)
+            }
+            
+            asum /= 2
+            
+            var count = Float(0)
+            var m = Cell(index: 0, count: 0)
+            for iv in v {
+                count += iv.count
+                if count>=asum {
+                    m = iv
+                    break
+                }
+            }
+            return m
+        }
+        
+        private func split() -> [Cube] {
+            
+            let side  = maxDimension
+            let index = median(side: side.0).index
+            
+            var newDimensions1 = [Int](dimensions)
+            var newDimensions2 = [Int](dimensions)
+            
+            newDimensions1[side.0]=index
+            newDimensions2[side.0]=newDimensions2[side.0]-index-1
+            
+            var cube1 = Cube(dimensions: newDimensions1, rmin:self.rmin, gmin: self.gmin, bmin: self.bmin)
+            
+            for r in 0..<cube1.dimensions[0] {
+                for g in 0..<cube1.dimensions[1] {
+                    for b in 0..<cube1.dimensions[2] {
+                        cube1[r,g,b]=self[r,g,b]
+                    }
+                }
+            }
+            
+            var sr = 0
+            var sg = 0
+            var sb = 0
+            if side.0 == 0 {
+                sr = index+1
+            }
+            else if side.0 == 1 {
+                sg = index+1
+            }
+            else if side.0 == 2 {
+                sb = index+1
+            }
+            
+            var cube2 = Cube(dimensions: newDimensions2, rmin: sr, gmin: sg, bmin: sb)
+            
+            for r in 0..<cube2.dimensions[0] {
+                for g in 0..<cube2.dimensions[1] {
+                    for b in 0..<cube2.dimensions[2] {
+                        cube2[r,g,b]=self[sr+r,sg+g,sb+b]
+                    }
+                }
+            }
+            
+            return [cube1,cube2]
+        }
+        
+        public func split(number:Int) -> [Cube] {
+            var cubes = [Cube]()
+            cubes.append(self)
+            
+            while cubes.count > 0 && cubes.count<number && cubes.count<Int(kIMP_HistogramCubeResolution) {
+                
+                cubes = cubes.sort(>)
+            
+                let current = cubes.removeFirst()
+                let list = current.split()
+                for l in list {
+                    if l.count > 0 {
+                        cubes.append(l)
+                    }
+                }
+            }
+            if cubes.count == 0 {
+                cubes.append(self)
+            }
+            return cubes
+        }
+        
+        var count : Float {
+            get{
+                var rsum = Float(0)
+                for r in 0..<dimensions[0]{
+                    for g in 0..<dimensions[1]{
+                        for b in 0..<dimensions[2]{
+                            rsum+=self[r,g,b].count
+                        }
+                    }
+                }
+                return rsum
+            }
+        }
+        
+        var average : float3 {
+            get {
+                var rsum = Float(0)
+                var gsum = Float(0)
+                var bsum = Float(0)
+                for r in 0..<dimensions[0]{
+                    for g in 0..<dimensions[1]{
+                        for b in 0..<dimensions[2]{
+                            rsum+=self[r,g,b].reds
+                            gsum+=self[r,g,b].greens
+                            bsum+=self[r,g,b].blues
+                        }
+                    }
+                }
+                
+                return float3(rsum,gsum,bsum)/count/Float(kIMP_HistogramSize-1)
+            }
+        }
+
+        public func dominantColors(count count: Int) -> [float3] {
             let maximas = filteredMaxima(localMaxima,count: count)
             return maximas.colors
         }
-        
+
+        public func palette(count count: Int) -> [float3] {
+            
+            let cubes = self.split(count).sort {$0.count>$1.count}
+            
+            var p = [float3]()
+            
+            for cube in cubes{
+                p.append(cube.average)
+            }
+            
+            return p
+        }
+
     }
     
     public var cube   = Cube()

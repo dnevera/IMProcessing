@@ -36,7 +36,7 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
     }
     
     public func analizerDidUpdate(analizer: IMPHistogramCubeAnalyzer, histogram: IMPHistogramCube, imageSize: CGSize) {
-        let palette      = histogram.cube.pallete(count: 8)
+        let palette      = histogram.cube.palette(count: 8)
         var paletteLayer = [IMPPaletteBuffer](count: palette.count, repeatedValue: IMPPaletteBuffer(color: vector_float4()))
         for i in 0..<palette.count {
             paletteLayer[i].color = float4(rgb: palette[i], a: 1)

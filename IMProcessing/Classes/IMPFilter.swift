@@ -222,7 +222,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
                     l_texture  = filter.destination
                     
                     if l_texture == nil {
-                        fatalError("IMPFilter \(filter) did not return valid texture...")
+                        //fatalError("IMPFilter \(filter) did not return valid texture...")
+                        return
                     }
                 }
                 
