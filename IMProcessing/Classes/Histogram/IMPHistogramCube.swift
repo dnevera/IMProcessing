@@ -88,7 +88,7 @@ extension SequenceType where Generator.Element == IMPHistogramCube.LocalMaximum 
         get{
             var v = [float3]()
             for lm in self{
-                v.append(lm.color/255)
+                v.append(lm.color)
             }
             return v
         }
@@ -199,9 +199,9 @@ public class IMPHistogramCube{
                         
                         if !isMaxima { continue }
                         let idx   = index(r,green:g,blue:b)
-                        let r     = cell.reds/cell.count
-                        let g     = cell.greens/cell.count
-                        let b     = cell.blues/cell.count
+                        let r     = cell.reds/cell.count/Float(kIMP_HistogramSize-1)
+                        let g     = cell.greens/cell.count/Float(kIMP_HistogramSize-1)
+                        let b     = cell.blues/cell.count/Float(kIMP_HistogramSize-1)
                         let brightnes = max(max(r, g), b)
                         let local = LocalMaximum(count: Int(count), index: idx, color: float3(r,g,b), brightnes: brightnes)
 
@@ -228,7 +228,7 @@ public class IMPHistogramCube{
                     let delta = max1.color-max2.color
                     
                     let distance = sqrt(pow(delta.r, 2)+pow(delta.g,2)+pow(delta.b,2))
-                    
+                                        
                     if threshold>distance {
                         isDistinct = false
                         break
@@ -249,15 +249,15 @@ public class IMPHistogramCube{
             
             var filtered = maxima
             var temp     = [LocalMaximum]()
-            var treshold = Float(0.1)
+            var threshold = Float(0.1)
             
             for var k = 0 ; k<10 ; k++ {
-                temp = distinctMaxima(filtered, threshold: treshold)
+                temp = distinctMaxima(filtered, threshold: threshold)
                 if temp.count <= count {
                     break
                 }
                 filtered = temp
-                treshold += 0.05
+                threshold += 0.05
             }
             
             return [LocalMaximum](filtered[0..<count])
