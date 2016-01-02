@@ -47,7 +47,6 @@
 		31D4A7961C2C138F00A7C278 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A78F1C2C138F00A7C278 /* Document.swift */; };
 		31D4A7971C2C138F00A7C278 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7901C2C138F00A7C278 /* IMPDocument.swift */; };
 		31D4A7981C2C138F00A7C278 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */; };
-		31D4A7991C2C138F00A7C278 /* IMPScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */; };
 		31D4A79A1C2C138F00A7C278 /* IMPTestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */; };
 		31D4A79B1C2C138F00A7C278 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7941C2C138F00A7C278 /* ViewController.swift */; };
 		31E670861C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E670851C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift */; };
@@ -90,7 +89,7 @@
 		3112BCF11C281D9F00825078 /* CGSize+IMProcessing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGSize+IMProcessing.swift"; sourceTree = "<group>"; };
 		3112BCF21C281D9F00825078 /* IMPImage+CGImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImage+CGImage.swift"; sourceTree = "<group>"; };
 		3112BCF31C281D9F00825078 /* IMPImage+MTLTexture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImage+MTLTexture.swift"; sourceTree = "<group>"; };
-		3112BD0F1C2820B400825078 /* IMProcessing.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMProcessing.podspec; sourceTree = SOURCE_ROOT; };
+		3112BD0F1C2820B400825078 /* IMProcessing.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMProcessing.podspec; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		3112BD131C2821F200825078 /* IMPHistogramView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPHistogramView.swift; path = FrontEnd/IMPHistogramView.swift; sourceTree = "<group>"; };
 		3112BD141C2821F200825078 /* IMPView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPView.swift; path = FrontEnd/IMPView.swift; sourceTree = "<group>"; };
 		3112BD201C28260000825078 /* IMPSwift-Bridging-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMPSwift-Bridging-Metal.h"; sourceTree = "<group>"; };
@@ -115,7 +114,6 @@
 		31D4A78F1C2C138F00A7C278 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Document.swift; path = Example/Document.swift; sourceTree = "<group>"; };
 		31D4A7901C2C138F00A7C278 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPDocument.swift; path = Example/IMPDocument.swift; sourceTree = "<group>"; };
 		31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMenuHandler.swift; path = Example/IMPMenuHandler.swift; sourceTree = "<group>"; };
-		31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPScrollView.swift; path = Example/IMPScrollView.swift; sourceTree = "<group>"; };
 		31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPTestFilter.swift; path = Example/IMPTestFilter.swift; sourceTree = "<group>"; };
 		31D4A7941C2C138F00A7C278 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ViewController.swift; path = Example/ViewController.swift; sourceTree = "<group>"; };
 		31E670851C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramCubeAnalyzer.swift; sourceTree = "<group>"; };
@@ -276,7 +274,6 @@
 				31D4A78F1C2C138F00A7C278 /* Document.swift */,
 				31D4A7901C2C138F00A7C278 /* IMPDocument.swift */,
 				31D4A7911C2C138F00A7C278 /* IMPMenuHandler.swift */,
-				31D4A7921C2C138F00A7C278 /* IMPScrollView.swift */,
 				31D4A7931C2C138F00A7C278 /* IMPTestFilter.swift */,
 				31D4A7941C2C138F00A7C278 /* ViewController.swift */,
 			);
@@ -453,7 +450,6 @@
 				3112BCFC1C281D9F00825078 /* IMPHistogramRangeSolver.swift in Sources */,
 				3112BD031C281D9F00825078 /* IMPTexturePovider.swift in Sources */,
 				31D4A7981C2C138F00A7C278 /* IMPMenuHandler.swift in Sources */,
-				31D4A7991C2C138F00A7C278 /* IMPScrollView.swift in Sources */,
 				3112BCFE1C281D9F00825078 /* IMPExtensions.swift in Sources */,
 				31E670861C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift in Sources */,
 				31D4A7971C2C138F00A7C278 /* IMPDocument.swift in Sources */,

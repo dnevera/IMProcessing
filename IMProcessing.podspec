@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.frameworks   = 'Metal'
   s.requires_arc = true
 
-  s.source_files  = 'IMProcessing/Classes/**/*.{h,swift}', 'IMProcessing/Classes/*.{swift}'
+  s.source_files        = 'IMProcessing/Classes/**/*.{h,swift}', 'IMProcessing/Classes/*.{swift}'
   s.public_header_files = 'IMProcessing/Classes/**/*.h','IMProcessing/Classes/Shaders/*.h'
 
 end

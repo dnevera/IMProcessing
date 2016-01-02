@@ -100,6 +100,11 @@ class ViewController: NSViewController {
         //histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
 
         paletteView = IMPPaletteView(frame: histogramContainerView.bounds)
+        
+//        paletteView.palette.solver.paletteHandler = { (cube,count) in
+//            return cube.dominantColors(count: count)
+//        }
+        
         //paletteView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
         //paletteView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
 

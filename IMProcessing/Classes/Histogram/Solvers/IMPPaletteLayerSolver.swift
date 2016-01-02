@@ -25,6 +25,9 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
     /// Palette color number represents on layer.
     public var colorNumber:Int = 8
     
+    /// Palette representaion handler
+    public var paletteHandler:((cube:IMPHistogramCube.Cube, count:Int)->[float3])?
+    
     ///  Create palette layer object
     ///
     ///  - parameter context: current IMPContext
@@ -44,6 +47,7 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
         self.addFunction(kernel)
     }
     
+    
     ///  Analizer handler
     ///
     ///  - parameter analizer:  analizer object
@@ -51,7 +55,13 @@ public class IMPPaletteLayerSolver: IMPFilter, IMPHistogramCubeSolver {
     ///  - parameter imageSize: current image size
     public func analizerDidUpdate(analizer: IMPHistogramCubeAnalyzer, histogram: IMPHistogramCube, imageSize: CGSize) {
         
-        let palette      = histogram.cube.palette(count: colorNumber)
+        var palette:[float3]
+        if let handler = paletteHandler{
+            palette = handler(cube: histogram.cube,count: colorNumber)
+        }
+        else{
+            palette      = histogram.cube.palette(count: colorNumber)
+        }
         var paletteLayer = [IMPPaletteBuffer](count: palette.count, repeatedValue: IMPPaletteBuffer(color: vector_float4()))
         
         for i in 0..<palette.count {
