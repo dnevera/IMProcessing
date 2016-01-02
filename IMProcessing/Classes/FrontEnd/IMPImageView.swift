@@ -232,8 +232,18 @@
             self.init(context: IMPContext(), frame:frameRect)
         }
         
+        @objc func magnifyChanged(event:NSNotification){
+            isSizeFit = false
+        }
+
         private func configure(){
             
+            NSNotificationCenter.defaultCenter().addObserver(
+                self,
+                selector: "magnifyChanged:",
+                name: NSScrollViewWillStartLiveMagnifyNotification,
+                object: nil)
+
             scrollView = IMPScrollView(frame: bounds)
             
             scrollView?.backgroundColor = IMPColor.clearColor()
