@@ -26,7 +26,7 @@ namespace IMProcessing
     namespace histogram{
         
         static constant float3 Im(kIMP_HistogramSize - 1);
-
+        
         ///  @brief Get a sample acording texture scale factor value.
         ///
         ///  @param inTexture       input texture
@@ -282,6 +282,94 @@ namespace IMProcessing
             outArray[groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
         }
     }
+    
+    
+    typedef struct {
+        atomic_uint count;
+        atomic_uint reds;
+        atomic_uint greens;
+        atomic_uint blues;
+    } IMPHistogramCubeCellAtomic;
+    
+    typedef struct {
+        IMPHistogramCubeCellAtomic cells[kIMP_HistogramCubeSize];
+    }IMPHistogramCubeAtomicBuffer;
+    
+    ///
+    ///  @brief Kernel compute partial histograms
+    ///
+    
+    typedef struct{
+        uint4 index;
+        uint4 value;
+    }IMPHistogramCubeValue;
+    
+    inline IMPHistogramCubeValue cube_binIndex(
+                                               texture2d<float, access::sample>  inTexture,
+                                               constant IMPCropRegion          &regionIn,
+                                               constant float                    &scale,
+                                               uint2 gid
+                                               ){
+        
+        float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
+        IMPHistogramCubeValue value;
+        value.index = uint4(uint3(inColor.rgb * (kIMP_HistogramCubeResolution-1)),inColor.a * (kIMP_HistogramCubeResolution-1));
+        value.value = uint4(uint3(inColor.rgb * (kIMP_HistogramSize-1)),inColor.a * (kIMP_HistogramSize-1));
+        return value;
+    }
+    
+    
+    
+    ///
+    ///  @brief Kernel compute partial histograms
+    ///
+    kernel void kernel_impHistogramCubePartial(
+                                               texture2d<float, access::sample>      inTexture  [[texture(0)]],
+                                               device   IMPHistogramCubeAtomicBuffer *outArray  [[ buffer(0)]],
+                                               constant IMPCropRegion                 &regionIn [[ buffer(1)]],
+                                               constant float                         &scale    [[ buffer(2)]],
+                                               constant IMPHistogramCubeClipping      &clipping [[ buffer(3)]],
+                                               uint tid       [[thread_index_in_threadgroup]],
+                                               uint2 groupid  [[threadgroup_position_in_grid]],
+                                               uint2 groupSize[[threadgroups_per_grid]],
+                                               uint2 thsize   [[threads_per_threadgroup]]
+                                               )
+    {
+        uint w      = uint(float(inTexture.get_width())*scale)/groupSize.x;
+        uint h      = uint(float(inTexture.get_height())*scale);
+        uint size   = w*h;
+        uint offset = thsize.x;
+        
+        for (uint i=0; i<size; i+=offset){
+            
+            uint  j = i+tid;
+            uint2 gid(j%w+groupid.x*w,j/w);
+            
+            IMPHistogramCubeValue  rgby = cube_binIndex(inTexture,regionIn,scale,gid);
+            
+            float3 shadows    = (float3(rgby.value.rgb)/float(kIMP_HistogramSize-1));
+            float3 highlights = 1.0-(float3(rgby.value.rgb)/float(kIMP_HistogramSize-1));
+            
+            if (clipping.shadows.r>shadows.r && clipping.shadows.g>shadows.g && clipping.shadows.b>shadows.b){
+                continue;
+            }
+            
+            if (clipping.highlights.r>highlights.r && clipping.highlights.g>highlights.g && clipping.highlights.b>highlights.b){
+                continue;
+            }
+            
+            
+            if (rgby.index.a>0){
+                uint index = kIMP_HistogramCubeIndex(rgby.index);
+                atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].count),  1, memory_order_relaxed);
+                atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].reds),   rgby.value.r, memory_order_relaxed);
+                atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].greens), rgby.value.g, memory_order_relaxed);
+                atomic_fetch_add_explicit(&(outArray[groupid.x].cells[index].blues),  rgby.value.b, memory_order_relaxed);
+            }
+        }
+    }
+    
+    
 }
 
 #endif

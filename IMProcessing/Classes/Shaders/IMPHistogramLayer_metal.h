@@ -67,6 +67,36 @@ namespace IMProcessing
         
         outTexture.write(result, gid);
     }
+    
+    kernel void kernel_paletteLayer(texture2d<float, access::sample>    inTexture   [[texture(0)]],
+                                    texture2d<float, access::write>   outTexture  [[texture(1)]],
+                                    constant IMPPaletteBuffer        *palette     [[buffer(0)]],
+                                    constant uint                     &count      [[buffer(1)]],
+                                    constant IMPPaletteLayerBuffer    &layer      [[buffer(2)]],
+                                    uint2 gid [[thread_position_in_grid]])
+    {
+        
+        float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+        
+        float  height    = float(outTexture.get_height());
+        float  offset    = height/float(count);
+        
+        float4 result;
+        if (layer.backgroundSource){
+            result = inColor;
+        }
+        else{
+            result = layer.backgroundColor;
+        }
+        
+        uint index = uint(gid.y/offset);
+        
+        float4 component = palette[index].color;
+        
+        result = IMProcessing::blendNormal(result, component);
+        
+        outTexture.write(result, gid);
+    }
 }
 
 #endif

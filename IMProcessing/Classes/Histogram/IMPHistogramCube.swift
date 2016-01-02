@@ -395,8 +395,10 @@ public class IMPHistogramCube{
             
             while cubes.count > 0 && cubes.count<number && cubes.count<Int(kIMP_HistogramCubeResolution) {
                 
-                cubes = cubes.sort(>)
-            
+                cubes = cubes.sort{
+                     $0.count > $1.count //&& $0.maxDimension.dimension > $1.maxDimension.dimension
+                }
+                
                 let current = cubes.removeFirst()
                 let list = current.split()
                 for l in list {

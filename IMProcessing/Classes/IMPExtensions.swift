@@ -42,9 +42,37 @@ public enum IMProcessing{
 }
 
 public extension IMPColor{
-    convenience init(color:float4) {
+    public convenience init(color:float4) {
         self.init(red: CGFloat(color.x), green: CGFloat(color.y), blue: CGFloat(color.z), alpha: CGFloat(color.w))
     }
+    public convenience init(rgba:float4) {
+        self.init(color:rgba)
+    }
+    public convenience init(rgb:float3) {
+        self.init(red: CGFloat(rgb.x), green: CGFloat(rgb.y), blue: CGFloat(rgb.z), alpha: CGFloat(1))
+    }
+    public convenience init(red:Float, green:Float, blue:Float) {
+        self.init(rgb:float3(red,green,blue))
+    }
+    
+    public var rgb:float3{
+        get{
+            return float3(redComponent.float,greenComponent.float,blueComponent.float)
+        }
+    }
+    
+    public var rgba:float4{
+        get{
+            return float4(redComponent.float,greenComponent.float,blueComponent.float,alphaComponent.float)
+        }
+    }
+}
+
+public func * (left:IMPColor, right:Float) -> IMPColor {
+    return IMPColor(
+        red: left.redComponent.float*right,
+        green: left.greenComponent.float*right,
+        blue: left.blueComponent.float*right)
 }
 
 public extension IMPBlendingMode{
