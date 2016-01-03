@@ -176,6 +176,7 @@
         public var backgroundColor:IMPColor{
             set{
                 imageView.backgroundColor = newValue
+                scrollView.backgroundColor = newValue
             }
             get{
                 return imageView.backgroundColor
@@ -211,8 +212,7 @@
         
         public func sizeFit(){
             isSizeFit = true
-            let newBounds = CGRect(x: 0, y: 0, width: imageView.bounds.size.width, height: imageView.bounds.size.height)
-            scrollView.magnifyToFitRect(newBounds)
+            scrollView.magnifyToFitRect(imageView.bounds)
         }
         
         public func sizeOriginal(){
@@ -235,7 +235,7 @@
         @objc func magnifyChanged(event:NSNotification){
             isSizeFit = false
         }
-
+        
         private func configure(){
             
             NSNotificationCenter.defaultCenter().addObserver(
@@ -243,20 +243,24 @@
                 selector: "magnifyChanged:",
                 name: NSScrollViewWillStartLiveMagnifyNotification,
                 object: nil)
-
+            
             scrollView = IMPScrollView(frame: bounds)
             
-            scrollView?.backgroundColor = IMPColor.clearColor()
+            scrollView.drawsBackground = false
+            scrollView.wantsLayer = true
+            
+            scrollView.allowsMagnification = true
+            scrollView.acceptsTouchEvents = true
+            scrollView.hasVerticalScroller = true
+            scrollView.hasHorizontalScroller = true
+            
+            scrollView.autoresizingMask = [.ViewHeightSizable, .ViewWidthSizable]
             
             imageView = IMPView(context: self.context, frame: self.bounds)
             imageView.backgroundColor = IMPColor.clearColor()
             
-            scrollView.drawsBackground = false
             scrollView.documentView = imageView
-            scrollView.allowsMagnification = true
-            scrollView.acceptsTouchEvents = true
             
-            scrollView.autoresizingMask = [.ViewHeightSizable, .ViewWidthSizable]
             addSubview(scrollView)
         }
         
@@ -285,7 +289,11 @@
         
         private func configure(){
             cv = IMPClipView(frame: self.bounds)
-            self.contentView = cv
+            contentView = cv
+            verticalScroller = IMPScroller()
+            verticalScroller?.controlSize = NSControlSize(rawValue: 5)!
+            horizontalScroller = IMPScroller()
+            horizontalScroller?.controlSize = NSControlSize(rawValue: 5)!
         }
         
         required init?(coder: NSCoder) {
@@ -302,6 +310,76 @@
             super.magnifyToFitRect(rect)
             self.cv.moveToCenter(true)
         }
+        
+        override func drawRect(dirtyRect: NSRect) {
+            backgroundColor.set()
+            NSRectFill(dirtyRect)
+        }
+    }
+    
+    class IMPScroller: NSScroller {
+        
+        var backgroundColor = IMPColor.clearColor()
+        
+        
+//        func drawBackground(rect:NSRect){
+//            let path = NSBezierPath(roundedRect: rect, xRadius: 0, yRadius: 0)
+//            IMPColor.clearColor().set()
+//            path.fill()
+//        }
+//
+//        static var width = 5
+//        
+//        override func drawKnob() {
+//            for i in 0...6{
+//                drawBackground(rectForPart(NSScrollerPart(rawValue: UInt(i))!))
+//            }
+//            
+//            let knobRect = rectForPart(.Knob)
+//            let newRect = NSMakeRect((knobRect.size.width -  IMPScroller.width.cgloat) / 2, knobRect.origin.y, IMPScroller.width.cgloat, knobRect.size.height)
+//            let path = NSBezierPath(roundedRect: newRect, xRadius:5, yRadius:5)
+//            IMPColor.lightGrayColor().set()
+//            path.fill()
+//        }
+        
+        override func drawRect(dirtyRect: NSRect) {
+            backgroundColor.set()
+            NSRectFill(dirtyRect)
+            drawKnob()
+        }
+        
+        override func drawKnobSlotInRect(slotRect: NSRect, highlight flag: Bool) {
+            super.drawKnobSlotInRect(slotRect, highlight: true)
+        }
+        
+        override func mouseExited(theEvent:NSEvent){
+            super.mouseExited(theEvent)
+            self.fadeOut()
+        }
+        
+        override func mouseEntered(theEvent:NSEvent) {
+            super.mouseEntered(theEvent)
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.1
+                self.animator().alphaValue = 1.0
+                
+                }, completionHandler: nil)
+            NSObject.cancelPreviousPerformRequestsWithTarget(self, selector: "fadeOut", object: nil)
+        }
+        
+        override func mouseMoved(theEvent:NSEvent){
+            super.mouseMoved(theEvent)
+            self.alphaValue = 1.0
+        }
+        
+        func fadeOut() {
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.3
+                self.animator().alphaValue = 1.0
+                
+                }, completionHandler: nil)
+        }
+        
     }
     
     class IMPClipView:NSClipView {
@@ -369,11 +447,6 @@
                 self.scrollToPoint(self.constrainBoundsRect(clipFrame).origin)
                 scrollView?.reflectScrolledClipView(self)
             }
-        }
-        
-        override func viewBoundsChanged(notification: NSNotification) {
-            super.viewBoundsChanged(notification)
-            NSLog(" ---> \(notification)")
         }
         
         override func viewFrameChanged(notification: NSNotification) {

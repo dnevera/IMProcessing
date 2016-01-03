@@ -36,7 +36,7 @@ public enum IMProcessing{
         #if os(iOS)
         static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #else
-        static let pixelFormat = MTLPixelFormat.RGBA8Unorm
+        static let pixelFormat = MTLPixelFormat.RGBA16Unorm
         #endif
     }
 }

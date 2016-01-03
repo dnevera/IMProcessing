@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		310284101C3929B600042B4C /* libturbojpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3102840F1C3929B600042B4C /* libturbojpeg.a */; };
+		310284141C392A4200042B4C /* IMPJpegturbo.m in Sources */ = {isa = PBXBuildFile; fileRef = 310284131C392A4200042B4C /* IMPJpegturbo.m */; };
 		3112BCBC1C281CEB00825078 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBB1C281CEB00825078 /* Assets.xcassets */; };
 		3112BCBF1C281CEB00825078 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBD1C281CEB00825078 /* Main.storyboard */; };
 		3112BCF41C281D9F00825078 /* IMPAdjustment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCC81C281D9F00825078 /* IMPAdjustment.swift */; };
@@ -54,6 +56,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3102840F1C3929B600042B4C /* libturbojpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libturbojpeg.a; path = vendor/lib/libturbojpeg.a; sourceTree = "<group>"; };
+		310284121C392A4200042B4C /* IMPJpegturbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPJpegturbo.h; sourceTree = "<group>"; };
+		310284131C392A4200042B4C /* IMPJpegturbo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMPJpegturbo.m; sourceTree = "<group>"; };
 		3112BCB21C281CEB00825078 /* IMProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3112BCBB1C281CEB00825078 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3112BCBE1C281CEB00825078 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -125,16 +130,26 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				310284101C3929B600042B4C /* libturbojpeg.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		310284111C3929DB00042B4C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3102840F1C3929B600042B4C /* libturbojpeg.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		3112BCA91C281CEB00825078 = {
 			isa = PBXGroup;
 			children = (
 				3112BCB41C281CEB00825078 /* IMProcessing */,
+				310284111C3929DB00042B4C /* Frameworks */,
 				3112BCB31C281CEB00825078 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -254,6 +269,8 @@
 				3112BCF11C281D9F00825078 /* CGSize+IMProcessing.swift */,
 				3112BCF21C281D9F00825078 /* IMPImage+CGImage.swift */,
 				3112BCF31C281D9F00825078 /* IMPImage+MTLTexture.swift */,
+				310284121C392A4200042B4C /* IMPJpegturbo.h */,
+				310284131C392A4200042B4C /* IMPJpegturbo.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -452,6 +469,7 @@
 				31D4A7981C2C138F00A7C278 /* IMPMenuHandler.swift in Sources */,
 				3112BCFE1C281D9F00825078 /* IMPExtensions.swift in Sources */,
 				31E670861C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift in Sources */,
+				310284141C392A4200042B4C /* IMPJpegturbo.m in Sources */,
 				31D4A7971C2C138F00A7C278 /* IMPDocument.swift in Sources */,
 				3112BCF71C281D9F00825078 /* IMPWBFilter.swift in Sources */,
 				3112BCF91C281D9F00825078 /* IMPHistogramAnalyzer.swift in Sources */,
@@ -568,8 +586,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/vendor/libjpeg-turbo/include";
 				INFOPLIST_FILE = IMProcessing/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/vendor/lib",
+				);
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/IMProcessing/Classes/Bridging";
 				PRODUCT_BUNDLE_IDENTIFIER = dehancer.photo.IMProcessing;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -582,8 +605,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/vendor/libjpeg-turbo/include";
 				INFOPLIST_FILE = IMProcessing/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/vendor/lib",
+				);
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/IMProcessing/Classes/Bridging";
 				PRODUCT_BUNDLE_IDENTIFIER = dehancer.photo.IMProcessing;
 				PRODUCT_NAME = "$(TARGET_NAME)";

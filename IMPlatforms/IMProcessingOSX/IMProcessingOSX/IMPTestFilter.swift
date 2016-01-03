@@ -16,9 +16,7 @@ class IMPTestFilter:IMPFilter {
     var contrastFilter:IMPContrastFilter!
     var awbFilter:IMPAutoWBFilter!
     var hsvFilter:IMPHSVFilter!
-    
-    var colorCubeAnalyzer:IMPHistogramCubeAnalyzer!
-    
+        
     required init(context: IMPContext, histogramView:IMPView, paletteView:IMPView?) {
         
         super.init(context: context)
@@ -39,17 +37,6 @@ class IMPTestFilter:IMPFilter {
             self.contrastFilter.adjustment.maximum = self.rangeSolver.maximum
         })
         
-        
-        //colorCubeAnalyzer = IMPHistogramCubeAnalyzer(context: self.context)
-        
-//        colorCubeAnalyzer.addUpdateObserver({ (histogram) -> Void in
-//            let palletes = histogram.cube.pallete(count: 16)
-//            for pallete in palletes {
-//                print(" ... update p=\(pallete)")
-//            }
-//            print(" ---  -- --  ---- -- ")
-//        })
-        
         addSourceObserver { (source) -> Void in
             self.sourceAnalyzer.source = source
         }
@@ -57,7 +44,6 @@ class IMPTestFilter:IMPFilter {
         addDestinationObserver { (destination) -> Void in
             histogramView.source = destination
             paletteView?.source = destination
-            //self.colorCubeAnalyzer.source = destination
         }
     }
     
