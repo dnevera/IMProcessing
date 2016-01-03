@@ -9,12 +9,6 @@
 import Accelerate
 import simd
 
-extension Array where Element: Comparable {
-    var median: Element {
-        return self.sort(<)[self.count/2]
-    }
-}
-
 extension IMPHistogramCube.Cube:Comparable{}
 
 public func == (lhs: IMPHistogramCube.Cube, rhs: IMPHistogramCube.Cube) -> Bool {
@@ -44,19 +38,19 @@ func == (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
     return lhs.count == rhs.count
 }
 
- func <= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+func <= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
     return lhs.count <= rhs.count
 }
 
- func > (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+func > (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
     return lhs.count > rhs.count
 }
 
- func < (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
+func < (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool {
     return lhs.count < rhs.count
 }
 
- func >= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool{
+func >= (lhs: IMPHistogramCube.Cell, rhs: IMPHistogramCube.Cell) -> Bool{
     return lhs.count >= rhs.count
 }
 
@@ -95,13 +89,16 @@ extension SequenceType where Generator.Element == IMPHistogramCube.LocalMaximum 
     }
 }
 
+/// Cube RGB-Histogram presentation
 public class IMPHistogramCube{
     
+    ///  @brief Cube Histogram cell uses in median-cut
     internal struct Cell{
         var index:Int
         var count:Float
     }
     
+    ///  @brief Local maximum cell presentation
     internal struct LocalMaximum{
         var count:Int
         var index:Int
@@ -109,14 +106,23 @@ public class IMPHistogramCube{
         var brightnes:Float
     }
     
+    ///  @brief RGB-Cube is a statistics accumulator.
     public struct Cube {
         
+        /// Red minimum presents lower corner of the RGB-Cube
         public var rmin:Int = 0
+        /// Red maximum presents higher corner of the RGB-Cube
         public var rmax:Int = Int(kIMP_HistogramCubeResolution)
+        /// Green minimum presents lower corner of the RGB-Cube
         public var gmin:Int = 0
+        /// Green maximum presents higher corner of the RGB-Cube
         public var gmax:Int = Int(kIMP_HistogramCubeResolution)
+        /// Blue minimum presents lower corner of the RGB-Cube
         public var bmin:Int = 0
+        /// Blue maximum presents higher corner of the RGB-Cube
         public var bmax:Int = Int(kIMP_HistogramCubeResolution)
+        
+        /// RGB-Cube statistics
         public var cells:[IMPHistogramCubeCell]
         public let dimensions:[Int]
         
@@ -138,7 +144,7 @@ public class IMPHistogramCube{
             self.rmax = rmin+dimensions[0]
             self.gmax = gmin+dimensions[1]
             self.bmax = bmin+dimensions[2]
-
+            
             let size = Int(dimensions[0]*dimensions[1]*dimensions[2])
             cells = [IMPHistogramCubeCell](
                 count: size,
@@ -188,9 +194,9 @@ public class IMPHistogramCube{
                             if (redIndex >= 0 && greenIndex >= 0 && blueIndex >= 0) {
                                 if (redIndex < dimensions[0] && greenIndex < dimensions[1] && blueIndex < dimensions[2]) {
                                     if (self[redIndex, greenIndex, blueIndex].count > count) {
-
+                                        
                                         isMaxima = false
-
+                                        
                                         break
                                     }
                                 }
@@ -204,7 +210,7 @@ public class IMPHistogramCube{
                         let b     = cell.blues/cell.count/Float(kIMP_HistogramSize-1)
                         let brightnes = max(max(r, g), b)
                         let local = LocalMaximum(count: Int(count), index: idx, color: float3(r,g,b), brightnes: brightnes)
-
+                        
                         maxima.append(local)
                     }
                 }
@@ -228,13 +234,13 @@ public class IMPHistogramCube{
                     let delta = max1.color-max2.color
                     
                     let distance = sqrt(pow(delta.r, 2)+pow(delta.g,2)+pow(delta.b,2))
-                                        
+                    
                     if threshold>distance {
                         isDistinct = false
                         break
                     }
                 }
-            
+                
                 if isDistinct {
                     filtered.append(max1)
                 }
@@ -396,7 +402,7 @@ public class IMPHistogramCube{
             while cubes.count > 0 && cubes.count<number && cubes.count<Int(kIMP_HistogramCubeResolution) {
                 
                 cubes = cubes.sort{
-                     $0.count > $1.count //&& $0.maxDimension.dimension > $1.maxDimension.dimension
+                    $0.count > $1.count //&& $0.maxDimension.dimension > $1.maxDimension.dimension
                 }
                 
                 let current = cubes.removeFirst()
@@ -449,7 +455,7 @@ public class IMPHistogramCube{
             let maximas = filteredMaxima(localMaxima,count: count)
             return maximas.colors
         }
-
+        
         public func palette(count count: Int) -> [float3] {
             
             let cubes = self.split(count).sort {$0.count>$1.count}
@@ -462,11 +468,11 @@ public class IMPHistogramCube{
             
             return p
         }
-
+        
     }
     
     public var cube   = Cube()
-    public let size   = Int(kIMP_HistogramCubeSize)    
+    public let size   = Int(kIMP_HistogramCubeSize)
     
     public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
         clearHistogram()

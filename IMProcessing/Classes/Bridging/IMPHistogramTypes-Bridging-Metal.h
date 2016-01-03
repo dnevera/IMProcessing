@@ -51,30 +51,46 @@ typedef struct{
 } IMPColorWeightsClipping;
 
 
+///  @brief Maximum threads launch on GPU to compute Cube histogram
 #define kIMP_HistogramCubeThreads      512
-#define kIMP_HistogramCubeSize         32768
-#define kIMP_HistogramCubeResolution   32
 
+///  @brief RGB-Cube resolution: 32x32x32
+#define kIMP_HistogramCubeResolution   32
+///  @brief RGB-Cube histgjram linear size
+#define kIMP_HistogramCubeSize         32768
+///  @brief RGB-Cube rgb index in the linear histogram array
 #define kIMP_HistogramCubeIndex(rgb) uint(rgb.r+rgb.g*kIMP_HistogramCubeResolution+rgb.b*kIMP_HistogramCubeResolution*kIMP_HistogramCubeResolution)
 
+///  @brief Kernel-side Cube of one cell presentation.
 typedef struct {
+    ///  @brief All color counts in the cell
     uint count;
+    ///  @brief Total red color volume in the cell
     uint reds;
+    ///  @brief Total green color volume in the cell
     uint greens;
+    ///  @brief Total blue color volume in the cell
     uint blues;
 } IMPHistogramCubeCellUint;
 
+///  @brief Host-side Cube of one cell presentation.
 typedef struct {
+    ///  @brief All color counts in the cell
     float count;
+    ///  @brief Total red color volume in the cell
     float reds;
+    ///  @brief Total green color volume in the cell
     float greens;
+    ///  @brief Total blue color volume in the cell
     float blues;
 } IMPHistogramCubeCell;
 
+///  @brief Completed RGB-Cube buffer
 typedef struct {
     IMPHistogramCubeCellUint cells[kIMP_HistogramCubeSize];
 }IMPHistogramCubeBuffer;
 
+///  @brief Clip shadows/highlights during statistic computaion
 typedef struct {
     metal_float3 shadows;
     metal_float3 highlights;
