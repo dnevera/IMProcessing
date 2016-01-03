@@ -30,4 +30,10 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
         self.init(context: context)
         self.texture = texture
     }
+    
+    public weak var filter:IMPFilter?
+    
+    public func completeUpdate(){
+        filter?.dirty = true
+    }
 }

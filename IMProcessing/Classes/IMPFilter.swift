@@ -23,8 +23,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var source:IMPImageProvider?{
         didSet{
-            //texture = nil
             dirty = true
+            source?.filter=self
         }
     }
     

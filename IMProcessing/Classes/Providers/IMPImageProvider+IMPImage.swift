@@ -26,9 +26,12 @@ extension IMPImageProvider{
         #if os(iOS)
             self.orientation = image.imageOrientation
         #endif
+        completeUpdate()
     }
     
     public func update(file file:String, maxSize: Float = 0) throws {
         texture = try IMPJpegturbo.updateMTLTexture(texture, withPixelFormat: IMProcessing.colors.pixelFormat, withDevice: context.device, fromFile: file, maxSize: maxSize.cgloat)
+        completeUpdate()
     }
+        
 }

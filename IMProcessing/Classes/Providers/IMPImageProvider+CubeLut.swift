@@ -31,7 +31,7 @@ public enum IMPLutStatus:Int{
 
 extension IMPImageProvider{
     
-    public struct Description {
+    public struct LutDescription {
         public var type = IMPLutType.UNKNOOWN
         public var title = String("")
         public var domainMin = float3(0)
@@ -41,7 +41,7 @@ extension IMPImageProvider{
         public init(){}
     }
     
-    public convenience init(context: IMPContext, cubeFile:String, inout description:Description) throws {
+    public convenience init(context: IMPContext, cubeFile:String, inout description:LutDescription) throws {
         self.init(context: context)
         do{
             description = try update(cubeFile)
@@ -52,10 +52,10 @@ extension IMPImageProvider{
     }
     
     
-    public func update(cubeFile:String) throws ->  Description {
+    public func update(cubeFile:String) throws ->  LutDescription {
         
         let manager = NSFileManager.defaultManager()
-        var description = Description()
+        var description = LutDescription()
         
         if manager.fileExistsAtPath(cubeFile){
 
@@ -146,7 +146,7 @@ extension IMPImageProvider{
         return description
     }
     
-    private func updateTextureFromData(data:NSData, desciption:Description) {
+    private func updateTextureFromData(data:NSData, desciption:LutDescription) {
         let width  = desciption.lut3DSize
         let height = desciption.type == .D1D ? 1: width
         let depth  = desciption.type == .D1D ? 1: width
@@ -176,7 +176,7 @@ extension IMPImageProvider{
         self.texture!.replaceRegion(region, mipmapLevel:0, slice:0, withBytes:data.bytes, bytesPerRow:bytesPerRow, bytesPerImage:bytesPerImage)
     }
     
-    private func updateBytes(var words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: Description) -> IMPLutStatus {
+    private func updateBytes(var words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: LutDescription) -> IMPLutStatus {
         
         let keyword = words[0];
         

@@ -22,9 +22,9 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
     public var adjustmentBuffer:MTLBuffer?
     public var kernel:IMPFunction!
     internal var lut:IMPImageProvider?
-    internal var lutDescription = IMPImageProvider.Description()
+    internal var lutDescription = IMPImageProvider.LutDescription()
     
-    public required init(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.Description) {
+    public required init(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.LutDescription) {
         
         super.init(context: context)
 
@@ -39,7 +39,7 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
         fatalError("init(context:) has not been implemented, IMPLutFilter(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.lutDescription) should be used instead...")
     }
     
-    public func update(lut:IMPImageProvider, description:IMPImageProvider.Description){
+    public func update(lut:IMPImageProvider, description:IMPImageProvider.LutDescription){
         var name = "kernel_adjustLut"
         
         if description.type == .D1D {
