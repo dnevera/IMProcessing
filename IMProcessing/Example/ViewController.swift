@@ -135,11 +135,16 @@ class ViewController: NSViewController {
         
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
-                if let image = IMPImage(contentsOfFile: file){
-                    self.imageView.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
-                    self.imageView.source = IMPImageProvider(context: self.imageView.context, image: image)
+                do{
+                    self.imageView.source = try IMPImageProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
-                        self.zoomOne()                        
+                        self.zoomOne()
+                    })
+                }
+                catch let error as NSError {
+                    self.asyncChanges({ () -> Void in
+                        let alert = NSAlert(error: error)
+                        alert.runModal()
                     })
                 }
             }

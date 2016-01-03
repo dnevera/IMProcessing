@@ -91,7 +91,6 @@
             }
         }
         
-        #if os(iOS)
         public var orientation:UIDeviceOrientation {
             get{
                 return imageView.orientation
@@ -104,8 +103,6 @@
         public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
             imageView.setOrientation(orientation, animate: animate)
         }
-        
-        #endif
         
         private func configure(){
             
@@ -167,8 +164,300 @@
             }
         }
         
-        private var imageContainer:UIView!
         private var imageView:IMPView!
         private var scrollView:IMPScrollView!
+    }
+#else
+    
+    public class IMPImageView: IMPViewBase, IMPContextProvider{
+        
+        public var context:IMPContext!
+        
+        public var backgroundColor:IMPColor{
+            set{
+                imageView.backgroundColor = newValue
+                scrollView.backgroundColor = newValue
+            }
+            get{
+                return imageView.backgroundColor
+            }
+        }
+        
+        public var filter:IMPFilter?{
+            didSet{
+                imageView?.filter = filter
+            }
+        }
+        
+        public var source:IMPImageProvider?{
+            get{
+                return imageView.source
+            }
+            set{
+                imageView?.source = newValue
+                if let texture = newValue?.texture{
+                    imageView.frame = CGRect(x: 0, y: 0,
+                        width:  Int(texture.width.float/imageView.scaleFactor),
+                        height: Int(texture.height.float/imageView.scaleFactor))
+                }
+            }
+        }
+        
+        public func magnifyToFitRect(rect:CGRect){
+            isSizeFit = false
+            scrollView.magnifyToFitRect(rect)
+        }
+        
+        var isSizeFit = true
+        
+        public func sizeFit(){
+            isSizeFit = true
+            scrollView.magnifyToFitRect(imageView.bounds)
+        }
+        
+        public func sizeOriginal(){
+            isSizeFit = false
+            scrollView.magnifyToFitRect(bounds)
+        }
+        
+        public init(context contextIn:IMPContext, frame: NSRect){
+            super.init(frame: frame)
+            context = contextIn
+            defer{
+                self.configure()
+            }
+        }
+        
+        public convenience override init(frame frameRect: NSRect) {
+            self.init(context: IMPContext(), frame:frameRect)
+        }
+        
+        @objc func magnifyChanged(event:NSNotification){
+            isSizeFit = false
+        }
+        
+        private func configure(){
+            
+            NSNotificationCenter.defaultCenter().addObserver(
+                self,
+                selector: "magnifyChanged:",
+                name: NSScrollViewWillStartLiveMagnifyNotification,
+                object: nil)
+            
+            scrollView = IMPScrollView(frame: bounds)
+            
+            scrollView.drawsBackground = false
+            scrollView.wantsLayer = true
+            
+            scrollView.allowsMagnification = true
+            scrollView.acceptsTouchEvents = true
+            scrollView.hasVerticalScroller = true
+            scrollView.hasHorizontalScroller = true
+            
+            scrollView.autoresizingMask = [.ViewHeightSizable, .ViewWidthSizable]
+            
+            imageView = IMPView(context: self.context, frame: self.bounds)
+            imageView.backgroundColor = IMPColor.clearColor()
+            
+            scrollView.documentView = imageView
+            
+            addSubview(scrollView)
+        }
+        
+        required public init?(coder: NSCoder) {
+            super.init(coder: coder)
+            self.context = IMPContext()
+            defer{
+                self.configure()
+            }
+        }
+        
+        override public func setFrameSize(newSize: NSSize) {
+            super.setFrameSize(newSize)
+            if isSizeFit {
+                sizeFit()
+            }
+        }
+        
+        private var imageView:IMPView!
+        private var scrollView:IMPScrollView!
+    }
+    
+    class IMPScrollView:NSScrollView {
+        
+        private var cv:IMPClipView!
+        
+        private func configure(){
+            cv = IMPClipView(frame: self.bounds)
+            contentView = cv
+            verticalScroller = IMPScroller()
+            verticalScroller?.controlSize = NSControlSize(rawValue: 5)!
+            horizontalScroller = IMPScroller()
+            horizontalScroller?.controlSize = NSControlSize(rawValue: 5)!
+        }
+        
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+            self.configure()
+        }
+        
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.configure()
+        }
+        
+        override func magnifyToFitRect(rect: NSRect) {
+            super.magnifyToFitRect(rect)
+            self.cv.moveToCenter(true)
+        }
+        
+        override func drawRect(dirtyRect: NSRect) {
+            backgroundColor.set()
+            NSRectFill(dirtyRect)
+        }
+    }
+    
+    class IMPScroller: NSScroller {
+        
+        var backgroundColor = IMPColor.clearColor()
+        
+        
+//        func drawBackground(rect:NSRect){
+//            let path = NSBezierPath(roundedRect: rect, xRadius: 0, yRadius: 0)
+//            IMPColor.clearColor().set()
+//            path.fill()
+//        }
+//
+//        static var width = 5
+//        
+//        override func drawKnob() {
+//            for i in 0...6{
+//                drawBackground(rectForPart(NSScrollerPart(rawValue: UInt(i))!))
+//            }
+//            
+//            let knobRect = rectForPart(.Knob)
+//            let newRect = NSMakeRect((knobRect.size.width -  IMPScroller.width.cgloat) / 2, knobRect.origin.y, IMPScroller.width.cgloat, knobRect.size.height)
+//            let path = NSBezierPath(roundedRect: newRect, xRadius:5, yRadius:5)
+//            IMPColor.lightGrayColor().set()
+//            path.fill()
+//        }
+        
+        override func drawRect(dirtyRect: NSRect) {
+            backgroundColor.set()
+            NSRectFill(dirtyRect)
+            drawKnob()
+        }
+        
+        override func drawKnobSlotInRect(slotRect: NSRect, highlight flag: Bool) {
+            super.drawKnobSlotInRect(slotRect, highlight: true)
+        }
+        
+        override func mouseExited(theEvent:NSEvent){
+            super.mouseExited(theEvent)
+            self.fadeOut()
+        }
+        
+        override func mouseEntered(theEvent:NSEvent) {
+            super.mouseEntered(theEvent)
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.1
+                self.animator().alphaValue = 1.0
+                
+                }, completionHandler: nil)
+            NSObject.cancelPreviousPerformRequestsWithTarget(self, selector: "fadeOut", object: nil)
+        }
+        
+        override func mouseMoved(theEvent:NSEvent){
+            super.mouseMoved(theEvent)
+            self.alphaValue = 1.0
+        }
+        
+        func fadeOut() {
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.3
+                self.animator().alphaValue = 1.0
+                
+                }, completionHandler: nil)
+        }
+        
+    }
+    
+    class IMPClipView:NSClipView {
+        
+        private var viewPoint = NSPoint()
+        
+        override func constrainBoundsRect(proposedBounds: NSRect) -> NSRect {
+            if let documentView = self.documentView{
+                
+                let documentFrame:NSRect = documentView.frame
+                var clipFrame     = self.bounds
+                
+                let x = documentFrame.size.width - clipFrame.size.width
+                let y = documentFrame.size.height - clipFrame.size.height
+                
+                clipFrame.origin = proposedBounds.origin
+                
+                if clipFrame.size.width>documentFrame.size.width{
+                    clipFrame.origin.x = CGFloat(roundf(Float(x) / 2.0))
+                }
+                else{
+                    let m = Float(max(0, min(clipFrame.origin.x, x)))
+                    clipFrame.origin.x = CGFloat(roundf(m))
+                }
+                
+                if clipFrame.size.height>documentFrame.size.height{
+                    clipFrame.origin.y = CGFloat(roundf(Float(y) / 2.0))
+                }
+                else{
+                    let m = Float(max(0, min(clipFrame.origin.y, y)))
+                    clipFrame.origin.y = CGFloat(roundf(m))
+                }
+                
+                viewPoint.x = NSMidX(clipFrame) / documentFrame.size.width;
+                viewPoint.y = NSMidY(clipFrame) / documentFrame.size.height;
+                
+                return clipFrame
+                
+            }
+            else{
+                return super.constrainBoundsRect(proposedBounds)
+            }
+        }
+        
+        func moveToCenter(always:Bool = false){
+            if let documentView = self.documentView{
+                
+                let documentFrame:NSRect = documentView.frame
+                var clipFrame     = self.bounds
+                
+                if documentFrame.size.width < clipFrame.size.width || always {
+                    clipFrame.origin.x = CGFloat(roundf(Float(documentFrame.size.width - clipFrame.size.width) / 2.0));
+                } else {
+                    clipFrame.origin.x = CGFloat(roundf(Float(viewPoint.x * documentFrame.size.width - (clipFrame.size.width) / 2.0)));
+                }
+                
+                if documentFrame.size.height < clipFrame.size.height || always {
+                    clipFrame.origin.y = CGFloat(roundf(Float(documentFrame.size.height - clipFrame.size.height) / 2.0));
+                } else {
+                    clipFrame.origin.y = CGFloat(roundf(Float(viewPoint.x * documentFrame.size.height - (clipFrame.size.height) / 2.0)));
+                }
+                
+                let scrollView = self.superview
+                
+                self.scrollToPoint(self.constrainBoundsRect(clipFrame).origin)
+                scrollView?.reflectScrolledClipView(self)
+            }
+        }
+        
+        override func viewFrameChanged(notification: NSNotification) {
+            super.viewBoundsChanged(notification)
+            self.moveToCenter()
+        }
+        
+        override var documentView:AnyObject?{
+            didSet{
+                self.moveToCenter()
+            }
+        }
     }
 #endif

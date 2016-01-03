@@ -33,7 +33,8 @@ class ViewController: NSViewController {
     
     var imageView: IMPView!
     var histogramView: IMPHistogramView!
-    var histogramCDFView: IMPHistogramView!
+    //var histogramCDFView: IMPHistogramView!
+    var paletteView: IMPPaletteView!
     
     var q = dispatch_queue_create("ViewController", DISPATCH_QUEUE_CONCURRENT)
     
@@ -51,7 +52,7 @@ class ViewController: NSViewController {
     @IBAction func changeValue1(sender: NSSlider) {
         let value = sender.floatValue/100
         asyncChanges { () -> Void in
-            self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
+            //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             self.textValueLabel.stringValue = String(format: "%2.5f", value);
             self.mainFilter.hsvFilter?.overlap = value*4
         }
@@ -94,19 +95,29 @@ class ViewController: NSViewController {
         histogramView = IMPHistogramView(frame: histogramContainerView.bounds)
         histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
         
-        histogramCDFView = IMPHistogramView(frame: histogramContainerView.bounds)
-        histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
-        histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
+        //histogramCDFView = IMPHistogramView(frame: histogramContainerView.bounds)
+        //histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        //histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
+
+        paletteView = IMPPaletteView(frame: histogramContainerView.bounds)
         
+//        paletteView.palette.solver.paletteHandler = { (cube,count) in
+//            return cube.dominantColors(count: count)
+//        }
+        
+        //paletteView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        //paletteView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
+
         histogramContainerView.addSubview(histogramView)
-        histogramCDFContainerView.addSubview(histogramCDFView)
+        histogramCDFContainerView.addSubview(paletteView)
         
         imageView = IMPView(frame: scrollView.bounds)
         
-        mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, histogramCDFView: histogramCDFView)
+        mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: paletteView)
+        //mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: nil)
         imageView.filter = mainFilter
         
-        mainFilter.sourceAnalayzer.addUpdateObserver { (histogram) -> Void in
+        mainFilter.sourceAnalyzer.addUpdateObserver { (histogram) -> Void in
             self.asyncChanges({ () -> Void in
                 self.minRangeLabel.stringValue = String(format: "%2.3f", self.mainFilter.rangeSolver.minimum.z)
                 self.maxRangeLabel.stringValue = String(format: "%2.3f", self.mainFilter.rangeSolver.maximum.z)
@@ -135,13 +146,25 @@ class ViewController: NSViewController {
         
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
-                if let image = IMPImage(contentsOfFile: file){
-                    self.imageView.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
-                    self.imageView.source = IMPImageProvider(context: self.imageView.context, image: image)
+                do{
+                    self.imageView.source = try IMPImageProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
-                        self.zoomOne()                        
+                        self.zoomOne()
                     })
                 }
+                catch let error as NSError {
+                    self.asyncChanges({ () -> Void in
+                        let alert = NSAlert(error: error)
+                        alert.runModal()
+                    })
+                }
+//                if let image = IMPImage(contentsOfFile: file){
+//                    self.imageView.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+//                    self.imageView.source = IMPImageProvider(context: self.imageView.context, image: image)
+//                    self.asyncChanges({ () -> Void in
+//                        self.zoom100()
+//                    })
+//                }
             }
             else if type == .LUT {
                 do {
@@ -191,7 +214,7 @@ class ViewController: NSViewController {
     private func zoomOne(){
         is100 = false
         asyncChanges { () -> Void in
-            self.scrollView.magnifyToFitRect(self.scrollView.bounds)
+            self.scrollView.magnifyToFitRect(self.view.bounds)
         }
     }
     

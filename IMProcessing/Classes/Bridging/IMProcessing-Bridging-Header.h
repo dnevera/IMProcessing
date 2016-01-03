@@ -7,4 +7,10 @@
 #include "IMPOperations-Bridgin-Metal.h"
 #include "IMPHistogramTypes-Bridging-Metal.h"
 
+#ifndef __METAL_VERSION__
+
+#include "IMPJpegturbo.h"
+
+#endif
+
 #define IMPSTD_PASS_KERNEL "kernel_passthrough"

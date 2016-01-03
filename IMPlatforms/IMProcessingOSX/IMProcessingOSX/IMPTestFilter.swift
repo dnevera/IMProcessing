@@ -10,14 +10,14 @@ import IMProcessing
 
 class IMPTestFilter:IMPFilter {
     
-    var sourceAnalayzer:IMPHistogramAnalyzer!
+    var sourceAnalyzer:IMPHistogramAnalyzer!
     let rangeSolver = IMPHistogramRangeSolver()
     
     var contrastFilter:IMPContrastFilter!
     var awbFilter:IMPAutoWBFilter!
     var hsvFilter:IMPHSVFilter!
-    
-    required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
+        
+    required init(context: IMPContext, histogramView:IMPView, paletteView:IMPView?) {
         
         super.init(context: context)
                 
@@ -29,21 +29,21 @@ class IMPTestFilter:IMPFilter {
         addFilter(awbFilter)
         addFilter(hsvFilter)
         
-        sourceAnalayzer = IMPHistogramAnalyzer(context: self.context)
-        sourceAnalayzer.addSolver(rangeSolver)
+        sourceAnalyzer = IMPHistogramAnalyzer(context: self.context)
+        sourceAnalyzer.addSolver(rangeSolver)
         
-        sourceAnalayzer.addUpdateObserver({ (histogram) -> Void in
+        sourceAnalyzer.addUpdateObserver({ (histogram) -> Void in
             self.contrastFilter.adjustment.minimum = self.rangeSolver.minimum
             self.contrastFilter.adjustment.maximum = self.rangeSolver.maximum
         })
         
         addSourceObserver { (source) -> Void in
-            self.sourceAnalayzer.source = source
+            self.sourceAnalyzer.source = source
         }
         
         addDestinationObserver { (destination) -> Void in
             histogramView.source = destination
-            histogramCDFView.source = destination
+            paletteView?.source = destination
         }
     }
     
