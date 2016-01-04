@@ -18,10 +18,11 @@ Pod::Spec.new do |s|
   s.vendored_libraries  = 'vendor/libjpeg-turbo/lib/libturbojpeg.a'
 
   s.frameworks   = 'Metal'
-  s.libraries    = 'turbojpeg'
-  
-  s.xcconfig  =   { 'LIBRARY_SEARCH_PATHS' =>  '/opt/libjpeg-turbo/lib' }
-  
+  s.xcconfig     =   { 'OTHER_LDFLAGS' => '/opt/libjpeg-turbo/lib/libturbojpeg.a'}
+
+ #s.libraries = 'turbojpeg'
+ #s.xcconfig  =   { 'LIBRARY_SEARCH_PATHS' =>  '/opt/libjpeg-turbo/lib'}
+
   s.requires_arc = true
 
 end
