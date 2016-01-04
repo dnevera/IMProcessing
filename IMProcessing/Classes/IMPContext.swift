@@ -73,13 +73,24 @@ public class IMPContext {
     /// How context execution is processed
     public let isLasy:Bool
     
+    /// check whether the MTL device is supported
+    public static var supportsSystemDevice:Bool{
+        get{
+            let device = MTLCreateSystemDefaultDevice()
+            if device == nil {
+                return false
+            }
+            return true
+        }
+    }
+        
     ///  Initialize current context
     ///
     ///  - parameter lazy: true if you need to process without waiting finishing computation in the context.
     ///
     ///  - returns: context instanc
     ///
-    required public init(lazy:Bool = false)  {
+    required public init(lazy:Bool = false) {
         isLasy = lazy
         if let device = self.device{
             commandQueue = device.newCommandQueue()
@@ -87,12 +98,11 @@ public class IMPContext {
                 defaultLibrary = library
             }
             else{
-                fatalError(" *** IMPContext: could not find default library...")
+                fatalError("Default Metal library could not be found...")
             }
-            
         }
         else{
-            fatalError(" *** IMPContext: could not get GPU device...")
+            fatalError("The system does not support any MTL devices...")
         }
     }
     

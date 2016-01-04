@@ -159,7 +159,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    public init(context contextIn:IMPContext, frame: NSRect){
+    public init(context contextIn:IMPContext, frame: NSRect) {
         super.init(frame: frame)
         context = contextIn
         defer{
@@ -167,7 +167,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
-    public convenience override init(frame frameRect: NSRect) {
+    public convenience override init(frame frameRect: NSRect)  {
         self.init(context: IMPContext(), frame:frameRect)
     }
     
