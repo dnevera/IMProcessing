@@ -23,6 +23,7 @@ using namespace metal;
 
 #ifdef __cplusplus
 
+
 namespace IMProcessing
 {
     kernel void kernel_histogramLayer(texture2d<float, access::sample>    inTexture   [[texture(0)]],

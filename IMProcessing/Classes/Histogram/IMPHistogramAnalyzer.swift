@@ -61,9 +61,9 @@ public class IMPHistogramAnalyzer: IMPFilter {
     /// Солверы анализирующие гистограмму в текущем инстансе
     ///
     public func addSolver(solver:IMPHistogramSolver){
-            solvers.append(solver)
+        solvers.append(solver)
     }
-        
+    
     ///
     /// Регион внутри которого вычисляем гистограмму.
     ///
@@ -164,9 +164,13 @@ public class IMPHistogramAnalyzer: IMPFilter {
             //
             // Обнуляем входной буфер
             //
-            let blitEncoder = commandBuffer.blitCommandEncoder()
-            blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-            blitEncoder.endEncoding()
+            #if os(iOS) 
+                let blitEncoder = commandBuffer.blitCommandEncoder()
+                blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
+                blitEncoder.endEncoding()
+            #else
+                memset(buffer.contents(), 0, buffer.length)
+            #endif
             
             let commandEncoder = commandBuffer.computeCommandEncoder()
             

@@ -83,6 +83,8 @@ public class IMPContext {
             return true
         }
     }
+    
+    public var dispatchQueue = dispatch_queue_create("com.improcessing.context", DISPATCH_QUEUE_SERIAL)
         
     ///  Initialize current context
     ///
@@ -110,7 +112,7 @@ public class IMPContext {
     ///
     ///  - parameter closure: execution context
     ///
-    public final func execute(closure: IMPContextExecution) {
+    public final func execute(closure: IMPContextExecution) {        
         if let commandBuffer = commandQueue?.commandBuffer(){
             
             closure(commandBuffer: commandBuffer)

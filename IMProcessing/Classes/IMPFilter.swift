@@ -23,8 +23,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var source:IMPImageProvider?{
         didSet{
-            dirty = true
             source?.filter=self
+            dirty = true
         }
     }
     
@@ -193,6 +193,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                     
                     if self.texture?.width != width || self.texture?.height != height {
                         let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(inputTexture.pixelFormat, width: width, height: height, mipmapped: false)
+
                         self.texture = self.context.device.newTextureWithDescriptor(descriptor)
                     }
                     
@@ -209,6 +210,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
                     commandEncoder.endEncoding()
                     
                     inputTexture = self.texture
+                    
+                    //print(" filter = \(self) source = \(self.source?.texture) context = \(inputTexture)")
                 }
             })
             
@@ -222,7 +225,6 @@ public class IMPFilter: NSObject,IMPContextProvider {
                     l_texture  = filter.destination
                     
                     if l_texture == nil {
-                        //fatalError("IMPFilter \(filter) did not return valid texture...")
                         return
                     }
                 }

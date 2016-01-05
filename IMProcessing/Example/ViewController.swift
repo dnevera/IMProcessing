@@ -91,10 +91,10 @@ class ViewController: NSViewController {
         histogramContainerView.wantsLayer = true
         histogramContainerView.layer?.backgroundColor = IMPColor.redColor().CGColor
         
-        histogramView = IMPHistogramView(frame: histogramContainerView.bounds)
+        histogramView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
         histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
         
-        histogramCDFView = IMPHistogramView(frame: histogramContainerView.bounds)
+        histogramCDFView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
         histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
         histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
         
@@ -103,7 +103,7 @@ class ViewController: NSViewController {
         
         imageView = IMPView(frame: scrollView.bounds)
         
-        mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, histogramCDFView: histogramCDFView)
+        mainFilter = IMPTestFilter(context: context, histogramView: histogramView, histogramCDFView: histogramCDFView)
         imageView.filter = mainFilter
         
         mainFilter.sourceAnalayzer.addUpdateObserver { (histogram) -> Void in
@@ -150,14 +150,14 @@ class ViewController: NSViewController {
             }
             else if type == .LUT {
                 do {
-                    var description = IMPImageProvider.Description()
-                    let lutProvider = try IMPImageProvider(context: self.context, cubeFile: file, description: &description)
+                    var description = IMPImageProvider.LutDescription()
+                    let lutProvider = try IMPImageProvider(context: self.mainFilter.context, cubeFile: file, description: &description)
                     
                     if let lut = self.lutFilter{
                         lut.update(lutProvider, description:description)
                     }
                     else{
-                        self.lutFilter = IMPLutFilter(context: self.context, lut: lutProvider, description: description)
+                        self.lutFilter = IMPLutFilter(context: self.mainFilter.context, lut: lutProvider, description: description)
                     }
                     self.mainFilter.addFilter(self.lutFilter!)
                 }

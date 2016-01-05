@@ -41,7 +41,7 @@ public class IMPHistogramView: IMPView {
             
             self.addSourceObserver{ (source:IMPImageProvider) -> Void in
                 self.analayzer.source = source
-            }
+            }            
         }
         
         private var view:IMPHistogramView?
@@ -61,31 +61,45 @@ public class IMPHistogramView: IMPView {
         }
     }
     
+    override public var source:IMPImageProvider?{
+        didSet{
+            _filter.source = source            
+            _filter.apply()
+        }
+    }
+    
     private var _filter:histogramLayerFilter!
     override public var filter:IMPFilter?{
-        set(newFiler){}
+        set(newFiler){
+            fatalError("IMPHistogramView does not allow set new filter...")
+        }
         get{ return _filter }
     }
     
     public var histogram:histogramLayerFilter{
         get{
-            return _filter
+            return filter as! histogramLayerFilter
         }
     }
     
-    override init(context contextIn: IMPContext, frame: NSRect) {
+    override  public init(context contextIn: IMPContext, frame: NSRect) {
         super.init(context: contextIn, frame: frame)
-        _filter = histogramLayerFilter(context: self.context, view: self)
-        _filter.addDirtyObserver { () -> Void in
-            self.layerNeedUpdate = true
+        defer{
+            _filter = histogramLayerFilter(context: self.context, view: self)
         }
     }
-    
+
+    convenience  public init(context contextIn: IMPContext) {
+        self.init(context: contextIn, frame: CGRectZero)
+        defer{
+            _filter = histogramLayerFilter(context: self.context, view: self)
+        }
+    }
+
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
-        _filter = histogramLayerFilter(context: self.context, view: self)
-        _filter.addDirtyObserver { () -> Void in
-            self.layerNeedUpdate = true
+        defer{
+            _filter = histogramLayerFilter(context: self.context, view: self)
         }
     }
 }
