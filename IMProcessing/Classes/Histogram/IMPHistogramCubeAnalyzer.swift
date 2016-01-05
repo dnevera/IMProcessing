@@ -88,7 +88,12 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         
         kernel_impHistogramCounter = IMPFunction(context: self.context, name:function)
         
-        let groups = kernel_impHistogramCounter.pipeline!.maxTotalThreadsPerThreadgroup/threadgroupCounts.width
+        let maxThreads:Int  = kernel_impHistogramCounter.pipeline!.maxTotalThreadsPerThreadgroup
+        let actualWidth:Int = threadgroupCounts.width <= maxThreads ? threadgroupCounts.width : maxThreads
+        
+        threadgroupCounts.width = actualWidth 
+        
+        let groups = maxThreads/actualWidth
         
         threadgroups = MTLSizeMake(groups,1,1)
         
