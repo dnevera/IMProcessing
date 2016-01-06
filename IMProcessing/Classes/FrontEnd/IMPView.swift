@@ -40,7 +40,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         didSet{
             if let texture = source?.texture{
                             
-                self.threadGroups = MTLSizeMake(
+                threadGroups = MTLSizeMake(
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                 
@@ -159,7 +159,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    public init(context contextIn:IMPContext, frame: NSRect) {
+    public init(context contextIn:IMPContext, frame: NSRect=CGRect(x: 0, y: 0, width: 100, height: 100)) {
         super.init(frame: frame)
         context = contextIn
         defer{
@@ -169,6 +169,13 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public convenience override init(frame frameRect: NSRect)  {
         self.init(context: IMPContext(), frame:frameRect)
+    }
+    
+    public convenience init(filter:IMPFilter, frame:NSRect=CGRect(x: 0, y: 0, width: 100, height: 100)){
+        self.init(context:filter.context,frame:frame)
+        defer{
+            self.filter = filter
+        }
     }
     
     public required init?(coder: NSCoder) {
@@ -288,7 +295,13 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             autoreleasepool({ () -> () in
                 
                 if let actualImageTexture = self.texture {
-                                        
+                    
+                    if threadGroups == nil {
+                        threadGroups = MTLSizeMake(
+                            (actualImageTexture.width+threadGroupCount.width)/threadGroupCount.width,
+                            (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
+                    }
+
                     self.context.execute { (commandBuffer) -> Void in
                         
                         dispatch_semaphore_wait(self.inflightSemaphore, DISPATCH_TIME_FOREVER);

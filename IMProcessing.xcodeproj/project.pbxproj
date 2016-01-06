@@ -53,6 +53,7 @@
 		31D4A79B1C2C138F00A7C278 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4A7941C2C138F00A7C278 /* ViewController.swift */; };
 		31E670861C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E670851C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift */; };
 		31EC4DFB1C31877A00068A14 /* IMPHistogramCube.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EC4DFA1C31877A00068A14 /* IMPHistogramCube.swift */; };
+		31F4F8241C3D88A9009D8FAB /* IMPHistogramGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F4F8231C3D88A9009D8FAB /* IMPHistogramGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -123,6 +124,7 @@
 		31D4A7941C2C138F00A7C278 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ViewController.swift; path = Example/ViewController.swift; sourceTree = "<group>"; };
 		31E670851C31894B00F947F7 /* IMPHistogramCubeAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramCubeAnalyzer.swift; sourceTree = "<group>"; };
 		31EC4DFA1C31877A00068A14 /* IMPHistogramCube.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramCube.swift; sourceTree = "<group>"; };
+		31F4F8231C3D88A9009D8FAB /* IMPHistogramGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPHistogramGenerator.swift; path = FrontEnd/IMPHistogramGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -316,6 +318,7 @@
 				3112BD141C2821F200825078 /* IMPView.swift */,
 				311690D51C2D1D1700904FBF /* IMPImageView.swift */,
 				3112BD131C2821F200825078 /* IMPHistogramView.swift */,
+				31F4F8231C3D88A9009D8FAB /* IMPHistogramGenerator.swift */,
 				31265AA81C34DB66005B8B00 /* IMPPaletteView.swift */,
 			);
 			name = FrontEnd;
@@ -462,6 +465,7 @@
 				3112BD001C281D9F00825078 /* IMPFunction.swift in Sources */,
 				311690D61C2D1D1700904FBF /* IMPImageView.swift in Sources */,
 				3112BCFD1C281D9F00825078 /* IMPContext.swift in Sources */,
+				31F4F8241C3D88A9009D8FAB /* IMPHistogramGenerator.swift in Sources */,
 				31819C1E1C2953BD0037DA99 /* IMPDistribution.swift in Sources */,
 				31D4A79B1C2C138F00A7C278 /* ViewController.swift in Sources */,
 				3112BCFC1C281D9F00825078 /* IMPHistogramRangeSolver.swift in Sources */,

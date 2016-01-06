@@ -169,10 +169,13 @@
     }
 #else
     
+    /// Image preview window
     public class IMPImageView: IMPViewBase, IMPContextProvider{
         
+        /// GPU device context
         public var context:IMPContext!
         
+        /// View backgound
         public var backgroundColor:IMPColor{
             set{
                 imageView.backgroundColor = newValue
@@ -183,12 +186,14 @@
             }
         }
         
+        /// View filter
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
             }
         }
         
+        /// Image source
         public var source:IMPImageProvider?{
             get{
                 return imageView.source
@@ -203,24 +208,38 @@
             }
         }
         
+        ///  Magnify image to fit rectangle
+        ///
+        ///  - parameter rect: rectangle which is used to magnify the image to fit size an position
         public func magnifyToFitRect(rect:CGRect){
             isSizeFit = false
             scrollView.magnifyToFitRect(rect)
         }
         
-        var isSizeFit = true
+        private var isSizeFit = true
         
+        ///  Fite image to current view size
         public func sizeFit(){
             isSizeFit = true
             scrollView.magnifyToFitRect(imageView.bounds)
         }
         
+        ///  Present image in oroginal size
         public func sizeOriginal(){
             isSizeFit = false
             scrollView.magnifyToFitRect(bounds)
         }
         
-        public init(context contextIn:IMPContext, frame: NSRect){
+        @objc func magnifyChanged(event:NSNotification){
+            isSizeFit = false
+        }
+        
+        ///  Create image view object with th context within properly frame
+        ///
+        ///  - parameter contextIn: GPU device context
+        ///  - parameter frame:     view frame rectangle
+        ///
+        public init(context contextIn:IMPContext, frame: NSRect = CGRect(x: 0, y: 0, width: 100, height: 100)){
             super.init(frame: frame)
             context = contextIn
             defer{
@@ -228,13 +247,43 @@
             }
         }
         
+        ///  Create image with default context.
+        ///
+        ///  - parameter frameRect: view frame rectangle
+        ///
         public convenience override init(frame frameRect: NSRect) {
             self.init(context: IMPContext(), frame:frameRect)
         }
         
-        @objc func magnifyChanged(event:NSNotification){
-            isSizeFit = false
+        ///  Create image with a filter
+        ///
+        ///  - parameter filter: image filter
+        ///  - parameter frame:  view frame rectangle
+        ///
+        public convenience init(filter:IMPFilter, frame:NSRect = CGRect(x: 0, y: 0, width: 100, height: 100)){
+            self.init(context:filter.context,frame:frame)
+            defer{
+                self.filter = filter
+            }
         }
+        
+        required public init?(coder: NSCoder) {
+            super.init(coder: coder)
+            self.context = IMPContext()
+            defer{
+                self.configure()
+            }
+        }
+        
+        override public func setFrameSize(newSize: NSSize) {
+            super.setFrameSize(newSize)
+            if isSizeFit {
+                sizeFit()
+            }
+        }
+        
+        private var imageView:IMPView!
+        private var scrollView:IMPScrollView!
         
         private func configure(){
             
@@ -263,24 +312,6 @@
             
             addSubview(scrollView)
         }
-        
-        required public init?(coder: NSCoder) {
-            super.init(coder: coder)
-            self.context = IMPContext()
-            defer{
-                self.configure()
-            }
-        }
-        
-        override public func setFrameSize(newSize: NSSize) {
-            super.setFrameSize(newSize)
-            if isSizeFit {
-                sizeFit()
-            }
-        }
-        
-        private var imageView:IMPView!
-        private var scrollView:IMPScrollView!
     }
     
     class IMPScrollView:NSScrollView {
@@ -322,25 +353,25 @@
         var backgroundColor = IMPColor.clearColor()
         
         
-//        func drawBackground(rect:NSRect){
-//            let path = NSBezierPath(roundedRect: rect, xRadius: 0, yRadius: 0)
-//            IMPColor.clearColor().set()
-//            path.fill()
-//        }
-//
-//        static var width = 5
-//        
-//        override func drawKnob() {
-//            for i in 0...6{
-//                drawBackground(rectForPart(NSScrollerPart(rawValue: UInt(i))!))
-//            }
-//            
-//            let knobRect = rectForPart(.Knob)
-//            let newRect = NSMakeRect((knobRect.size.width -  IMPScroller.width.cgloat) / 2, knobRect.origin.y, IMPScroller.width.cgloat, knobRect.size.height)
-//            let path = NSBezierPath(roundedRect: newRect, xRadius:5, yRadius:5)
-//            IMPColor.lightGrayColor().set()
-//            path.fill()
-//        }
+        //        func drawBackground(rect:NSRect){
+        //            let path = NSBezierPath(roundedRect: rect, xRadius: 0, yRadius: 0)
+        //            IMPColor.clearColor().set()
+        //            path.fill()
+        //        }
+        //
+        //        static var width = 5
+        //
+        //        override func drawKnob() {
+        //            for i in 0...6{
+        //                drawBackground(rectForPart(NSScrollerPart(rawValue: UInt(i))!))
+        //            }
+        //
+        //            let knobRect = rectForPart(.Knob)
+        //            let newRect = NSMakeRect((knobRect.size.width -  IMPScroller.width.cgloat) / 2, knobRect.origin.y, IMPScroller.width.cgloat, knobRect.size.height)
+        //            let path = NSBezierPath(roundedRect: newRect, xRadius:5, yRadius:5)
+        //            IMPColor.lightGrayColor().set()
+        //            path.fill()
+        //        }
         
         override func drawRect(dirtyRect: NSRect) {
             backgroundColor.set()

@@ -16,6 +16,15 @@ public class IMPHistogramView: IMPView {
     
     public class histogramLayerFilter: IMPFilter {
         
+        public var histogram:IMPHistogram?{
+            set{
+                solver.histogram = histogram
+            }
+            get{
+                return solver.histogram
+            }
+        }
+        
         public var analayzer:IMPHistogramAnalyzer!{
             didSet{
                 self.dirty = true
@@ -76,7 +85,7 @@ public class IMPHistogramView: IMPView {
         get{ return _filter }
     }
     
-    public var histogram:histogramLayerFilter{
+    public var histogramLayer:histogramLayerFilter{
         get{
             return filter as! histogramLayerFilter
         }

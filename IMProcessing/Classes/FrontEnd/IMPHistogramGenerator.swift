@@ -1,9 +1,9 @@
 //
-//  IMPHistogramLayerSolver.swift
+//  IMPHistogramLayer.swift
 //  IMProcessing
 //
-//  Created by denis svinarchuk on 18.12.15.
-//  Copyright © 2015 IMetalling. All rights reserved.
+//  Created by denis svinarchuk on 06.01.16.
+//  Copyright © 2016 Dehancer.photo. All rights reserved.
 //
 
 #if os(iOS)
@@ -12,11 +12,23 @@
     import Cocoa
 #endif
 
-public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
+public class IMPHistogramGenerator: IMPFilter{
     
-    public enum IMPHistogramType{
-        case PDF
-        case CDF
+    var texture:MTLTexture?
+    
+    public var size:IMPSize!{
+        didSet{
+            if
+                texture?.width.cgloat != size.width
+                ||
+                texture?.height.cgloat != size.height
+            {
+                let desc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(.RGBA8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
+                texture = context.device.newTextureWithDescriptor(desc)
+            }
+            
+            self.source = IMPImageProvider(context: context, texture: texture!)
+        }
     }
     
     public var layer = IMPHistogramLayer(
@@ -28,20 +40,23 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         backgroundColor: float4([0.1, 0.1, 0.1, 0.7]),
         backgroundSource: false)
     
-    public var histogramType:(type:IMPHistogramType,power:Float) = (type:.PDF,power:1){
-        didSet{
-            self.dirty = true;
-        }
-    }
-    
-    public required init(context: IMPContext) {
+    public required init(context: IMPContext, size:IMPSize) {
         super.init(context: context)
+        
+        defer{
+            self.size = size
+        }
+        
         kernel = IMPFunction(context: self.context, name: "kernel_histogramLayer")
         self.addFunction(kernel)
         channelsUniformBuffer = self.context.device.newBufferWithLength(sizeof(UInt), options: .CPUCacheModeDefaultCache)
         histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramFloatBuffer), options: .CPUCacheModeDefaultCache)
         layerUniformBiffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramLayer), options: .CPUCacheModeDefaultCache)
         memcpy(layerUniformBiffer.contents(), &layer, sizeof(IMPHistogramLayer))
+    }
+
+    required public init(context: IMPContext) {
+        fatalError("init(context:) has not been implemented")
     }
     
     public var histogram:IMPHistogram?{
@@ -52,14 +67,7 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
     
     func update(histogram: IMPHistogram){
         
-        var pdf:IMPHistogram;
-        
-        switch(histogramType.type){
-        case .PDF:
-            pdf = histogram.pdf()
-        case .CDF:
-            pdf = histogram.cdf(1, power: histogramType.power)
-        }
+        let pdf = histogram
         
         for c in 0..<pdf.channels.count{
             let address =  UnsafeMutablePointer<Float>(histogramUniformBuffer.contents())+c*pdf.size
@@ -73,9 +81,6 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         self.dirty = true;
     }
     
-    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
-        self.histogram = histogram
-    }
     
     override public func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
         if (kernel == function){

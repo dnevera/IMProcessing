@@ -14,11 +14,21 @@ import simd
 /// с максимальным количеством каналов от одного до 4х.
 ///
 public class IMPHistogram {
+
+    public enum ChannelsType:Int{
+        case PLANAR = 1
+        case XYZ    = 3
+        case XYZW   = 4
+    };
     
+
     ///
-    /// Фиксированная размерность гистограмы. Всегда будем подразумевать 256.
+    /// Фиксированная размерность гистограмы.
     ///
-    public let size = Int(kIMP_HistogramSize)
+    public let size:Int
+    
+    /// Channels type: .PLANAR - one channel, XYZ - 3 channels, XYZW - 4 channels per histogram
+    public let type:ChannelsType
     
     ///
     /// Поканальная таблица счетов. Используем представление в числах с плавающей точкой.
@@ -31,14 +41,43 @@ public class IMPHistogram {
     /// Конструктор пустой гистограммы.
     ///
     public init(){
-        channels = [[Float]](count: Int(kIMP_HistogramMaxChannels), repeatedValue: [Float](count: Int(kIMP_HistogramSize), repeatedValue: 0))
+        size = Int(kIMP_HistogramSize)
+        type = .XYZW
+        channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: size, repeatedValue: 0))
     }
     
-    public init(channels number:UInt){
-        if number > UInt(kIMP_HistogramMaxChannels){
-            fatalError("IMPHistogram could not be created with channels number great then \(kIMP_HistogramMaxChannels)")
+    ///  Create normal distributed histogram
+    ///
+    ///  - parameter fi:    fi
+    ///  - parameter mu:    points of mu's
+    ///  - parameter sigma: points of sigma's, must be the same number that is in mu's
+    ///  - parameter size:  histogram size, by default is kIMP_HistogramSize
+    ///  - parameter type:  channels type
+    ///
+    public init(gauss fi:Float, mu:[Float], sigma:[Float], size:Int = Int(kIMP_HistogramSize), type: ChannelsType){
+        self.size = size
+        self.type = type
+        channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
+        
+        let m = Float(size-1)
+        
+        for var c=0; c<channels.count; c++ {
+            for var i=0; i<size; i++ {
+                let v = Float(i)/m
+                for var p=0; p<mu.count; p++ {
+                    channels[c][i] += v.gaussianPoint(fi: fi, mu: mu[p], sigma: sigma[p])
+                }
+            }
         }
-        channels = [[Float]](count: Int(number), repeatedValue: [Float](count: Int(kIMP_HistogramSize), repeatedValue: 0))
+    }
+    
+    public init(ramp:Range<Int>, size:Int = Int(kIMP_HistogramSize), type: ChannelsType = .XYZW){
+        self.size = size
+        self.type = type
+        channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
+        for var c=0; c<channels.count; c++ {
+            self.ramp(&channels[c], ramp: ramp)
+        }
     }
     
     ///
@@ -47,6 +86,17 @@ public class IMPHistogram {
     ///  - parameter channels: каналы с данными исходной гистограммы
     ///
     public init(channels:[[Float]]){
+        self.size = channels[0].count
+        switch channels.count {
+        case 1:
+            type = .PLANAR
+        case 3:
+            type = .XYZ
+        case 4:
+            type = .XYZW
+        default:
+            fatalError("Number of channels is great then it posible: \(channels.count)")
+        }
         self.channels = channels
     }
     
@@ -78,6 +128,17 @@ public class IMPHistogram {
                 self.addFromData(&data, toChannel: &channels[c])
             }
         }
+    }
+    
+    public func update(channel:Int, fromHistogram:IMPHistogram, fromChannel:Int) {
+        if fromHistogram.size != size {
+            fatalError("Histogram sizes are not equal: \(size) != \(fromHistogram.size)")
+        }
+        
+        let address = UnsafeMutablePointer<Float>(channels[channel])
+        let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[channel])
+        vDSP_vclr(address, 1, vDSP_Length(size))
+        vDSP_vadd(address, 1, from_address, 1, address, 1, vDSP_Length(size));
     }
     
     
@@ -236,6 +297,12 @@ public class IMPHistogram {
         return (size,h);
     }
     
+    private func ramp(inout C:[Float], ramp:Range<Int>){
+        let m:Float    = Float(C.count-1)
+        var zero:Float = Float(ramp.startIndex)/m
+        var v:Float    = Float(ramp.endIndex-ramp.startIndex)/m
+        vDSP_vramp(&zero, &v, &C, 1, vDSP_Length(C.count))
+    }
     //
     // Вычисление среднего занчения распределния вектора
     //
