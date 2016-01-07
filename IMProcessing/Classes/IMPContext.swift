@@ -84,6 +84,14 @@ public class IMPContext {
         }
     }
     
+    private let semaphore = dispatch_semaphore_create(1)
+    public func wait() {
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
+    }
+    public func resume(){
+        dispatch_semaphore_signal(semaphore)
+    }
+
     public var dispatchQueue = dispatch_queue_create("com.improcessing.context", DISPATCH_QUEUE_SERIAL)
         
     ///  Initialize current context
@@ -112,14 +120,18 @@ public class IMPContext {
     ///
     ///  - parameter closure: execution context
     ///
-    public final func execute(closure: IMPContextExecution) {        
-        if let commandBuffer = commandQueue?.commandBuffer(){
-            
-            closure(commandBuffer: commandBuffer)
-            commandBuffer.commit()
-            
-            if isLasy == false {
-                commandBuffer.waitUntilCompleted()
+    public final func execute(closure: IMPContextExecution) {
+        dispatch_sync(dispatchQueue) { () -> Void in
+            if let commandBuffer = self.commandQueue?.commandBufferWithUnretainedReferences(){
+                //self.wait()
+                
+                closure(commandBuffer: commandBuffer)
+                commandBuffer.commit()
+                
+              if self.isLasy == false {
+                    commandBuffer.waitUntilCompleted()
+                }
+                //self.resume()
             }
         }
     }
@@ -176,5 +188,22 @@ public class IMPContext {
     /// Dirty-trigger should be set when inherits object change stat of theirs processing
     ///
     public var dirty:Bool = true
-    
+//    private var dirtyCounter:Int=0
+//    public var dirty:Bool{
+//        set(newValue){
+//            if newValue {
+//                ++dirtyCounter
+//            }
+//            else{
+//                --dirtyCounter
+//            }
+//            if dirtyCounter<0 {
+//                dirtyCounter = 0
+//            }
+//            print(" dirty === \(dirtyCounter)")
+//        }
+//        get{
+//            return dirtyCounter>0
+//        }
+//    }
 }

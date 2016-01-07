@@ -23,6 +23,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var context:IMPContext!
     
+    internal var currentDestination:IMPImageProvider?
+    
     public var filter:IMPFilter?{
         didSet{
             
@@ -30,7 +32,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 self.filter?.source = s
             }
             
-            filter?.addDirtyObserver({ () -> Void in
+            filter?.addDestinationObserver(destination: { (destination) -> Void in
+                self.currentDestination = destination
                 self.layerNeedUpdate = true
             })
         }
@@ -38,6 +41,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var source:IMPImageProvider?{
         didSet{
+            
+            currentDestination = nil
+            
             if let texture = source?.texture{
                             
                 threadGroups = MTLSizeMake(
@@ -60,11 +66,14 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     private var texture:MTLTexture?{
         get{
-            if let t = self.filter?.destination?.texture{
+            if let t = currentDestination?.texture{
                 return t
             }
             else {
-                return self.source?.texture
+                if currentDestination == nil  && filter != nil {
+                    currentDestination = filter?.destination
+                }
+                return nil
             }
         }
     }
@@ -248,7 +257,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 }
                 timer = CADisplayLink(target: self, selector: "refresh")
             #else
-                timer = IMPDisplayLink(selector: refresh)
+                timer = IMPDisplayLink.sharedInstance
+                timer?.addView(self)
             #endif
             timer?.paused = self.isPaused
             
@@ -260,9 +270,13 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
+    deinit{
+        timer?.removeView(self)
+    }
+    
     private let threadGroupCount = MTLSizeMake(8, 8, 1)
     private var threadGroups : MTLSize!
-    private let inflightSemaphore = dispatch_semaphore_create(3)
+    private let inflightSemaphore = dispatch_semaphore_create(4)
     
     
     #if os(iOS)
@@ -287,7 +301,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     internal func refresh() {
-        
+                
         if layerNeedUpdate {
             
             layerNeedUpdate = false
@@ -302,35 +316,38 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                     }
 
-                    self.context.execute { (commandBuffer) -> Void in
-                        
-                        dispatch_semaphore_wait(self.inflightSemaphore, DISPATCH_TIME_FOREVER);
-                        
-                        commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
-                            dispatch_semaphore_signal(self.inflightSemaphore);
-                        })
+
+                    dispatch_sync(dispatch_get_main_queue(), { () -> Void in
                         
                         if let drawable = self.metalLayer.nextDrawable(){
                             
-                            let encoder = commandBuffer.computeCommandEncoder()
-                            
-                            encoder.setComputePipelineState(self.pipeline!)
-                            
-                            encoder.setTexture(actualImageTexture, atIndex: 0)
-                            
-                            encoder.setTexture(drawable.texture, atIndex: 1)
-                            
-                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-                            
-                            encoder.endEncoding()
-                            
-                            commandBuffer.presentDrawable(drawable)
-                            
+                            self.context.execute { (commandBuffer) -> Void in
+                                self.context.wait()
+                                
+                                commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
+                                    self.context.resume()
+                                })
+                                
+                                let encoder = commandBuffer.computeCommandEncoder()
+                                
+                                encoder.setComputePipelineState(self.pipeline!)
+                                
+                                encoder.setTexture(actualImageTexture, atIndex: 0)
+                                
+                                encoder.setTexture(drawable.texture, atIndex: 1)
+                                
+                                encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+                                
+                                encoder.endEncoding()
+                                
+                                commandBuffer.presentDrawable(drawable)
+                                
+                            }
                         }
                         else{
-                            dispatch_semaphore_signal(self.inflightSemaphore);
+                            self.context.resume()
                         }
-                    }
+                    })
                 }
             })
         }
@@ -406,6 +423,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     private class IMPDisplayLink {
         
+        static let sharedInstance = IMPDisplayLink()
+
         private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
         
         private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
@@ -418,7 +437,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
         
         
-        private var displayLink:CVDisplayLink
+        private var displayLink:CVDisplayLink!
         
         var paused:Bool = false {
             didSet(oldValue){
@@ -435,8 +454,21 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
         }
         
+        private var viewList = [IMPView]()
         
-        required init(selector: ()->Void ){
+        func addView(view:IMPView){
+            if viewList.contains(view) == false {
+                viewList.append(view)
+            }
+        }
+        
+        func removeView(view:IMPView){
+            if let index = viewList.indexOf(view) {
+                viewList.removeAtIndex(index)
+            }
+        }
+        
+        required init(){
             
             displayLink = {
                 var linkRef:CVDisplayLink?
@@ -454,7 +486,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 _:UnsafeMutablePointer<CVOptionFlags>,
                 _:UnsafeMutablePointer<Void>)->Void in
                 
-                selector()
+                for v in self.viewList {
+                    v.refresh()
+                }
+                
             }
             
             displayLinkSetOutputCallback( displayLink, callback: callback )

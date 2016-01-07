@@ -183,7 +183,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
             
             apply( texture, buffer: histogramUniformBuffer)
             
-            histogram.updateWithData(histogramUniformBuffer.contents(), dataCount: threadgroups.width)
+            histogram.update(data: histogramUniformBuffer.contents(), dataCount: threadgroups.width)
             
             for s in solvers {
                 let size = CGSizeMake(CGFloat(texture.width), CGFloat(texture.height))

@@ -111,7 +111,8 @@ public class IMPHistogramAnalyzer: IMPFilter {
         
         threadgroups = MTLSizeMake(groups,1,1)
         
-        histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer) * Int(groups), options: MTLResourceOptions.CPUCacheModeDefaultCache)
+        histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer) * Int(groups), options: .CPUCacheModeDefaultCache)
+    
         
         // добавляем счетчик как метод фильтра
         self.addFunction(kernel_impHistogramCounter);
@@ -164,7 +165,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
             //
             // Обнуляем входной буфер
             //
-            #if os(iOS) 
+            #if os(iOS)
                 let blitEncoder = commandBuffer.blitCommandEncoder()
                 blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
                 blitEncoder.endEncoding()
@@ -196,14 +197,13 @@ public class IMPHistogramAnalyzer: IMPFilter {
     
     public override func apply() {
         
-        if let texture = source?.texture{
-            
+        if let texture = source?.texture{                        
             apply(
                 texture,
                 threadgroupCounts: MTLSizeMake(histogram.size, 1, 1),
                 buffer: histogramUniformBuffer)
             
-            histogram.updateWithData(histogramUniformBuffer.contents(), dataCount: threadgroups.width)
+            histogram.update(data:histogramUniformBuffer.contents(), dataCount: threadgroups.width)
             
             for s in solvers {
                 let size = CGSizeMake(CGFloat(texture.width), CGFloat(texture.height))
@@ -213,7 +213,6 @@ public class IMPHistogramAnalyzer: IMPFilter {
             for o in analizerUpdateHandlers{
                 o(histogram: histogram)
             }
-            
         }
     }
 }

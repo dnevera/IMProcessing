@@ -48,18 +48,19 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var dirty:Bool{
         set(newDirty){
-            self.context.dirty = newDirty
-            for f in filterList{
-                f.dirty = newDirty
-            }
-            if newDirty == true {
+            if newDirty == true /*&& context.dirty != true*/ {
                 for o in dirtyHandlers{
+                    //NSLog(" dirty observer call: \(self, dirty)")
                     o()
                 }
             }
+            for f in filterList{
+                f.dirty = newDirty
+            }
+            context.dirty = newDirty
         }
         get{
-            return  self.context.dirty
+            return  context.dirty
         }
     }
     
@@ -136,7 +137,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public func configure(function:IMPFunction, command:MTLComputeCommandEncoder){}
     
-    private func executeSourceObservers(source:IMPImageProvider?){
+    internal func executeSourceObservers(source:IMPImageProvider?){
         if let s = source{
             for o in sourceObservers {
                 o(source: s)
@@ -144,7 +145,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
         }
     }
     
-    private func executeDestinationObservers(destination:IMPImageProvider?){
+    internal func executeDestinationObservers(destination:IMPImageProvider?){
         if let d = destination {
             for o in destinationObservers {
                 o(destination: d)
@@ -153,6 +154,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
     }
     
     public func apply(){
+        
         
         if dirty {
             
@@ -238,7 +240,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                 executeDestinationObservers(getDestination())
             }
             
-            dirty = false
+            dirty = false            
         }
     }
 }

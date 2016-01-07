@@ -14,14 +14,22 @@ import simd
 /// с максимальным количеством каналов от одного до 4х.
 ///
 public class IMPHistogram {
-
+    
     public enum ChannelsType:Int{
         case PLANAR = 1
+        case XY     = 2
         case XYZ    = 3
         case XYZW   = 4
     };
     
-
+    public enum ChannelNo:Int{
+        case X  = 0
+        case Y  = 1
+        case Z  = 2
+        case W  = 3
+    };
+    
+    
     ///
     /// Фиксированная размерность гистограмы.
     ///
@@ -36,6 +44,12 @@ public class IMPHistogram {
     /// поскольку все операции на DSP выполняются либо во float либо в double.
     ///
     public var channels:[[Float]]
+    
+    public subscript(channel:ChannelNo)->[Float]{
+        get{
+            return channels[channel.rawValue]
+        }
+    }
     
     ///
     /// Конструктор пустой гистограммы.
@@ -90,6 +104,8 @@ public class IMPHistogram {
         switch channels.count {
         case 1:
             type = .PLANAR
+        case 2:
+            type = .XY
         case 3:
             type = .XYZ
         case 4:
@@ -105,7 +121,7 @@ public class IMPHistogram {
     ///
     /// - parameter dataIn: обновить значение интенсивностей по сырым данным. Сырые данные должны быть преставлены в формате IMPHistogramBuffer.
     ///
-    public func updateWithData(dataIn: UnsafePointer<Void>){
+    public func update(data dataIn: UnsafePointer<Void>){
         clearHistogram()
         let address = UnsafePointer<UInt32>(dataIn)
         for c in 0..<channels.count{
@@ -117,7 +133,7 @@ public class IMPHistogram {
     ///
     ///  - parameter dataIn:
     ///  - parameter dataCount:
-    public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
+    public func update(data dataIn: UnsafePointer<Void>, dataCount: Int){
         self.clearHistogram()
         for i in 0..<dataCount{
             let dataIn = UnsafePointer<IMPHistogramBuffer>(dataIn)+i
@@ -130,13 +146,13 @@ public class IMPHistogram {
         }
     }
     
-    public func update(channel:Int, fromHistogram:IMPHistogram, fromChannel:Int) {
+    public func update(channel:ChannelNo, fromHistogram:IMPHistogram, fromChannel:Int) {
         if fromHistogram.size != size {
             fatalError("Histogram sizes are not equal: \(size) != \(fromHistogram.size)")
         }
         
-        let address = UnsafeMutablePointer<Float>(channels[channel])
-        let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[channel])
+        let address = UnsafeMutablePointer<Float>(channels[channel.rawValue])
+        let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[channel.rawValue])
         vDSP_vclr(address, 1, vDSP_Length(size))
         vDSP_vadd(address, 1, from_address, 1, address, 1, vDSP_Length(size));
     }
@@ -157,12 +173,12 @@ public class IMPHistogram {
         }
         return _cdf;
     }
-
+    
     ///  Текущий PDF (распределенией плотностей) гистограммы.
     ///
-    ///  - parameter scale: <#scale description#>
+    ///  - parameter scale: scale
     ///
-    ///  - returns: <#return value description#>
+    ///  - returns: return value histogram
     ///
     public func pdf(scale:Float = 1) -> IMPHistogram{
         let _pdf = IMPHistogram(channels:channels);
@@ -180,9 +196,9 @@ public class IMPHistogram {
     ///
     /// - returns: нормализованное значние средней интенсивности канала
     ///
-    public func mean(channel index:Int) -> Float{
-        let m = mean(A: &channels[index], size: channels[index].count)
-        let denom = sum(A: &channels[index], size: channels[index].count)
+    public func mean(channel index:ChannelNo) -> Float{
+        let m = mean(A: &channels[index.rawValue], size: channels[index.rawValue].count)
+        let denom = sum(A: &channels[index.rawValue], size: channels[index.rawValue].count)
         return m/denom
     }
     
@@ -194,9 +210,9 @@ public class IMPHistogram {
     ///
     /// - returns: Возвращается значение нормализованное к 1.
     ///
-    public func low(channel index:Int, clipping:Float) -> Float{
-        let size = channels[index].count
-        var low:vDSP_Length = search_clipping(channel: index, size: size, clipping: clipping)
+    public func low(channel index:ChannelNo, clipping:Float) -> Float{
+        let size = channels[index.rawValue].count
+        var low:vDSP_Length = search_clipping(channel: index.rawValue, size: size, clipping: clipping)
         low = low>0 ? low-1 : 0
         return Float(low)/Float(size)
     }
@@ -210,13 +226,72 @@ public class IMPHistogram {
     ///
     /// - returns: Возвращается значение нормализованное к 1.
     ///
-    public func high(channel index:Int, clipping:Float) -> Float{
-        let size = channels[index].count
-        var high:vDSP_Length = search_clipping(channel: index, size: size, clipping: 1.0-clipping)
+    public func high(channel index:ChannelNo, clipping:Float) -> Float{
+        let size = channels[index.rawValue].count
+        var high:vDSP_Length = search_clipping(channel: index.rawValue, size: size, clipping: 1.0-clipping)
         high = high<vDSP_Length(size) ? high+1 : vDSP_Length(size)
         return Float(high)/Float(size)
     }
     
+    
+    ///  Convolve histogram channel with filter presented another histogram distribution with phase-lead and scale.
+    ///
+    ///  - parameter channel: histogram which should be convolved
+    ///  - parameter filter:  filter distribution
+    ///  - parameter lead:    phase-lead in ticks of the histogram
+    ///  - parameter scale:   scale
+    public func convolve(channel c:ChannelNo, filter:IMPHistogram, lead:Int, scale:Float){
+        
+        if filter.size == 0 {
+            return
+        }
+        
+        let halfs = vDSP_Length(filter.size)
+        var asize = size+filter.size*2
+        var addata = [Float](count: asize, repeatedValue: 0)
+        
+        //
+        // we need to supplement source distribution to apply filter right
+        //
+        vDSP_vclr(&addata, 1, vDSP_Length(asize))
+        
+        var zero = channels[c.rawValue][0]
+        vDSP_vsadd(&addata, 1, &zero, &addata, 1, vDSP_Length(filter.size))
+        
+        var one  =  channels[c.rawValue][self.size-1]
+        let rest = UnsafeMutablePointer<Float>(addata)+size+Int(halfs)
+        vDSP_vsadd(rest, 1, &one, rest, 1, halfs-1)
+        
+        var addr = UnsafeMutablePointer<Float>(addata)+Int(halfs)
+        let os = UnsafeMutablePointer<Float>(channels[c.rawValue])
+        vDSP_vadd(os, 1, addr, 1, addr, 1, vDSP_Length(size))
+        
+        //
+        // apply filter
+        //
+        asize = size+filter.size-1
+        vDSP_conv(addata, 1, filter.channels[c.rawValue], 1, &addata, 1, vDSP_Length(asize), vDSP_Length(filter.size))
+        
+        //
+        // normalize coordinates
+        //
+        addr = UnsafeMutablePointer<Float>(addata)+lead
+        memcpy(os, addr, size*sizeof(Float))
+        
+        var left = -channels[c.rawValue][0]
+        vDSP_vsadd(os, 1, &left, os, 1, vDSP_Length(size))
+        
+        //
+        // normalize
+        //
+        var denom:Float = 0
+        
+        if (scale>0) {
+            vDSP_maxv (os, 1, &denom, vDSP_Length(size))
+            denom /= scale
+            vDSP_vsdiv(os, 1, &denom, os, 1, vDSP_Length(size))
+        }
+    }
     
     //
     // Утилиты работы с векторными данными на DSP
@@ -292,7 +367,7 @@ public class IMPHistogram {
         var zero:Float = 0
         var v:Float    = 1.0/m
         
-        // Создает вектор с монотонно возрастающими или убывающими значениями        
+        // Создает вектор с монотонно возрастающими или убывающими значениями
         vDSP_vramp(&zero, &v, &h, 1, vDSP_Length(size))
         return (size,h);
     }
@@ -359,7 +434,7 @@ public class IMPHistogram {
             vDSP_vsdiv(&B, 1, &denom, &B, 1, rsize);
         }
     }
- 
+    
     private func scale(inout A A:[Float], size:Int, scale:Float){
         let rsize = vDSP_Length(size)
         if scale > 0 {
@@ -379,11 +454,11 @@ public class IMPHistogram {
     private func clearChannel(inout channel:[Float]){
         vDSP_vclr(&channel, 1, vDSP_Length(self.size))
     }
-        
+    
     private func clearHistogram(){
         for c in 0..<channels.count{
             clearChannel(&channels[c]);
         }
     }
-
+    
 }

@@ -474,7 +474,7 @@ public class IMPHistogramCube{
     public var cube   = Cube()
     public let size   = Int(kIMP_HistogramCubeSize)
     
-    public func updateWithData(dataIn: UnsafePointer<Void>, dataCount: Int){
+    public func update(data dataIn: UnsafePointer<Void>, dataCount: Int){
         clearHistogram()
         var buffer = [IMPHistogramCubeCell](count: size, repeatedValue: IMPHistogramCubeCell())
         for i in 0..<dataCount {

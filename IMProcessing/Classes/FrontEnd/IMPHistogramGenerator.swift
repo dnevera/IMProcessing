@@ -31,7 +31,7 @@ public class IMPHistogramGenerator: IMPFilter{
         }
     }
     
-    public var layer = IMPHistogramLayer(
+    public static let defaultLayer = IMPHistogramLayer(
         components: (
             IMPHistogramLayerComponent(color: float4([1,0,0,0.5]), width: Float(UInt32.max)),
             IMPHistogramLayerComponent(color: float4([0,1,0,0.6]), width: Float(UInt32.max)),
@@ -39,6 +39,13 @@ public class IMPHistogramGenerator: IMPFilter{
             IMPHistogramLayerComponent(color: float4([0.8,0.8,0.8,0.8]), width: Float(UInt32.max))),
         backgroundColor: float4([0.1, 0.1, 0.1, 0.7]),
         backgroundSource: false)
+    
+    public var layer = IMPHistogramGenerator.defaultLayer {
+        didSet{
+            layerUniformBiffer = layerUniformBiffer ?? self.context.device.newBufferWithLength(sizeof(IMPHistogramLayer), options: .CPUCacheModeDefaultCache)
+            memcpy(layerUniformBiffer.contents(), &layer, sizeof(IMPHistogramLayer))
+        }
+    }
     
     public required init(context: IMPContext, size:IMPSize) {
         super.init(context: context)
@@ -51,8 +58,9 @@ public class IMPHistogramGenerator: IMPFilter{
         self.addFunction(kernel)
         channelsUniformBuffer = self.context.device.newBufferWithLength(sizeof(UInt), options: .CPUCacheModeDefaultCache)
         histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramFloatBuffer), options: .CPUCacheModeDefaultCache)
-        layerUniformBiffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramLayer), options: .CPUCacheModeDefaultCache)
-        memcpy(layerUniformBiffer.contents(), &layer, sizeof(IMPHistogramLayer))
+        defer{
+            layer = IMPHistogramGenerator.defaultLayer
+        }
     }
 
     required public init(context: IMPContext) {
@@ -78,6 +86,7 @@ public class IMPHistogramGenerator: IMPFilter{
         var channels = pdf.channels.count
         memcpy(channelsUniformBuffer.contents(), &channels, sizeof(UInt))
         
+        apply()
         self.dirty = true;
     }
     

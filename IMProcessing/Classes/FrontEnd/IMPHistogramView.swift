@@ -50,7 +50,7 @@ public class IMPHistogramView: IMPView {
             
             self.addSourceObserver{ (source:IMPImageProvider) -> Void in
                 self.analayzer.source = source
-            }            
+            }
         }
         
         private var view:IMPHistogramView?
@@ -72,12 +72,19 @@ public class IMPHistogramView: IMPView {
     
     override public var source:IMPImageProvider?{
         didSet{
-            _filter.source = source            
+            _filter.source = source
             _filter.apply()
         }
     }
     
-    private var _filter:histogramLayerFilter!
+    private var _filter:histogramLayerFilter! {
+        didSet{
+            _filter.addDestinationObserver { (destination) -> Void in
+                self.currentDestination = destination
+                self.layerNeedUpdate = true
+            }
+        }
+    }
     override public var filter:IMPFilter?{
         set(newFiler){
             fatalError("IMPHistogramView does not allow set new filter...")
