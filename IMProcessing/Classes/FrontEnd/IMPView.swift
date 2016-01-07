@@ -24,6 +24,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var context:IMPContext!
     
     internal var currentDestination:IMPImageProvider?
+    internal var currentDestinationLocked:Bool = false
     
     public var filter:IMPFilter?{
         didSet{
@@ -33,7 +34,16 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
             
             filter?.addDestinationObserver(destination: { (destination) -> Void in
-                self.currentDestination = destination
+                if !self.currentDestinationLocked {
+                    self.currentDestinationLocked = true
+                    self.currentDestination = destination
+                    self.currentDestinationLocked = false
+                }
+                self.layerNeedUpdate = true
+            })
+            
+            filter?.addDirtyObserver({ () -> Void in
+                self.currentDestination = nil
                 self.layerNeedUpdate = true
             })
         }
@@ -71,7 +81,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
             else {
                 if currentDestination == nil  && filter != nil {
-                    currentDestination = filter?.destination
+                    if !self.currentDestinationLocked {
+                        self.currentDestinationLocked = true
+                        self.currentDestination = filter?.destination
+                        self.currentDestinationLocked = false
+                    }
+                    //currentDestination = filter?.destination
                 }
                 return nil
             }

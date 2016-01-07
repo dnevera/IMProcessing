@@ -188,22 +188,4 @@ public class IMPContext {
     /// Dirty-trigger should be set when inherits object change stat of theirs processing
     ///
     public var dirty:Bool = true
-//    private var dirtyCounter:Int=0
-//    public var dirty:Bool{
-//        set(newValue){
-//            if newValue {
-//                ++dirtyCounter
-//            }
-//            else{
-//                --dirtyCounter
-//            }
-//            if dirtyCounter<0 {
-//                dirtyCounter = 0
-//            }
-//            print(" dirty === \(dirtyCounter)")
-//        }
-//        get{
-//            return dirtyCounter>0
-//        }
-//    }
 }

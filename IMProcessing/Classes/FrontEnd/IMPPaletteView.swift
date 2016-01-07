@@ -76,7 +76,7 @@ public class IMPPaletteView: IMPView {
     override init(context contextIn: IMPContext, frame: NSRect) {
         super.init(context: contextIn, frame: frame)
         _filter = paletteLayerFilter(context: self.context, view: self)
-        _filter.addDirtyObserver { () -> Void in
+        _filter.addDestinationObserver { (destination) -> Void in
             self.layerNeedUpdate = true
         }
     }
@@ -84,7 +84,7 @@ public class IMPPaletteView: IMPView {
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
         _filter = paletteLayerFilter(context: self.context, view: self)
-        _filter.addDirtyObserver { () -> Void in
+        _filter.addDestinationObserver { (destination) -> Void in
             self.layerNeedUpdate = true
         }
     }

@@ -50,7 +50,6 @@ public class IMPFilter: NSObject,IMPContextProvider {
         set(newDirty){
             if newDirty == true /*&& context.dirty != true*/ {
                 for o in dirtyHandlers{
-                    //NSLog(" dirty observer call: \(self, dirty)")
                     o()
                 }
             }
@@ -155,9 +154,10 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public func apply(){
         
+       dirty = true
         
         if dirty {
-            
+        
             if self.source?.texture == nil {
                 dirty = false
                 return
@@ -240,7 +240,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                 executeDestinationObservers(getDestination())
             }
             
-            dirty = false            
+            dirty = false
         }
     }
 }

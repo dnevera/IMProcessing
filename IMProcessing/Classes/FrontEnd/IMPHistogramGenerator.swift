@@ -86,7 +86,6 @@ public class IMPHistogramGenerator: IMPFilter{
         var channels = pdf.channels.count
         memcpy(channelsUniformBuffer.contents(), &channels, sizeof(UInt))
         
-        apply()
         self.dirty = true;
     }
     
