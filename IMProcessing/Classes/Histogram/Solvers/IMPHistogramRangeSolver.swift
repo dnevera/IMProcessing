@@ -22,11 +22,11 @@ public class IMPHistogramRangeSolver: NSObject, IMPHistogramSolver {
         ///
         /// Клипинг теней (все тени, которые будут перекрыты растяжением), по умолчанию 0.1%
         ///
-        var shadows:Float = 0.1/100.0
+        public var shadows:Float = 0.1/100.0
         ///
         /// Клипинг светов, по умолчанию 0.1%
         ///
-        var highlights:Float = 0.1/100.0
+        public var highlights:Float = 0.1/100.0
     }
     
     public var clipping = clippingType()
