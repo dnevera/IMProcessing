@@ -32,11 +32,15 @@ typedef struct{
     IMPBlending    blending;
 } IMPAdjustment;
 
-
 typedef struct{
     metal_float4   dominantColor;
     IMPBlending    blending;
 } IMPWBAdjustment;
+
+typedef struct{
+    float        value;
+    IMPBlending  blending;
+} IMPValueAdjustment;
 
 typedef struct{
     metal_float4   minimum;

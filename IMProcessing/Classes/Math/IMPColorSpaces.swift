@@ -132,10 +132,26 @@ public extension float4{
     }
 }
 
+public func / (left:float2,right:Float) -> float2 {
+    return float2(left.x/right,left.y/right)
+}
+
 public func / (left:float3,right:Float) -> float3 {
     return float3(left.x/right,left.y/right,left.z/right)
 }
 
 public func / (left:float4,right:Float) -> float4 {
     return float4(left.x/right,left.y/right,left.z/right,left.w/right)
+}
+
+public func * (left:float2,right:Float) -> float2 {
+    return float2(left.x*right,left.y*right)
+}
+
+public func * (left:float3,right:Float) -> float3 {
+    return float3(left.x*right,left.y*right,left.z*right)
+}
+
+public func * (left:float4,right:Float) -> float4 {
+    return float4(left.x*right,left.y*right,left.z*right,left.w*right)
 }
