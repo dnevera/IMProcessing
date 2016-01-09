@@ -20,9 +20,10 @@
 #include "IMPHistogramLayer_metal.h"
 #include "IMPFlowControl_metal.h"
 #include "IMPCommon_metal.h"
-#include "IMPAdjustment_metal.h"
 #include "IMPColorSpaces_metal.h"
 #include "IMPBlending_metal.h"
+
+#include "IMPAdjustment_metal.h"
 #include "IMPAdjustmentHSV_metal.h"
 
 #ifdef __cplusplus

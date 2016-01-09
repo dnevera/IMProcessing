@@ -17,6 +17,7 @@
 #include "IMPCommon_metal.h"
 #include "IMPColorSpaces_metal.h"
 #include "IMPBlending_metal.h"
+#include "IMPAdjustmentSHL_metal.h"
 
 using namespace metal;
 

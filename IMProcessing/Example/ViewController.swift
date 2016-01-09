@@ -51,7 +51,7 @@ class ViewController: NSViewController {
     @IBAction func changeValue1(sender: NSSlider) {
         let value = sender.floatValue/100
         asyncChanges { () -> Void in
-            self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
+            //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             self.textValueLabel.stringValue = String(format: "%2.5f", value);
             self.mainFilter.hsvFilter?.overlap = value*4
         }
@@ -92,11 +92,11 @@ class ViewController: NSViewController {
         histogramContainerView.layer?.backgroundColor = IMPColor.redColor().CGColor
         
         histogramView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
-        histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        //histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
         
         histogramCDFView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
-        histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
-        histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
+        //histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        //histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
         
         histogramContainerView.addSubview(histogramView)
         histogramCDFContainerView.addSubview(histogramCDFView)
