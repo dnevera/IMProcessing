@@ -8,14 +8,14 @@
 
 import Foundation
 
-// MARK: - Splines
+// MARK: - Cubic Splines
 public extension CollectionType where Generator.Element == Float {
     
-    ///  Create cubic spline curve from linear collection of Floats with certain control points
+    ///  Create 1D piecewise cubic spline curve from linear collection of x-Float points with certain control points
     ///
     ///  - parameter controls: list of (x,y) control points
     ///
-    ///  - returns: interpolated list of points
+    ///  - returns: interpolated list of (y) points
     public func cubicSpline(controls:[float2], scale:Float=0)-> [Float]{
         var curve = [Float]()
         let max   = self.maxElement()!
@@ -33,6 +33,28 @@ public extension CollectionType where Generator.Element == Float {
         return curve
     }
     
+    ///  Create 2D piecewise cubic spline curve from linear collection of x-Float points with certain control points
+    ///
+    ///  - parameter controls: list of (x,y) control points
+    ///
+    ///  - returns: interpolated list of (x,y) points
+    public func cubicSpline(controls:[float2], scale:Float=0)-> [float2]{
+        var curve = [float2]()
+        let max   = self.maxElement()!
+        let S = splineSlopes(controls)
+        for i in self{
+            let x = Float(i)
+            var y = evaluateSpline(x, points: controls, slopes: S)
+            y = y<0 ? 0 : y > max ? max : y
+            var point = float2(x,y)
+            if scale > 0 {
+                point = point/scale
+            }
+            curve.append(point)
+        }
+        return curve
+    }
+
     
     func splineSlopes(points:[float2]) -> [Float] {
         
@@ -195,6 +217,107 @@ public extension CollectionType where Generator.Element == Float {
         
         return D
     }
-    
-    
 }
+
+// MARK: - Catmull-Rom piecewise splines
+public extension CollectionType where Generator.Element == Float {
+    
+    ///  Create 1D piecewise Catmull-Rom spline curve from linear collection of x-Float points with certain control points
+    ///
+    ///  - parameter controls: list of (x,y) control points
+    ///
+    ///  - returns: interpolated list of (y) points
+    public func catmullRomSpline(points:[float2], scale:Float=0) -> [Float]{
+        var curve = [Float]()
+        for x in self {
+            curve.append(catmullRomSplinePoint(x, points: points).y)
+        }
+        return curve
+    }
+    
+    ///  Create 2D piecewise Catmull-Rom spline curve from linear collection of x-Float points with certain control points
+    ///
+    ///  - parameter controls: list of (x,y) control points
+    ///
+    ///  - returns: interpolated list of (x,y) points
+    public func catmullRomSpline(points:[float2], scale:Float=0) -> [float2]{
+        var curve = [float2]()
+        for x in self {
+            curve.append(catmullRomSplinePoint(x, points: points))
+        }
+        return curve
+    }
+    
+    func catmullRomSplinePoint(x:Float,points:[float2]) -> float2 {
+        let Xi = x
+        
+        let k  = find(points, Xi: Xi)
+        let P1 = points[k.0]
+        let P2 = points[k.1]
+        
+        let (a,b,h) = catmullRomSplineCoeff(k, points: points)
+        
+        let t = (Xi - P1.x) / h
+        let t2 = t*t
+        let t3 = t2*t
+        
+        let h00 =  2*t3 - 3*t2 + 1
+        let h10 =    t3 - 2*t2 + t
+        let h01 = -2*t3 + 3*t2
+        let h11 =    t3 - t2
+        
+        return float2(
+            Xi,
+            h00 * P1.y + h10 * h * a + h01 * P2.y + h11 * h * b
+        )
+    }
+    
+    func find(points:[float2], Xi:Float)->(Int,Int){
+        let n = points.count
+        
+        var k1:Int = 0
+        var k2:Int = n-1
+        while k2-k1 > 1 {
+            let k = floor(Float(k2+k1)/2.0).int
+            let xkpoint = points[k]
+            if xkpoint.x > Xi {
+                k2 = k
+            }
+            else {
+                k1 = k
+            }
+        }
+        return (k1,k2)
+    }
+    
+    
+    func catmullRomSplineCoeff(k:(Int,Int), points:[float2]) -> (a:Float,b:Float,h:Float) {
+        
+        let P1 = points[k.0]
+        let P2 = points[k.1]
+        
+        let h = P2.x - P1.x
+        var a:Float = 0
+        var b:Float = 0
+        
+        if k.0 == 0 {
+            let P3 = points[k.1+1]
+            a = (P2.y - P1.y) / h
+            b = (P3.y - P1.y) / (P3.x - P1.x)
+        }
+        else if k.1 == points.count-1 {
+            let P0 = points[k.0-1]
+            a = (P2.y - P1.y) / (P2.x - P0.x)
+            b = (P2.y - P1.y) / h
+        }
+        else{
+            let P0 = points[k.0-1]
+            let P3 = points[k.1+1]
+            a = (P2.y - P0.y) / (P2.x - P0.x)
+            b = (P3.y - P1.y) / (P3.x - P1.x)
+        }
+        
+        return (a,b,h)
+    }
+}
+
