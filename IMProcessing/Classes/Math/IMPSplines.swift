@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Accelerate
 
 // MARK: - Cubic Splines
 public extension CollectionType where Generator.Element == Float {
@@ -26,7 +27,7 @@ public extension CollectionType where Generator.Element == Float {
             y = y<0 ? 0 : y > max ? max : y
             var point = y
             if scale > 0 {
-                point = point/scale
+                point = point/(max/scale)
             }
             curve.append(point)
         }
@@ -48,7 +49,7 @@ public extension CollectionType where Generator.Element == Float {
             y = y<0 ? 0 : y > max ? max : y
             var point = float2(x,y)
             if scale > 0 {
-                point = point/scale
+                point = point/(max/scale)
             }
             curve.append(point)
         }
@@ -232,6 +233,12 @@ public extension CollectionType where Generator.Element == Float {
         for x in self {
             curve.append(catmullRomSplinePoint(x, points: points).y)
         }
+        if scale>0 {
+            var max:Float = 0
+            vDSP_maxv(curve, 1, &max, vDSP_Length(curve.count))
+            max = scale/max
+            vDSP_vsmul(curve, 1, &max, &curve, 1, vDSP_Length(curve.count))
+        }
         return curve
     }
     
@@ -244,6 +251,13 @@ public extension CollectionType where Generator.Element == Float {
         var curve = [float2]()
         for x in self {
             curve.append(catmullRomSplinePoint(x, points: points))
+        }
+        if scale>0 {
+            var max:Float = 0
+            let address = UnsafeMutablePointer<Float>(curve)
+            vDSP_maxv(address+1, 2, &max, vDSP_Length(curve.count))
+            max = scale/max
+            vDSP_vsmul(address, 1, &max, address, 1, vDSP_Length(curve.count*2))
         }
         return curve
     }
@@ -318,6 +332,127 @@ public extension CollectionType where Generator.Element == Float {
         }
         
         return (a,b,h)
+    }
+}
+
+public struct IMPMatrix3D{
+    
+    public var columns:[Float]
+    public var rows:   [(y:Float,z:[Float])]
+    
+    public func column(index:Int) -> [Float] {
+        var c = [Float]()
+        for i in rows {
+            c.append(i.z[index])
+        }
+        return c
+    }
+    
+    public func row(index:Int) -> [Float] {
+        return rows[index].z
+    }
+    
+    public init(columns:[Float], rows:[(y:Float,z:[Float])]){
+        self.columns = columns
+        self.rows = rows
+    }
+    
+    public init(xy points:[[Float]], zMatrix:[Float]){
+        if points.count != 2 {
+            fatalError("IMPMatrix3D xy must have 2 dimension Float array with X-points and Y-points lists...")
+        }
+        columns = points[0]
+        rows = [(y:Float,z:[Float])]()
+        var yi = 0
+        for y in points[1] {
+            var row = (y,z:[Float]())
+            for var xi = 0; xi < columns.count; xi++ {
+                row.z.append(zMatrix[yi++])
+            }
+            rows.append(row)
+        }
+    }
+    
+    public var description:String{
+        get{
+            var s = String("[")
+            var i=0
+            for var yi=0; yi<rows.count; yi++ {
+                let row = rows[yi]
+                var ci = 0
+                for obj in row.z {
+                    if i>0 {
+                        s += ""
+                    }
+                    i++
+                    s += String(format: "%2.4f", obj)
+                    if i<rows.count*columns.count {
+                        if ci<self.columns.count-1 {
+                            s += ","
+                        }
+                        else{
+                            s += ";"
+                        }
+                    }
+                    ci++
+                }
+                if (yi<rows.count-1){
+                    s += "\n"
+                }
+            }
+            s += "]"
+            return s
+        }
+    }
+}
+
+// MARK: - 3D Catmull-Rom piecewise splines
+public extension CollectionType where Generator.Element == [Float] {
+    
+    public func catmullRomSpline(controlPoints:IMPMatrix3D, scale:Float=0)  -> [Float]{
+        
+        if self.count != 2 {
+            fatalError("CollectionType must have 2 dimension Float array with X-points and Y-points lists...")
+        }
+        
+        var curve   = [Float]()
+        let xPoints = self[0 as! Self.Index]
+        let yPoints = self[count - 1 as! Self.Index]
+        
+        
+        //
+        // y-z
+        //
+        var ysplines = [Float]()
+        for var i=0; i < controlPoints.columns.count; i++ {
+            
+            var points = [float2]()
+            
+            for var yi=0; yi < controlPoints.rows.count; yi++ {
+                let y = controlPoints.rows[yi].y
+                let z = controlPoints.rows[yi].z[i]
+                points.append(float2(y,z))
+            }
+            
+            let spline = yPoints.catmullRomSpline(points, scale: 0) as [Float]
+            ysplines.appendContentsOf(spline)
+        }
+                
+        let z = IMPMatrix3D(xy: [yPoints,controlPoints.columns], zMatrix: ysplines)
+        
+        for var i=0; i < yPoints.count; i++ {
+            
+            var points = [float2]()
+            
+            for var xi=0; xi<controlPoints.columns.count; xi++ {
+                let x = controlPoints.columns[xi]
+                let y = z.rows[xi].z[i]
+                points.append(float2(x,y))
+            }
+            let spline = xPoints.catmullRomSpline(points, scale: scale) as [Float]
+            curve.appendContentsOf(spline)
+        }
+        return curve
     }
 }
 

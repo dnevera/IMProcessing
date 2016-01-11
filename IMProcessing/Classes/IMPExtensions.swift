@@ -29,10 +29,10 @@ import Metal
 public typealias IMPSize  = CGSize
 
 public enum IMProcessing{
-    struct names {
+    public struct names {
         static let prefix = "com.improcessing."
     }
-    struct colors {
+    public struct colors {
         #if os(iOS)
         static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #else
