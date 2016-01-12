@@ -18,17 +18,30 @@ class IMPTestFilter:IMPFilter {
     var awbFilter:IMPAutoWBFilter!
     var hsvFilter:IMPHSVFilter!
     
+    var curveFilter:IMPCurvesFilter!
+    
     required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
         
         super.init(context: context)
-                
+        
         contrastFilter = IMPContrastFilter(context: self.context)
         awbFilter = IMPAutoWBFilter(context: self.context)
         hsvFilter = IMPHSVFilter(context: self.context, optimization:.NORMAL)
+        curveFilter = IMPCurvesFilter(context: self.context)
+        
+        curveFilter.splines.compositeControls = [
+            float2(0,0),
+            float2(50,18),
+            float2(128,128),
+            float2(238,245),
+            float2(255,255)
+        ]
         
         addFilter(contrastFilter)
         addFilter(awbFilter)
         addFilter(hsvFilter)
+        
+        addFilter(curveFilter)
         
         sourceAnalayzer = IMPHistogramAnalyzer(context: self.context)
         sourceAnalayzer.addSolver(rangeSolver)

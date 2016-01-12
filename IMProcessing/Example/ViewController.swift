@@ -78,7 +78,15 @@ class ViewController: NSViewController {
 
     @IBAction func changeValue5(sender: NSSlider) {
         asyncChanges { () -> Void in
-            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
+            //self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
+            //self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100
+            self.mainFilter.curveFilter.splines.compositeControls = [
+                float2(0,0),
+                float2(50,18),
+                float2(128,128*sender.floatValue/100),
+                float2(238,245),
+                float2(255,255)
+            ]
         }
     }
     

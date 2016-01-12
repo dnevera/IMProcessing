@@ -437,9 +437,12 @@ public extension CollectionType where Generator.Element == [Float] {
             let spline = yPoints.catmullRomSpline(points, scale: 0) as [Float]
             ysplines.appendContentsOf(spline)
         }
-                
+        
         let z = IMPMatrix3D(xy: [yPoints,controlPoints.columns], zMatrix: ysplines)
         
+        //
+        // x-y-z
+        //
         for var i=0; i < yPoints.count; i++ {
             
             var points = [float2]()
