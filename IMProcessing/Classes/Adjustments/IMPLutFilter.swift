@@ -22,7 +22,10 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
     public var adjustmentBuffer:MTLBuffer?
     public var kernel:IMPFunction!
     internal var lut:IMPImageProvider?
-    internal var lutDescription = IMPImageProvider.LutDescription()
+    internal var _lutDescription = IMPImageProvider.LutDescription()
+    public var lutDescription:IMPImageProvider.LutDescription{
+        return _lutDescription
+    }
     
     public required init(context: IMPContext, lut:IMPImageProvider, description:IMPImageProvider.LutDescription) {
         
@@ -49,7 +52,7 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
             name += "D3D"
         }
         
-        if self.lutDescription.type != description.type  || kernel == nil {
+        if self._lutDescription.type != description.type  || kernel == nil {
             if kernel != nil {
                 self.removeFunction(kernel)
             }
@@ -58,7 +61,7 @@ public class IMPLutFilter: IMPFilter, IMPAdjustmentProtocol {
         }
         
         self.lut = lut
-        self.lutDescription = description
+        self._lutDescription = description
         
         self.dirty = true
     }

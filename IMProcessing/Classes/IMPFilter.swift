@@ -21,6 +21,13 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var context:IMPContext!
     
+    public var enabled = true {
+        didSet{
+            dirty = true
+            apply()
+        }
+    }
+    
     public var source:IMPImageProvider?{
         didSet{
             source?.filter=self
@@ -30,8 +37,13 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var destination:IMPImageProvider?{
         get{
-            self.apply()
-            return getDestination()
+            if enabled {
+                self.apply()
+                return getDestination()
+            }
+            else{
+                return source
+            }
         }
     }
     
@@ -123,6 +135,9 @@ public class IMPFilter: NSObject,IMPContextProvider {
     private var destinationContainer:IMPImageProvider?
     
     internal func getDestination() -> IMPImageProvider? {
+        if !enabled{
+            return source
+        }
         if let t = self.texture{
             if let d = destinationContainer{
                 d.texture=t

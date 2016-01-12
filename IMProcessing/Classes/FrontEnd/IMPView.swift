@@ -86,7 +86,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         self.currentDestination = filter?.destination
                         self.currentDestinationLocked = false
                     }
-                    //currentDestination = filter?.destination
                 }
                 return nil
             }

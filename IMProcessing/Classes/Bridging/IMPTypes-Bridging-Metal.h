@@ -43,6 +43,12 @@ typedef struct{
 } IMPValueAdjustment;
 
 typedef struct{
+    float        level;
+    IMPBlending  blending;
+} IMPLevelAdjustment;
+
+
+typedef struct{
     metal_float4   minimum;
     metal_float4   maximum;
     IMPBlending    blending;
