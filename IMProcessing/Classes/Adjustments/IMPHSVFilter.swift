@@ -305,9 +305,10 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     }
     
     
-    internal static let level:IMPHSVLevel = IMPHSVLevel(hue: 0.0, saturation: 0, value: 0)
     public var adjustmentBuffer:MTLBuffer?
     public var kernel:IMPFunction!
+
+    internal static let level:IMPHSVLevel = IMPHSVLevel(hue: 0.0, saturation: 0, value: 0)
     internal var hueWeights:MTLTexture!
     
     private  var adjustmentLut = IMPAdjustment(blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
