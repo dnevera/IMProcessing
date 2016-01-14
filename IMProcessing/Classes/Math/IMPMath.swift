@@ -10,6 +10,16 @@ import Foundation
 import GLKit
 
 public extension Double{
+    
+    public var int:Int{
+        get{
+            return Int(self)
+        }
+        set(newValue){
+            self = Double(newValue)
+        }
+    }
+
     public var float:Float{
         get{
             return Float(self)
@@ -29,6 +39,7 @@ public extension Double{
 }
 
 public extension Float{
+    
     public var double:Double{
         get{
             return Double(self)
@@ -68,6 +79,16 @@ public extension Float{
 }
 
 public extension Int {
+    
+    public var double:Double{
+        get{
+            return Double(self)
+        }
+        set(newValue){
+            self = Int(newValue)
+        }
+    }
+    
     public var float:Float{
         get{
             return Float(self)

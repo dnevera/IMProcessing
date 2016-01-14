@@ -24,7 +24,7 @@
 #include "IMPBlending_metal.h"
 
 #include "IMPAdjustment_metal.h"
-#include "IMPAdjustmentHSV_metal.h"
+#include "IMPGaussianBlur_metal.h"
 
 #ifdef __cplusplus
 

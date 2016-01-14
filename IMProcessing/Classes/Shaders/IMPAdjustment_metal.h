@@ -22,6 +22,7 @@
 #include "IMPAdjustmentContrast_metal.h"
 #include "IMPAdjustmentCurves_metal.h"
 #include "IMPAdjustment3DLUT_metal.h"
+#include "IMPAdjustmentHSV_metal.h"
 
 #endif
 

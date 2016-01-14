@@ -44,6 +44,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             filter?.addDirtyObserver({ () -> Void in
                 self.currentDestination = nil
+                self.filter?.context.dirty = true
                 self.layerNeedUpdate = true
             })
         }

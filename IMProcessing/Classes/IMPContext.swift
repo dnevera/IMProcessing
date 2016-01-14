@@ -122,7 +122,11 @@ public class IMPContext {
     ///
     public final func execute(closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
-            if let commandBuffer = self.commandQueue?.commandBufferWithUnretainedReferences(){
+        if let commandBuffer =
+            self.isLasy ?
+            self.commandQueue?.commandBufferWithUnretainedReferences() :
+            self.commandQueue?.commandBuffer() {
+                
                 closure(commandBuffer: commandBuffer)
                 commandBuffer.commit()
                 
