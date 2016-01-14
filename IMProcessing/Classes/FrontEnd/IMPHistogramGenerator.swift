@@ -87,6 +87,7 @@ public class IMPHistogramGenerator: IMPFilter{
         memcpy(channelsUniformBuffer.contents(), &channels, sizeof(UInt))
         
         self.dirty = true;
+        self.apply()
     }
     
     

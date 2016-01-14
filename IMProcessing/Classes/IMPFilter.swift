@@ -24,7 +24,6 @@ public class IMPFilter: NSObject,IMPContextProvider {
     public var enabled = true {
         didSet{
             dirty = true
-            apply()
         }
     }
     
