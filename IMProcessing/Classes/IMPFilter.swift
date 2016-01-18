@@ -174,6 +174,10 @@ public class IMPFilter: NSObject,IMPContextProvider {
     var passThroughKernel:IMPFunction?
     
     public func apply(){
+        apply(counts:nil, groups:nil)
+    }
+    
+    public func apply(counts counts:MTLSize?, groups:MTLSize?){
 
         if dirty {
             
@@ -216,8 +220,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                 height = s.height
                             }
                             
-                            let threadgroupCounts = MTLSizeMake(function.groupSize.width, function.groupSize.height, 1);
-                            let threadgroups = MTLSizeMake(
+                            let threadgroupCounts = counts ?? MTLSizeMake(function.groupSize.width, function.groupSize.height, 1);
+                            let threadgroups = groups ?? MTLSizeMake(
                                 (width  + threadgroupCounts.width ) / threadgroupCounts.width ,
                                 (height + threadgroupCounts.height) / threadgroupCounts.height,
                                 1);

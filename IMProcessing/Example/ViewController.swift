@@ -42,7 +42,8 @@ class ViewController: NSViewController {
             //
             // немного того, но... :)
             //
-            dispatch_after(0, dispatch_get_main_queue()) { () -> Void in
+            //dispatch_after(0, dispatch_get_main_queue()) { () -> Void in
+            dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 block()
             }
         })
@@ -78,15 +79,23 @@ class ViewController: NSViewController {
 
     @IBAction func changeValue5(sender: NSSlider) {
         asyncChanges { () -> Void in
-            //self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
-            //self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100
-            self.mainFilter.curveFilter.splines.compositeControls = [
-                float2(0,0),
-                float2(50,18),
-                float2(128,128*sender.floatValue/100),
-                float2(238,245),
-                float2(255,255)
-            ]
+            
+            if sender.floatValue < 2 {
+                self.mainFilter.blur.radius = 0
+            }
+            else {
+                self.mainFilter.blur.radius = (512*sender.floatValue/100).int
+            }
+            
+//            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
+//            self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100
+//            self.mainFilter.curveFilter.splines.compositeControls = [
+//                float2(0,0),
+//                float2(50,18),
+//                float2(128,128*sender.floatValue/100),
+//                float2(238,245),
+//                float2(255,255)
+//            ]
         }
     }
     
@@ -100,11 +109,11 @@ class ViewController: NSViewController {
         histogramContainerView.layer?.backgroundColor = IMPColor.redColor().CGColor
         
         histogramView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
-        //histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        histogramView.histogramLayer.solver.layer.backgroundColor = IMPPrefs.colors.background
         
         histogramCDFView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
-        //histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
-        //histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
+        histogramCDFView.histogramLayer.solver.layer.backgroundColor = IMPPrefs.colors.background
+        histogramCDFView.histogramLayer.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
         
         histogramContainerView.addSubview(histogramView)
         histogramCDFContainerView.addSubview(histogramCDFView)

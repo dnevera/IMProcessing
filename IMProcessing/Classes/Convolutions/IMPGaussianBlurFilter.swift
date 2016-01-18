@@ -73,8 +73,8 @@ public class IMPGaussianBlurFilter: IMPFilter {
                 addFunction(horizontal_pass_kernel)
                 addFunction(vertical_pass_kernel)
             }
-            weightsTexure = create1DTexture(weights)
-            offsetsTexture = create1DTexture(offsets)
+            weightsTexure =  context.device.texture1D(weights)
+            offsetsTexture = context.device.texture1D(offsets)
         }
         else{
             empty = true

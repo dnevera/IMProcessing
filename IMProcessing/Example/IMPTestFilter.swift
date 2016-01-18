@@ -20,6 +20,9 @@ class IMPTestFilter:IMPFilter {
     
     var curveFilter:IMPCurvesFilter!
     
+    //var blur:IMPIIRGaussianBlurFilter!
+    var blur:IMPGaussianBlurFilter!
+    
     required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
         
         super.init(context: context)
@@ -37,11 +40,15 @@ class IMPTestFilter:IMPFilter {
             float2(255,255)
         ]
         
+        //blur = IMPIIRGaussianBlurFilter(context: context)
+        blur = IMPGaussianBlurFilter(context: context)
+
         addFilter(contrastFilter)
         addFilter(awbFilter)
         addFilter(hsvFilter)
         
         addFilter(curveFilter)
+        addFilter(blur)
         
         sourceAnalayzer = IMPHistogramAnalyzer(context: self.context)
         sourceAnalayzer.addSolver(rangeSolver)

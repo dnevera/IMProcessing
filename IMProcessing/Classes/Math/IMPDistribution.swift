@@ -10,7 +10,7 @@ import Foundation
 import Accelerate
 
 public extension Int {
-    ///  Create gaussian kernel distribution with kernel size in pixel
+    ///  Create gaussian kernel distribution with kernel size in pixels
     ///
     ///  - parameter size:  kernel size
     ///
@@ -25,7 +25,7 @@ public extension Int {
             while( true )
             {
                 
-                let kernel = Float.gaussianKernel(sigma: sigma, size: size)
+                let kernel = sigma.gaussianKernel(size: size)
                 if kernel[0] > epsilon {
                     
                     if searchStep > 0.02  {
@@ -62,6 +62,7 @@ public extension Float {
     ///  - parameter size:  kernel size, must be odd number
     ///
     ///  - returns: gaussian kernel piecewise distribution
+    ///
     public static func gaussianKernel(sigma sigma:Float, size:Int) -> [Float] {
         
         assert(size%2==1, "gaussian kernel size must be odd number...")
@@ -78,6 +79,16 @@ public extension Float {
         
         vDSP_vsdiv(kernel, 1, &sum, &kernel, 1, vDSP_Length(kernel.count))
         return kernel
+    }
+    
+    ///  Create gaussian kernel distribution from sigma value with kernel size
+    ///
+    ///  - parameter size:  kernel size, must be odd number
+    ///
+    ///  - returns: gaussian kernel piecewise distribution
+    ///
+    public func gaussianKernel(size size:Int) -> [Float] {
+        return Float.gaussianKernel(sigma: self, size: size)
     }
 }
 

@@ -25,7 +25,7 @@ public class IMPFunction: NSObject, IMPContextProvider {
     public let library:MTLLibrary?
     public let pipeline:MTLComputePipelineState?
     public let name:String
-    public let groupSize:GroupSize = GroupSize()
+    public var groupSize:GroupSize = GroupSize()
     
     public var context:IMPContext!
         
