@@ -32,7 +32,7 @@ public extension IMProcessing{
 public extension Float32{
     
     //
-    // Get HSV weight for the hue overlap between two close colors in the HSV color wheel
+    // Get HSV weight which uses to define how two close colors interfer between ech others
     //
     func overlapWeight(ramp ramp:float4, overlap:Float = IMProcessing.hsv.hueOverlapFactor) -> Float32 {
         

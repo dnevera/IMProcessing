@@ -92,28 +92,14 @@ public class IMPCurvesFilter:IMPFilter,IMPAdjustmentProtocol{
         }
         
         func updateTexture(){
-            
-            if texture == nil {
-                let textureDescriptor = MTLTextureDescriptor()
-                textureDescriptor.textureType = .Type1DArray
-                textureDescriptor.width       = Splines.maxValue
-                textureDescriptor.height      = 1
-                textureDescriptor.depth       = 1
-                textureDescriptor.pixelFormat = .R32Float
-                
-                textureDescriptor.arrayLength = 3
-                textureDescriptor.mipmapLevelCount = 1
-                
-                texture = context.device.newTextureWithDescriptor(textureDescriptor)
-            }
 
-            let region = MTLRegionMake2D(0, 0, texture!.width, 1)
-            let bytesPerRow = region.size.width * sizeof(Float32)
-            for var index=0; index<channelCurves.count; index++ {
-                let curve = channelCurves[index]
-                texture!.replaceRegion(region, mipmapLevel:0, slice:index, withBytes:curve, bytesPerRow:bytesPerRow, bytesPerImage:0)
+            if texture == nil {
+                texture = context.device.texture1DArray(channelCurves)
             }
-            
+            else {
+                texture?.update(channelCurves)
+            }
+                        
             if filter != nil {
                 filter?.dirty = true
             }
