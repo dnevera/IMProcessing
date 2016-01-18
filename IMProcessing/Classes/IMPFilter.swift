@@ -48,10 +48,13 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var destinationSize:MTLSize?{
         didSet{
-            if let ov = destinationSize{
+            if let ov = oldValue{
                 if ov != destinationSize! {
                     dirty = true
                 }
+            }
+            else{
+                dirty = true
             }
         }
     }

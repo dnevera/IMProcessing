@@ -23,6 +23,8 @@ class IMPTestFilter:IMPFilter {
     //var blur:IMPIIRGaussianBlurFilter!
     var blur:IMPGaussianBlurFilter!
     
+    var downSample:IMPMaxSizeFilter!
+    
     required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
         
         super.init(context: context)
@@ -43,6 +45,11 @@ class IMPTestFilter:IMPFilter {
         //blur = IMPIIRGaussianBlurFilter(context: context)
         blur = IMPGaussianBlurFilter(context: context)
 
+        downSample = IMPMaxSizeFilter(context: self.context)
+        downSample.size = 1000
+        
+        addFilter(downSample)
+        
         addFilter(contrastFilter)
         addFilter(awbFilter)
         addFilter(hsvFilter)
