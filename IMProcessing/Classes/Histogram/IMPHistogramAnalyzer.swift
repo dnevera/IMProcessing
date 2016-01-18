@@ -75,10 +75,13 @@ public class IMPHistogramAnalyzer: IMPFilter {
     }
     internal var regionUniformBuffer:MTLBuffer!
     
-    //
-    // kernel-функция счета
-    //
-    private var kernel_impHistogramCounter:IMPFunction!
+    ///
+    /// Кernel-функция счета
+    ///
+    public var kernel:IMPFunction {
+        return _kernel
+    }
+    private var _kernel:IMPFunction!
     
     //
     // Буфер обмена контейнера счета с GPU
@@ -105,9 +108,9 @@ public class IMPHistogramAnalyzer: IMPFilter {
         super.init(context: context)
         
         // инициализируем счетчик
-        kernel_impHistogramCounter = IMPFunction(context: self.context, name:function)
+        _kernel = IMPFunction(context: self.context, name:function)
         
-        let groups = kernel_impHistogramCounter.pipeline!.maxTotalThreadsPerThreadgroup/histogram.size
+        let groups = kernel.pipeline!.maxTotalThreadsPerThreadgroup/histogram.size
         
         threadgroups = MTLSizeMake(groups,1,1)
         
@@ -115,7 +118,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
     
         
         // добавляем счетчик как метод фильтра
-        self.addFunction(kernel_impHistogramCounter);
+        //self.addFunction(kernel);
         
         defer{
             region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
@@ -178,14 +181,14 @@ public class IMPHistogramAnalyzer: IMPFilter {
             //
             // Создаем вычислительный пайп
             //
-            commandEncoder.setComputePipelineState(self.kernel_impHistogramCounter.pipeline!);
+            commandEncoder.setComputePipelineState(self.kernel.pipeline!);
             commandEncoder.setTexture(texture, atIndex:0)
             commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
             commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
             commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
             commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
             
-            self.configure(self.kernel_impHistogramCounter, command: commandEncoder)
+            self.configure(self.kernel, command: commandEncoder)
             
             //
             // Запускаем вычисления

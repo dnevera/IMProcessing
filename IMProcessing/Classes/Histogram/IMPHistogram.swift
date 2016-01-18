@@ -51,6 +51,11 @@ public class IMPHistogram {
         }
     }
     
+    private var binCounts:[Float]
+    public func binCount(channel:ChannelNo)->Float{
+        return binCounts[channel.rawValue]
+    }
+    
     ///
     /// Конструктор пустой гистограммы.
     ///
@@ -58,6 +63,7 @@ public class IMPHistogram {
         size = Int(kIMP_HistogramSize)
         type = .XYZW
         channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: size, repeatedValue: 0))
+        binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
     }
     
     ///  Create normal distributed histogram
@@ -72,7 +78,8 @@ public class IMPHistogram {
         self.size = size
         self.type = type
         channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
-        
+        binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
+
         let m = Float(size-1)
         
         for var c=0; c<channels.count; c++ {
@@ -82,15 +89,19 @@ public class IMPHistogram {
                     channels[c][i] += v.gaussianPoint(fi: fi, mu: mu[p], sigma: sigma[p])
                 }
             }
+            updateBinCountForChannel(c)
         }
     }
     
+
     public init(ramp:Range<Int>, size:Int = Int(kIMP_HistogramSize), type: ChannelsType = .XYZW){
         self.size = size
         self.type = type
         channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
+        binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
         for var c=0; c<channels.count; c++ {
             self.ramp(&channels[c], ramp: ramp)
+            updateBinCountForChannel(c)
         }
     }
     
@@ -114,6 +125,10 @@ public class IMPHistogram {
             fatalError("Number of channels is great then it posible: \(channels.count)")
         }
         self.channels = channels
+        binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
+        for var c=0; c<channels.count; c++ {
+            updateBinCountForChannel(c)
+        }
     }
     
     ///
@@ -126,6 +141,7 @@ public class IMPHistogram {
         let address = UnsafePointer<UInt32>(dataIn)
         for c in 0..<channels.count{
             updateChannel(&channels[c], address: address, index: c)
+            updateBinCountForChannel(c)
         }
     }
     
@@ -142,6 +158,7 @@ public class IMPHistogram {
                 var data:[Float] = [Float](count: Int(self.size), repeatedValue: 0)
                 self.updateChannel(&data, address: address, index: c)
                 self.addFromData(&data, toChannel: &channels[c])
+                updateBinCountForChannel(c)
             }
         }
     }
@@ -155,6 +172,7 @@ public class IMPHistogram {
         let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[channel.rawValue])
         vDSP_vclr(address, 1, vDSP_Length(size))
         vDSP_vadd(address, 1, from_address, 1, address, 1, vDSP_Length(size));
+        updateBinCountForChannel(channel.rawValue)
     }
     
     
@@ -165,11 +183,12 @@ public class IMPHistogram {
     ///
     /// - returns: контейнер значений гистограммы с комулятивным распределением значений интенсивностей
     ///
-    public func cdf(scale:Float = 1, power pow:Float=1) ->IMPHistogram{
+    public func cdf(scale:Float = 1, power pow:Float=1) -> IMPHistogram {
         let _cdf = IMPHistogram(channels:channels);
         for c in 0..<_cdf.channels.count{
             power(pow: pow, A: _cdf.channels[c], B: &_cdf.channels[c])
             integrate(A: &_cdf.channels[c], B: &_cdf.channels[c], size: _cdf.channels[c].count, scale:scale)
+            _cdf.updateBinCountForChannel(c)
         }
         return _cdf;
     }
@@ -180,10 +199,11 @@ public class IMPHistogram {
     ///
     ///  - returns: return value histogram
     ///
-    public func pdf(scale:Float = 1) -> IMPHistogram{
+    public func pdf(scale:Float = 1) -> IMPHistogram {
         let _pdf = IMPHistogram(channels:channels);
         for c in 0..<_pdf.channels.count{
             self.scale(A: &_pdf.channels[c], size: _pdf.channels[c].count, scale:scale)
+            _pdf.updateBinCountForChannel(c)
         }
         return _pdf;
     }
@@ -291,12 +311,22 @@ public class IMPHistogram {
             denom /= scale
             vDSP_vsdiv(os, 1, &denom, os, 1, vDSP_Length(size))
         }
+        
+        updateBinCountForChannel(c.rawValue)
     }
     
     //
     // Утилиты работы с векторными данными на DSP
     //
     // ..........................................
+    
+    
+    private func updateBinCountForChannel(channel:Int){
+        var denom:Float = 0
+        let c = channels[channel]
+        vDSP_sve(c, 1, &denom, vDSP_Length(c.count))
+        binCounts[channel] = denom
+    }
     
     //
     // Реальная размерность беззнакового целого. Может отличаться в зависимости от среды исполнения.
