@@ -13,7 +13,6 @@
 #import <jpeglib.h>
 #import <setjmp.h>
 
-
 struct DPJpegErrorMgr {
     struct jpeg_error_mgr pub;    /* "public" fields */
     jmp_buf setjmp_buffer;        /* for return to caller */
@@ -39,7 +38,72 @@ static void my_error_exit (j_common_ptr cinfo)
     longjmp(myerr->setjmp_buffer, 1);
 }
 
+
+/**
+ * Save jpeg in NSMutableData object
+ */
+typedef struct {
+    struct jpeg_destination_mgr pub;
+    void   *jpegData;
+} mem_destination_mgr;
+
+typedef mem_destination_mgr *mem_dest_ptr;
+
+#define BLOCK_SIZE 4096
+
+METHODDEF(void) init_destination(j_compress_ptr cinfo)
+{
+    mem_dest_ptr dest = (mem_dest_ptr) cinfo->dest;
+    NSMutableData  *data = (__bridge NSMutableData *)(dest->jpegData);
+    dest->pub.next_output_byte = (JOCTET *)data.mutableBytes;
+    dest->pub.free_in_buffer   = data.length;
+}
+
+METHODDEF(boolean) empty_output_buffer(j_compress_ptr cinfo)
+{
+    mem_dest_ptr dest = (mem_dest_ptr) cinfo->dest;
+    NSMutableData  *data = (__bridge NSMutableData *)(dest->jpegData);
+    
+    size_t oldsize = data.length;
+    [data setLength: oldsize + BLOCK_SIZE];
+    
+    dest->pub.next_output_byte = &data.mutableBytes[oldsize];
+    dest->pub.free_in_buffer   =  data.length - oldsize;
+    
+    return true;
+}
+
+METHODDEF(void) term_destination(j_compress_ptr cinfo)
+{
+    mem_dest_ptr dest = (mem_dest_ptr) cinfo->dest;
+    NSMutableData  *data = (__bridge NSMutableData *)(dest->jpegData);
+    [data setLength:data.length-dest->pub.free_in_buffer];
+}
+
+static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
+{
+    mem_dest_ptr dest;
+    
+    if (cinfo->dest == NULL) {
+        cinfo->dest = (struct jpeg_destination_mgr *)
+        (*cinfo->mem->alloc_small)((j_common_ptr)cinfo, JPOOL_PERMANENT,
+                                   sizeof(mem_destination_mgr));
+    }
+    
+    dest = (mem_dest_ptr) cinfo->dest;
+    
+    dest->jpegData = (__bridge void *)(data);
+    
+    dest->pub.init_destination    = init_destination;
+    dest->pub.empty_output_buffer = empty_output_buffer;
+    dest->pub.term_destination    = term_destination;
+}
+
+//
+// IMP jpegturbo interface
+//
 @implementation IMPJpegturbo
+
 + (id<MTLTexture>) updateMTLTexture:(id<MTLTexture>)textureIn withPixelFormat:(MTLPixelFormat)pixelFormat withDevice:(id<MTLDevice>)device fromFile:(NSString*)filePath  maxSize:(CGFloat)maxSize  error:(NSError *__autoreleasing *)error{
     
     
@@ -182,4 +246,190 @@ static void my_error_exit (j_common_ptr cinfo)
     
     return texture;
 }
+
+
++ (void) updateJpegWithMTLTexture:(id<MTLTexture>)texture
+                   writeInitBlock:(writeInitBlock)writeInitBlock
+                 writeFinishBlock:(writeFinishBlock)writeFinishBlock
+                          quality:(CGFloat)qualityIn error:(NSError *__autoreleasing *)error{
+    
+    int quality = round(qualityIn*100.0f); quality=quality<=0?10:quality>100?100:quality;
+    int q = (int)round(quality * 100.0f); q=(q<=0?10:q>=100?100:q);
+    
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    
+    JSAMPROW row_pointer[1];      /* pointer to JSAMPLE row[s] */
+    int row_stride;               /* physical row width in image buffer */
+    
+    /* Step 1: allocate and initialize JPEG compression object */
+    
+    cinfo.err = jpeg_std_error(&jerr);
+    jpeg_create_compress(&cinfo);
+    
+    
+    void *userData;
+    if (!writeInitBlock(&cinfo,&userData)) {
+        return;
+    }
+    
+    /* Step 3: set parameters for compression */
+    
+    cinfo.image_width  = (int)[texture width];      /* image width and height, in pixels */
+    cinfo.image_height = (int)[texture height];
+    cinfo.input_components = 4;           /* # of color components per pixel */
+    if (
+        [texture pixelFormat] == MTLPixelFormatBGRA8Unorm
+        ||
+        [texture pixelFormat] == MTLPixelFormatBGRA8Unorm_sRGB
+        ) {
+        cinfo.in_color_space = JCS_EXT_BGRA;  /* colorspace of input image */
+    }
+    else if (
+             [texture pixelFormat] == MTLPixelFormatRGBA8Unorm
+             ||
+             [texture pixelFormat] == MTLPixelFormatRGBA8Unorm_sRGB
+             ) {
+        cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
+    }
+    else if (
+             [texture pixelFormat] == MTLPixelFormatRGBA16Unorm
+             ) {
+        //cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
+        cinfo.in_color_space = JCS_EXT_RGBA;
+    }
+    
+    jpeg_set_defaults(&cinfo);
+    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+    
+    
+    /* Step 4: Start compressor */
+    
+    jpeg_start_compress(&cinfo, TRUE);
+    
+    /* Step 5: while (scan lines remain to be written) */
+    /*           jpeg_write_scanlines(...); */
+    
+    row_stride = (int)cinfo.image_width  * cinfo.input_components; /* JSAMPLEs per row in image_buffer */
+    
+    uint   counts        = cinfo.image_width * 4;
+    uint   componentSize = sizeof(uint8);
+    uint8 *tmp = NULL;
+    if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
+        tmp  = malloc(row_stride);
+        row_stride *= 2;
+        componentSize = sizeof(uint16);
+    }
+    
+    //
+    // MTLTexture.getBytes does not work on OSX.
+    //
+    id<MTLBuffer> imageBuffer = [texture.device newBufferWithLength:row_stride options: MTLResourceOptionCPUCacheModeDefault];
+    id<MTLCommandQueue> queue = [texture.device newCommandQueue];
+    
+    int j=0;
+    while (cinfo.next_scanline < cinfo.image_height) {
+        
+        id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
+        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+        
+        [blitEncoder copyFromTexture: texture
+                         sourceSlice: 0
+                         sourceLevel: 0
+                        sourceOrigin: MTLOriginMake(0, cinfo.next_scanline, 0)
+                          sourceSize: MTLSizeMake(cinfo.image_width, 1, 1)
+                            toBuffer: imageBuffer
+                   destinationOffset: 0
+              destinationBytesPerRow: cinfo.image_width * 4 * componentSize
+            destinationBytesPerImage: 0];
+        
+        [blitEncoder endEncoding];
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+        
+        if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
+            uint16 *s = [imageBuffer contents];
+            for (int i=0; i<counts; i++) {
+                tmp[i] = (s[i]>>8) & 0xff;
+                j++;
+            }
+            row_pointer[0] = tmp;
+        }
+        else{
+            row_pointer[0] = [imageBuffer contents];
+        }
+        (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+    }
+    
+    if (tmp != NULL) free(tmp);
+    
+    /* Step 6: Finish compression */
+    jpeg_finish_compress(&cinfo);
+    
+    /* After finish_compress, we can clear user data. */
+    writeFinishBlock(&cinfo,userData);
+    
+    /* Step 7: release JPEG compression object */
+    jpeg_destroy_compress(&cinfo);
+    
+}
+
+
++ (NSData*) dataFromMTLTexture:(id<MTLTexture>)texture
+                   compression:(CGFloat)qualityIn{
+    
+    __block NSMutableData *data = [NSMutableData dataWithCapacity:BLOCK_SIZE];
+    
+    [IMPJpegturbo updateJpegWithMTLTexture:texture
+                            writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
+                                struct jpeg_compress_struct *cinfo = in_cinfo;
+                                [data setLength:BLOCK_SIZE];
+                                jpeg_mem_dest_dp(cinfo, data);
+                                return YES;
+                            } writeFinishBlock:^(void *in_cinfo, void *userData) {
+                            } quality:qualityIn error:nil
+     ];
+    
+    return data;
+}
+
++ (void) writeMTLTexture:(id<MTLTexture>)texture
+              toJpegFile:(NSString *)filePath
+             compression:(CGFloat)qualityIn
+                   error:(NSError *__autoreleasing *)error{
+    
+    __block const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
+    
+    [[self class] updateJpegWithMTLTexture:texture
+                            writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
+                                
+                                struct jpeg_compress_struct *cinfo = in_cinfo;
+                                
+                                FILE * outfile;               /* target file */
+                                /* Step 2: specify data destination (eg, a file) */
+                                if ((outfile = fopen(filename, "wb")) == NULL) {
+                                    if (error) {
+                                        *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
+                                                                             code: ENOENT
+                                                                         userInfo: @{
+                                                                                     NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
+                                                                                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
+                                                                                     }];
+                                    }
+                                    return NO;
+                                }
+                                jpeg_stdio_dest(cinfo, outfile);
+                                
+                                *userData = outfile;
+                                
+                                return YES;
+                                
+                            } writeFinishBlock:^(void *cinfo, void *userData) {
+                                /* After finish_compress, we can close the output file. */
+                                fclose(userData);
+                            } quality:qualityIn error:error
+     ];
+}
+
+
 @end

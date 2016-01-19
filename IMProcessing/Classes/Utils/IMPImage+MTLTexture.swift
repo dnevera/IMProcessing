@@ -194,7 +194,7 @@ public extension IMPImage{
         self.init(CGImage: imageRef!, size: IMPSize(width: width, height: height))
     }
     
-    func saveJPEGImage(compression compressionQ:Float, path:String) {
+    public func writeJpegToFile(path:String, compression compressionQ:Float) {
         
         let dr:CGImageDestination! = CGImageDestinationCreateWithURL(
             NSURL(fileURLWithPath: path), "public.jpeg" as CFStringRef , 1, nil)

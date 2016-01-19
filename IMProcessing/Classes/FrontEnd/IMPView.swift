@@ -255,7 +255,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         didSet{
             metalLayer.device = self.context.device
             metalLayer.framebufferOnly = false
-            metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm
+            metalLayer.pixelFormat = .BGRA8Unorm
             
             originalBounds = self.bounds
             metalLayer.bounds = originalBounds!

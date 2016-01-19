@@ -18,7 +18,7 @@ extension IMPImageProvider{
 
     public convenience init(context: IMPContext, file: String, maxSize: Float = 0) throws {
         self.init(context: context)
-        try self.update(file: file, maxSize: maxSize)
+        try self.updateFromJpeg(file: file, maxSize: maxSize)
     }
 
     public func update(image image:IMPImage, maxSize: Float = 0){
@@ -29,9 +29,16 @@ extension IMPImageProvider{
         completeUpdate()
     }
     
-    public func update(file file:String, maxSize: Float = 0) throws {
+    public func updateFromJpeg(file file:String, maxSize: Float = 0) throws {
         texture = try IMPJpegturbo.updateMTLTexture(texture, withPixelFormat: IMProcessing.colors.pixelFormat, withDevice: context.device, fromFile: file, maxSize: maxSize.cgloat)
         completeUpdate()
     }
-        
+    
+    public func writeToJpeg(path:String, compression compressionQ:Float) throws {
+        var error:NSError?
+        IMPJpegturbo.writeMTLTexture(self.texture, toJpegFile: path, compression: compressionQ.cgloat, error: &error)
+        if error != nil {
+            throw error!
+        }
+    }
 }
