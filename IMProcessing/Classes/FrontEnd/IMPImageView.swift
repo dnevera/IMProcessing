@@ -205,6 +205,7 @@
                         height: Int(texture.height.float/imageView.scaleFactor))
                 }
                 imageView?.source = newValue
+                imageView.filter?.dirty = true
             }
         }
         
