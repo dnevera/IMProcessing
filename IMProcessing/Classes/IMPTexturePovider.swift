@@ -51,7 +51,7 @@ public extension MTLDevice {
         textureDescriptor.mipmapLevelCount = 1
         
         let texture = self.newTextureWithDescriptor(textureDescriptor)
-
+                
         texture.update(buffers)
         
         return texture

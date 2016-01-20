@@ -29,7 +29,7 @@
 #ifdef __cplusplus
 
 namespace IMProcessing
-{    
+{
     kernel void kernel_passthrough(texture2d<float, access::sample> inTexture [[texture(0)]],
                                    texture2d<float, access::write> outTexture [[texture(1)]],
                                    uint2 gid [[thread_position_in_grid]])
@@ -37,7 +37,15 @@ namespace IMProcessing
         float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
         outTexture.write(inColor, gid);
     }
-        
+    
+    kernel void kernel_view(texture2d<float, access::sample> inTexture [[texture(0)]],
+                            texture2d<float, access::write> outTexture [[texture(1)]],
+                            uint2 gid [[thread_position_in_grid]])
+    {
+        float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+        outTexture.write(inColor, gid);
+    }
+
     kernel void kernel_desaturate(texture2d<float, access::sample> inTexture [[texture(0)]],
                                   texture2d<float, access::write> outTexture [[texture(1)]],
                                   uint2 gid [[thread_position_in_grid]])
@@ -45,7 +53,7 @@ namespace IMProcessing
         float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
         inColor.rgb = float3(dot(inColor.rgb,kIMP_Y_mean_factor));
         outTexture.write(inColor, gid);
-    }    
+    }
 }
 
 #endif

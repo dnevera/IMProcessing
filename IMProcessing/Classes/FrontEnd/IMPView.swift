@@ -228,6 +228,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         #else
             wantsLayer = true
             metalLayer = CAMetalLayer()
+            metalLayer.colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)!
             layerContentsRedrawPolicy = .DuringViewResize
             layer?.addSublayer(metalLayer)
         #endif
@@ -237,7 +238,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         //
         // Функция которую мы будем использовать в качестве функции фильтра из библиотеки шейдеров.
         //
-        let function:MTLFunction! = library.newFunctionWithName(IMPSTD_PASS_KERNEL)
+        let function:MTLFunction! = library.newFunctionWithName(IMPSTD_VIEW_KERNEL)
         
         //
         // Теперь создаем основной объект который будет ссылаться на исполняемый код нашего фильтра.
