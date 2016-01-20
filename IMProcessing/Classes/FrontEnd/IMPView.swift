@@ -61,16 +61,15 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                 
-                #if os(iOS)
-                    orientation = currentDeviceOrientation
-                    updateLayer()
-                #endif
-
                 if let f = self.filter{
                     f.source = source
                 }
-
-                layerNeedUpdate = true
+                
+                #if os(iOS)
+                    orientation = currentDeviceOrientation
+                #endif
+                
+                updateLayer()
             }
         }
     }
@@ -411,6 +410,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
             
             l.frame = CGRect(origin: origin, size: adjustedSize)
+            layerNeedUpdate = true
         }
     }
     

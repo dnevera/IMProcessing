@@ -199,12 +199,12 @@
                 return imageView.source
             }
             set{
-                imageView?.source = newValue
                 if let texture = newValue?.texture{
                     imageView.frame = CGRect(x: 0, y: 0,
                         width:  Int(texture.width.float/imageView.scaleFactor),
                         height: Int(texture.height.float/imageView.scaleFactor))
                 }
+                imageView?.source = newValue
             }
         }
         
@@ -214,6 +214,7 @@
         public func magnifyToFitRect(rect:CGRect){
             isSizeFit = false
             scrollView.magnifyToFitRect(rect)
+            imageView.layerNeedUpdate = true
         }
         
         private var isSizeFit = true
@@ -222,16 +223,19 @@
         public func sizeFit(){
             isSizeFit = true
             scrollView.magnifyToFitRect(imageView.bounds)
+            imageView.layerNeedUpdate = true
         }
         
         ///  Present image in oroginal size
         public func sizeOriginal(){
             isSizeFit = false
             scrollView.magnifyToFitRect(bounds)
+            imageView.layerNeedUpdate = true
         }
         
         @objc func magnifyChanged(event:NSNotification){
             isSizeFit = false
+            imageView.layerNeedUpdate = true
         }
         
         ///  Create image view object with th context within properly frame
