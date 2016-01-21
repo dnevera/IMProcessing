@@ -289,7 +289,6 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         textureDescriptor.arrayLength = IMProcessing.hsv.hueRamps.count;
         textureDescriptor.mipmapLevelCount = 1;
         
-        
         let region = MTLRegionMake2D(0, 0, width, 1);
         
         let hueWeights = context.device.newTextureWithDescriptor(textureDescriptor)
