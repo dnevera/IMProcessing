@@ -41,6 +41,7 @@
 		31265AA71C3489B0005B8B00 /* IMPPaletteLayerSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31265AA61C3489B0005B8B00 /* IMPPaletteLayerSolver.swift */; };
 		31265AA91C34DB66005B8B00 /* IMPPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31265AA81C34DB66005B8B00 /* IMPPaletteView.swift */; };
 		312B8E5E1C2AEC3300FFFD76 /* IMPColorSpaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */; };
+		315F802C1C4FD45800FBF030 /* IMPHistogramZonesSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 315F802B1C4FD45800FBF030 /* IMPHistogramZonesSolver.swift */; };
 		31819C1B1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C1A1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift */; };
 		31819C1E1C2953BD0037DA99 /* IMPDistribution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */; };
 		31819C241C2996FC0037DA99 /* IMPHSVFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31819C231C2996FC0037DA99 /* IMPHSVFilter.swift */; };
@@ -115,6 +116,7 @@
 		312B8E5D1C2AEC3300FFFD76 /* IMPColorSpaces.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPColorSpaces.swift; path = Math/IMPColorSpaces.swift; sourceTree = "<group>"; };
 		312B8E5F1C2AEFB100FFFD76 /* IMPOperations-Bridgin-Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "IMPOperations-Bridgin-Metal.h"; path = "IMProcessing/Classes/Bridging/IMPOperations-Bridgin-Metal.h"; sourceTree = SOURCE_ROOT; };
 		314403AB1C28412600BC06A7 /* IMProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMProcessing.h; path = IMProcessing/Classes/IMProcessing.h; sourceTree = SOURCE_ROOT; };
+		315F802B1C4FD45800FBF030 /* IMPHistogramZonesSolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPHistogramZonesSolver.swift; sourceTree = "<group>"; };
 		31819C111C285E6B0037DA99 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		31819C1A1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPColorWeightsAnalyzer.swift; sourceTree = "<group>"; };
 		31819C1D1C2953BD0037DA99 /* IMPDistribution.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPDistribution.swift; path = Math/IMPDistribution.swift; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				3112BCD01C281D9F00825078 /* IMPHistogramAverageSolver.swift */,
+				315F802B1C4FD45800FBF030 /* IMPHistogramZonesSolver.swift */,
 				3112BCD21C281D9F00825078 /* IMPHistogramRangeSolver.swift */,
 				3112BCD11C281D9F00825078 /* IMPHistogramLayerSolver.swift */,
 				31265AA61C3489B0005B8B00 /* IMPPaletteLayerSolver.swift */,
@@ -537,6 +540,7 @@
 				31265AA91C34DB66005B8B00 /* IMPPaletteView.swift in Sources */,
 				31819C1B1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift in Sources */,
 				3112BCFF1C281D9F00825078 /* IMPFilter.swift in Sources */,
+				315F802C1C4FD45800FBF030 /* IMPHistogramZonesSolver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -52,6 +52,18 @@ public extension float3{
     
     var xxx:float3 { get{ return float3(x,x,x) } }
     
+    func normalized() -> float3 {
+        var vector = self
+        var sum = vector.x+vector.y+vector.z
+        if (sum==0.0) {
+            sum = 1.0
+        }
+        vector.x/=sum
+        vector.y/=sum
+        vector.z/=sum
+        return vector
+    }
+
     init(color:IMPColor){
         #if os(iOS)
             var r = CGFloat(0)
@@ -101,6 +113,19 @@ public extension float4{
     var xyw:float3 { get{ return float3(x,y,w) } }
     var yzx:float3 { get{ return float3(y,z,x) } }
     var xyz:float3 { get{ return float3(x,y,z) } }
+    
+    func normalized() -> float4 {
+        var vector = self
+        var sum = vector.x+vector.y+vector.z+vector.w
+        if (sum==0.0) {
+            sum = 1.0
+        }
+        vector.x/=sum
+        vector.y/=sum
+        vector.z/=sum
+        vector.w/=sum
+        return vector
+    }
     
     init(_ bg:float2, _ wz:float2){
         self.init(bg.x,bg.y,wz.x,wz.y)
