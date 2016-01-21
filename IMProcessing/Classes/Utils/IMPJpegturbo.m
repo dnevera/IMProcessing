@@ -295,7 +295,6 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
     else if (
              [texture pixelFormat] == MTLPixelFormatRGBA16Unorm
              ) {
-        //cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
         cinfo.in_color_space = JCS_EXT_RGBA;
     }
     
@@ -322,33 +321,32 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
     }
     
     //
-    // MTLTexture.getBytes does not work on OSX.
+    // Synchronize texture with host memory 
     //
-    id<MTLBuffer> imageBuffer = [texture.device newBufferWithLength:row_stride options: MTLResourceOptionCPUCacheModeDefault];
-    id<MTLCommandQueue> queue = [texture.device newCommandQueue];
+    id<MTLCommandQueue> queue             = [texture.device newCommandQueue];
+    id<MTLCommandBuffer> commandBuffer    = [queue commandBuffer];
+    id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+
+    [blitEncoder synchronizeTexture:texture slice:0 level:0];
+    [blitEncoder endEncoding];
+    
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+
+    void       *image_buffer  = malloc(row_stride);
     
     int j=0;
     while (cinfo.next_scanline < cinfo.image_height) {
         
-        id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
-        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+        MTLRegion region = MTLRegionMake2D(0, cinfo.next_scanline, cinfo.image_width, 1);
         
-        [blitEncoder copyFromTexture: texture
-                         sourceSlice: 0
-                         sourceLevel: 0
-                        sourceOrigin: MTLOriginMake(0, cinfo.next_scanline, 0)
-                          sourceSize: MTLSizeMake(cinfo.image_width, 1, 1)
-                            toBuffer: imageBuffer
-                   destinationOffset: 0
-              destinationBytesPerRow: cinfo.image_width * 4 * componentSize
-            destinationBytesPerImage: 0];
-        
-        [blitEncoder endEncoding];
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        [texture getBytes:image_buffer
+                       bytesPerRow:cinfo.image_width * 4 * componentSize
+                        fromRegion:region
+                       mipmapLevel:0];
         
         if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
-            uint16 *s = [imageBuffer contents];
+            uint16 *s = image_buffer;
             for (int i=0; i<counts; i++) {
                 tmp[i] = (s[i]>>8) & 0xff;
                 j++;
@@ -356,11 +354,12 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
             row_pointer[0] = tmp;
         }
         else{
-            row_pointer[0] = [imageBuffer contents];
+            row_pointer[0] = image_buffer;
         }
         (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
     
+    free(image_buffer);
     if (tmp != NULL) free(tmp);
     
     /* Step 6: Finish compression */
