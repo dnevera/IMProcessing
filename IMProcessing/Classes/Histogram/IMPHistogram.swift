@@ -163,13 +163,13 @@ public class IMPHistogram {
         }
     }
     
-    public func update(channel:ChannelNo, fromHistogram:IMPHistogram, fromChannel:Int) {
+    public func update(channel:ChannelNo, fromHistogram:IMPHistogram, fromChannel:ChannelNo) {
         if fromHistogram.size != size {
             fatalError("Histogram sizes are not equal: \(size) != \(fromHistogram.size)")
         }
         
         let address = UnsafeMutablePointer<Float>(channels[channel.rawValue])
-        let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[channel.rawValue])
+        let from_address = UnsafeMutablePointer<Float>(fromHistogram.channels[fromChannel.rawValue])
         vDSP_vclr(address, 1, vDSP_Length(size))
         vDSP_vadd(address, 1, from_address, 1, address, 1, vDSP_Length(size));
         updateBinCountForChannel(channel.rawValue)
