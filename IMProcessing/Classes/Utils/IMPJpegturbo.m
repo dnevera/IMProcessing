@@ -261,7 +261,6 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
                           quality:(CGFloat)qualityIn error:(NSError *__autoreleasing *)error{
     
     int quality = round(qualityIn*100.0f); quality=quality<=0?10:quality>100?100:quality;
-    int q = (int)round(quality * 100.0f); q=(q<=0?10:q>=100?100:q);
     
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
