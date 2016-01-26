@@ -25,6 +25,8 @@
 
 #include "IMPAdjustment_metal.h"
 #include "IMPGaussianBlur_metal.h"
+#include "IMPRandomNoise_metal.h"
+#include "IMPFilmGrain_metal.h"
 
 #ifdef __cplusplus
 
@@ -34,7 +36,7 @@ namespace IMProcessing
                                    texture2d<float, access::write> outTexture [[texture(1)]],
                                    uint2 gid [[thread_position_in_grid]])
     {
-        float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+        float4 inColor = sampledColor(inTexture,outTexture,gid);
         outTexture.write(inColor, gid);
     }
     
@@ -42,7 +44,7 @@ namespace IMProcessing
                             texture2d<float, access::write> outTexture [[texture(1)]],
                             uint2 gid [[thread_position_in_grid]])
     {
-        float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+        float4 inColor = sampledColor(inTexture,outTexture,gid);
         outTexture.write(inColor, gid);
     }
 
@@ -50,7 +52,7 @@ namespace IMProcessing
                                   texture2d<float, access::write> outTexture [[texture(1)]],
                                   uint2 gid [[thread_position_in_grid]])
     {
-        float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+        float4 inColor = sampledColor(inTexture,outTexture,gid);
         inColor.rgb = float3(dot(inColor.rgb,kIMP_Y_mean_factor));
         outTexture.write(inColor, gid);
     }

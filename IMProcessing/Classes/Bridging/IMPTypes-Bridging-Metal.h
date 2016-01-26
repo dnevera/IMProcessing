@@ -66,4 +66,18 @@ typedef struct {
     IMPBlending   blending;
 } IMPHSVAdjustment;
 
+typedef struct {
+    float total;
+    float color;
+    float luma;
+}IMPFilmGrainColor;
+
+typedef struct {
+    bool                isColored;
+    float               size;
+    float               scale;
+    IMPFilmGrainColor   amount;
+    IMPBlending         blending;
+} IMPFilmGrainAdjustment;
+
 #endif /* IMPTypes_h */

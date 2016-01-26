@@ -12,6 +12,7 @@
 #import <stdio.h>
 #import <jpeglib.h>
 #import <setjmp.h>
+@import Security;
 
 struct DPJpegErrorMgr {
     struct jpeg_error_mgr pub;    /* "public" fields */
@@ -214,11 +215,17 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
             int componentsPerPixel = 4;
             int componentsPerRow   = componentsPerPixel * cinfo.output_width;
             uint16_t u16[sizeof(uint16_t)*componentsPerRow];
+            
+            uint8_t rnd[componentsPerRow];
+            uint8_t rnd2[componentsPerRow];
+            SecRandomCopyBytes(kSecRandomDefault, componentsPerRow, rnd);
+            SecRandomCopyBytes(kSecRandomDefault, componentsPerRow, rnd2);
+            
             for (int i=0; i < componentsPerRow; i++) {
                 uint16_t  pixel = 0;
                 uint8_t  *address = buffer[0]+i;
                 memcpy(&pixel, address, sizeof(uint8_t));
-                u16[i] = pixel<<8;
+                u16[i] = (uint16_t)(pixel<<8);
             }
             [texture replaceRegion:MTLRegionMake2D(0, cinfo.output_scanline-1, cinfo.output_width, 1)
                        mipmapLevel:0
@@ -321,18 +328,18 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
     }
     
     //
-    // Synchronize texture with host memory 
+    // Synchronize texture with host memory
     //
     id<MTLCommandQueue> queue             = [texture.device newCommandQueue];
     id<MTLCommandBuffer> commandBuffer    = [queue commandBuffer];
     id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
-
+    
     [blitEncoder synchronizeTexture:texture slice:0 level:0];
     [blitEncoder endEncoding];
     
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     void       *image_buffer  = malloc(row_stride);
     
     int j=0;
@@ -341,9 +348,9 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
         MTLRegion region = MTLRegionMake2D(0, cinfo.next_scanline, cinfo.image_width, 1);
         
         [texture getBytes:image_buffer
-                       bytesPerRow:cinfo.image_width * 4 * componentSize
-                        fromRegion:region
-                       mipmapLevel:0];
+              bytesPerRow:cinfo.image_width * 4 * componentSize
+               fromRegion:region
+              mipmapLevel:0];
         
         if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
             uint16 *s = image_buffer;
