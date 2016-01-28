@@ -75,7 +75,6 @@ typedef struct {
 typedef struct {
     bool                isColored;
     float               size;
-    float               scale;
     IMPFilmGrainColor   amount;
     IMPBlending         blending;
 } IMPFilmGrainAdjustment;

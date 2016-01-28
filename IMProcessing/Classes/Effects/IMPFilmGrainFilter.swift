@@ -14,7 +14,6 @@ public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
     public static let defaultAdjustment = IMPFilmGrainAdjustment(
         isColored: true,
         size:  1,
-        scale: 1,
         amount: IMPFilmGrainColor(total: 1, color: 0.3, luma: 1.0),
         blending: IMPBlending(mode: NORMAL, opacity: 1))
     
@@ -42,7 +41,7 @@ public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
     
     public required init(context: IMPContext) {
         super.init(context: context)
-        kernel = IMPFunction(context: self.context, name: "kernel_perlinNoise")
+        kernel = IMPFunction(context: self.context, name: "kernel_filmGrain")
         self.addFunction(kernel)
         defer{
             self.adjustment = IMPFilmGrainFilter.defaultAdjustment
