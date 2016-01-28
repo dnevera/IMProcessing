@@ -11,10 +11,6 @@ import Metal
 
 public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
     
-    struct  Times{
-        var  time = [Float](count: 8, repeatedValue: 0)
-    }
-
     public static let defaultAdjustment = IMPFilmGrainAdjustment(
         isColored: true,
         size:  1,
@@ -25,7 +21,7 @@ public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
     public var adjustment:IMPFilmGrainAdjustment!{
         didSet{
 
-            var times = [Float](count: 8, repeatedValue: 0)
+            var times = [Float](count: 4, repeatedValue: 0)
             
             let timer  = UInt32(modf(NSDate.timeIntervalSinceReferenceDate()).0)
             for var i=0; i < times.count; i++ {

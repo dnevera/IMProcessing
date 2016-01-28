@@ -87,7 +87,7 @@ class ViewController: NSViewController {
                 //self.mainFilter.blur.radius = (512*sender.floatValue/100).int
             }
             
-            self.mainFilter.noise.adjustment.amount.total = sender.floatValue/100
+            self.mainFilter.dither.adjustment.blending.opacity = sender.floatValue/100
             
 //            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
 //            self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100

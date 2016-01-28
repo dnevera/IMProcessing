@@ -16,11 +16,11 @@ public protocol IMPTextureProvider{
 
 public extension MTLDevice {
     
-    public func texture1D(buffer:[Float], pixelFormat:MTLPixelFormat = .R32Float) -> MTLTexture {
+    public func texture1D(buffer:[Float]) -> MTLTexture {
         let weightsDescription = MTLTextureDescriptor()
         
         weightsDescription.textureType = .Type1D
-        weightsDescription.pixelFormat = pixelFormat
+        weightsDescription.pixelFormat = .R32Float
         weightsDescription.width       = buffer.count
         weightsDescription.height      = 1
         weightsDescription.depth       = 1
@@ -29,8 +29,30 @@ public extension MTLDevice {
         texture.update(buffer)
         return texture
     }
-    
-    public func texture1DArray(buffers:[[Float]], pixelFormat:MTLPixelFormat = .R32Float) -> MTLTexture {
+
+    public func texture1D(buffer:[UInt8]) -> MTLTexture {
+        let weightsDescription = MTLTextureDescriptor()
+        
+        weightsDescription.textureType = .Type1D
+        weightsDescription.pixelFormat = .R8Uint
+        weightsDescription.width       = buffer.count
+        weightsDescription.height      = 1
+        weightsDescription.depth       = 1
+        
+        let texture = self.newTextureWithDescriptor(weightsDescription)
+        texture.update(buffer)
+        return texture
+    }
+
+    public func texture2D(buffer:[[UInt8]]) -> MTLTexture {
+        let width = buffer[0].count
+        let weightsDescription = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(.R8Unorm, width: width, height: buffer.count, mipmapped: false)
+        let texture = self.newTextureWithDescriptor(weightsDescription)
+        texture.update(buffer)
+        return texture
+    }
+
+    public func texture1DArray(buffers:[[Float]]) -> MTLTexture {
         
         let width = buffers[0].count
         
@@ -59,15 +81,55 @@ public extension MTLDevice {
 }
 
 public extension MTLTexture {
+    
     public func update(buffer:[Float]){
+        if pixelFormat != .R32Float {
+            fatalError("MTLTexture.update(buffer:[Float]) has wrong pixel format...")
+        }
+        if width != buffer.count {
+            fatalError("MTLTexture.update(buffer:[Float]) is not equal texture size...")
+        }
         self.replaceRegion(MTLRegionMake1D(0, buffer.count), mipmapLevel: 0, withBytes: buffer, bytesPerRow: sizeof(Float32)*buffer.count)
     }
+
+    public func update(buffer:[UInt8]){
+        if pixelFormat != .R8Uint {
+            fatalError("MTLTexture.update(buffer:[UInt8]) has wrong pixel format...")
+        }
+        if width != buffer.count {
+            fatalError("MTLTexture.update(buffer:[UInt8]) is not equal texture size...")
+        }
+        self.replaceRegion(MTLRegionMake1D(0, buffer.count), mipmapLevel: 0, withBytes: buffer, bytesPerRow: sizeof(UInt8)*buffer.count)
+    }
+
+    public func update(buffer:[[UInt8]]){
+        if pixelFormat != .R8Unorm {
+            fatalError("MTLTexture.update(buffer:[UInt8]) has wrong pixel format...")
+        }
+        if width != buffer[0].count {
+            fatalError("MTLTexture.update(buffer:[UInt8]) is not equal texture size...")
+        }
+        if height != buffer.count {
+            fatalError("MTLTexture.update(buffer:[UInt8]) is not equal texture size...")
+        }
+        for var i=0; i<height; i++ {
+            self.replaceRegion(MTLRegionMake2D(0, i, width, 1), mipmapLevel: 0, withBytes: buffer[i], bytesPerRow: width)
+        }
+    }
+    
     public func update(buffers:[[Float]]){
-        let region = MTLRegionMake2D(0, 0, self.width, 1)
+        if pixelFormat != .R32Float {
+            fatalError("MTLTexture.update(buffer:[[Float]]) has wrong pixel format...")
+        }
+        
+        let region = MTLRegionMake2D(0, 0, width, 1)
         let bytesPerRow = region.size.width * sizeof(Float32)
         
         for var index=0; index<buffers.count; index++ {
             let curve = buffers[index]
+            if width != curve.count {
+                fatalError("MTLTexture.update(buffer:[[Float]]) is not equal texture size...")
+            }
             self.replaceRegion(region, mipmapLevel:0, slice:index, withBytes:curve, bytesPerRow:bytesPerRow, bytesPerImage:0)
         }
     }

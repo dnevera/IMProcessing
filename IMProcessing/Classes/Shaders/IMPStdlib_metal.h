@@ -27,6 +27,7 @@
 #include "IMPGaussianBlur_metal.h"
 #include "IMPRandomNoise_metal.h"
 #include "IMPFilmGrain_metal.h"
+#include "IMPDithering_metal.h"
 
 #ifdef __cplusplus
 

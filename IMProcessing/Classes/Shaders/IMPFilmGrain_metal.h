@@ -6,8 +6,8 @@
 //  Copyright © 2016 Dehancer.photo. All rights reserved.
 //
 
-#ifndef IMPPerlinNoise_metal_h
-#define IMPPerlinNoise_metal_h
+#ifndef IMPFilmGrain_metal_h
+#define IMPFilmGrain_metal_h
 
 #ifdef __METAL_VERSION__
 
@@ -25,6 +25,10 @@ using namespace metal;
 namespace IMProcessing
 {
 
+    //
+    // Inspired by http://devlog-martinsh.blogspot.ru/2013/05/image-imperfections-and-film-grain-post.html
+    //
+    
     constant float permTexUnit     = 1.0/256.0;    // Perm texture texel-size
     constant float permTexUnitHalf = 0.5/256.0;    // Half perm texture texel-size
     
@@ -168,4 +172,4 @@ namespace IMProcessing
 
 #endif
 
-#endif /* IMPPerlinNoise_metal_h */
+#endif /* IMPFilmGrain_metal_h */

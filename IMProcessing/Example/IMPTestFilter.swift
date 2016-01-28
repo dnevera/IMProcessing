@@ -25,7 +25,8 @@ class IMPTestFilter:IMPFilter {
     
     var downSample:IMPMaxSizeFilter!
     
-    var noise:IMPFilmGrainFilter!
+    //var noise:IMPFilmGrainFilter!
+    var dither:IMPDitheringFilter!
     
     required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
         
@@ -44,7 +45,9 @@ class IMPTestFilter:IMPFilter {
             float2(255,255)
         ]
         
-        noise = IMPFilmGrainFilter(context: context)
+        //noise = IMPFilmGrainFilter(context: context)
+        //dither = IMPBayerDitheringFilter(context: context)
+        dither = IMPBayerDitheringFilter(context: context)
         
         //blur = IMPIIRGaussianBlurFilter(context: context)
         blur = IMPGaussianBlurFilter(context: context)
@@ -60,7 +63,7 @@ class IMPTestFilter:IMPFilter {
         
         addFilter(curveFilter)
         addFilter(blur)
-        addFilter(noise)
+        addFilter(dither)
         
         sourceAnalayzer = IMPHistogramAnalyzer(context: self.context)
         sourceAnalayzer.addSolver(rangeSolver)
