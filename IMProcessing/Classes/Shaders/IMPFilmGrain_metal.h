@@ -376,24 +376,27 @@ namespace IMProcessing
         
         float2 texCoord = float2(gid) / (adjustment.size*3.33335777);
         
-        float3 noise1  = float3(IMPSimplexNoise::noise4D(texCoord.x,texCoord.y,time[0],time[1]));
-        float3 noise2  = float3(IMPSimplexNoise::noise4D(texCoord.x,texCoord.y,time[2],time[3]));
+        float3 noise1  = float3(IMProcessing::IMPSimplexNoise::noise4D(texCoord.x,texCoord.y,time[0],time[1]));
+        float3 noise2  = float3(IMProcessing::IMPSimplexNoise::noise4D(time[2],time[3],texCoord.x,texCoord.y));
         
-        float3 noise   = (noise2 + noise1);
+        float3 noise   = noise2 + noise1;
         
-        float luminance = mix(0.0,gray,adjustment.amount.luma);
-        float lum       = smoothstep(0.2,0.0,luminance);
-        lum            += luminance;
+        //float luminance = mix(0.0,gray,adjustment.amount.luma);
+        //float lum       = smoothstep(0.2,0.0,luminance);
+        //lum            += luminance;
         
-        noise    = mix(noise,float3(0.0),pow(lum,4.0)) * (1.0-pow(luminance, 2.0)) ;
+        //float3 noisel    = mix(noise, float3(0.0), pow(1-lum,4.0)) * (1.0-pow(1-luminance, 2.0)) ;
+        //float3 noises    = mix(noise, float3(0.0), pow(lum,2.0)) * (1.0-pow(luminance, 2.0)) ;
         
         if (adjustment.isColored){
             float coloramount = adjustment.amount.color * smoothstep(1.0,0.0,gray) * smoothstep(1.0,0.0,gray);
-            noise.g = mix(noise.r,IMPSimplexNoise::noise4D(texCoord.y,texCoord.x,time[0],time[2]),coloramount);
-            noise.b = mix(noise.r,IMPSimplexNoise::noise4D(texCoord.y,texCoord.x,time[1],time[3]),coloramount);
+            
+            noise.g = mix(noise.g,IMProcessing::IMPSimplexNoise::noise4D(texCoord.y,texCoord.x,time[0],time[2]),coloramount);
+            noise.b = mix(noise.b,IMProcessing::IMPSimplexNoise::noise4D(texCoord.x,texCoord.y,time[0],time[1]),coloramount);
         }
         
-        float3 rgb  = inColor.rgb + noise * 0.5 * adjustment.amount.total;
+        //float3 rgb  =  inColor.rgb + noises * 0.5 * adjustment.amount.total;
+        float3 rgb  =  mix(inColor.rgb, float3(0) , noise * 0.5 * adjustment.amount.total);
         
         float4 result;
         
@@ -404,7 +407,7 @@ namespace IMProcessing
         
         outTexture.write(result,gid);
     }
-}
+ }
 
 #endif
 
