@@ -30,15 +30,15 @@ namespace IMProcessing
     //
     // L-shadows
     //
-    inline float Ls(float Li, float W, float Wt, float Ks){
+    inline float compressSH(float Li, float W, float Wt, float Ks){
         return  W / exp( 6 * Ks * Li / Wt) * Wt;
     }
     
     //
     // L-highlights
     //
-    inline float Lh(float Li, float W, float Wt, float Ka){
-        return Ls(1-Li,W,Wt,Ka);
+    inline float compressHL(float Li, float W, float Wt, float Ka){
+        return compressSH(1-Li,W,Wt,Ka);
     }
     
     inline float4 adjustShadows(float4 source, float3 shadows, float opacity)
@@ -54,7 +54,7 @@ namespace IMProcessing
         //
         float luminance = dot(rgb, kIMP_Y_YCbCr_factor);
         
-        float ls = Ls(luminance,
+        float ls = compressSH(luminance,
                       shadows.x,
                       shadows.y,
                       shadows.z);
@@ -73,7 +73,7 @@ namespace IMProcessing
         float luminance = dot(rgb, kIMP_Y_YCbCr_factor);
         
         
-        float lh = Lh(luminance,
+        float lh = compressHL(luminance,
                       highlights.x,
                       highlights.y,
                       highlights.z);
