@@ -260,7 +260,7 @@ public class IMPHistogram {
     ///  - parameter filter:  filter distribution
     ///  - parameter lead:    phase-lead in ticks of the histogram
     ///  - parameter scale:   scale
-    public func convolve(channel c:ChannelNo, filter:IMPHistogram, lead:Int, scale:Float){
+    public func convolve(channel c:ChannelNo, filter:IMPHistogram, lead:Int, scale:Float=1){
         
         if filter.size == 0 {
             return
@@ -315,6 +315,36 @@ public class IMPHistogram {
         updateBinCountForChannel(c.rawValue)
     }
     
+    public func random(scale scale:Float = 1) -> IMPHistogram {
+        let h = IMPHistogram(ramp: 0..<size, size:size, type: type)
+        for var c=0; c<h.channels.count; c++ {
+            var data  = [UInt8](count: h.size, repeatedValue: 0)
+            SecRandomCopyBytes(kSecRandomDefault, data.count, &data)
+            h.channels[c] = [Float](count: h.size, repeatedValue: 0)
+            
+            let addr = UnsafeMutablePointer<Float>(h.channels[c])
+            let sz   = vDSP_Length(h.channels[c].count)
+            vDSP_vfltu8(data, 1,  addr, 1, sz);
+            
+            if scale > 0 {
+                var denom:Float = 0;
+                vDSP_maxv (addr, 1, &denom, sz);
+                
+                denom /= scale
+                
+                vDSP_vsdiv(addr, 1, &denom, addr, 1, sz);
+            }
+            
+        }
+        return h
+    }
+    
+    public func add(histogram:IMPHistogram){
+        for var c=0; c<histogram.channels.count; c++ {
+            addFromData(&histogram.channels[c], toChannel: &channels[c])
+        }
+    }
+
     //
     // Утилиты работы с векторными данными на DSP
     //
