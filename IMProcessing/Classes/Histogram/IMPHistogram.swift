@@ -232,7 +232,8 @@ public class IMPHistogram {
     ///
     public func low(channel index:ChannelNo, clipping:Float) -> Float{
         let size = channels[index.rawValue].count
-        var low:vDSP_Length = search_clipping(channel: index.rawValue, size: size, clipping: clipping)
+        var (low,p) = search_clipping(channel: index.rawValue, size: size, clipping: clipping)
+        if p == 0 { low = 0 }
         low = low>0 ? low-1 : 0
         return Float(low)/Float(size)
     }
@@ -248,7 +249,8 @@ public class IMPHistogram {
     ///
     public func high(channel index:ChannelNo, clipping:Float) -> Float{
         let size = channels[index.rawValue].count
-        var high:vDSP_Length = search_clipping(channel: index.rawValue, size: size, clipping: 1.0-clipping)
+        var (high,p) = search_clipping(channel: index.rawValue, size: size, clipping: 1.0-clipping)
+        if p == 0 { high = vDSP_Length(size) }
         high = high<vDSP_Length(size) ? high+1 : vDSP_Length(size)
         return Float(high)/Float(size)
     }
@@ -378,7 +380,7 @@ public class IMPHistogram {
     //
     // Поиск индекса отсечки клипинга
     //
-    private func search_clipping(channel index:Int, size:Int, clipping:Float) -> vDSP_Length {
+    private func search_clipping(channel index:Int, size:Int, clipping:Float) -> (vDSP_Length,vDSP_Length) {
         
         if tempBuffer.count != size {
             tempBuffer = [Float](count: size, repeatedValue: 0)
@@ -405,7 +407,7 @@ public class IMPHistogram {
         //
         vDSP_nzcros(tempBuffer, 1, 1, &position, &all, vDSP_Length(size))
         
-        return position;
+        return (position,all);
         
     }
     
