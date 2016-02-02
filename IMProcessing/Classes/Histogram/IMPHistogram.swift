@@ -347,6 +347,26 @@ public class IMPHistogram {
         }
     }
 
+    public func add(channel channel:ChannelNo, histogram:IMPHistogram){
+        for var c=0; c<histogram.channels.count; c++ {
+            addFromData(&histogram.channels[c], toChannel: &channels[channel.rawValue])
+        }
+    }
+
+    
+    public func mul(histogram:IMPHistogram){
+        for var c=0; c<histogram.channels.count; c++ {
+            mulFromData(&histogram.channels[c], toChannel: &channels[c])
+        }
+    }
+    
+    public func mul(channel channel:ChannelNo, histogram:IMPHistogram){
+        for var c=0; c<histogram.channels.count; c++ {
+            mulFromData(&histogram.channels[c], toChannel: &channels[channel.rawValue])
+        }
+    }
+    
+
     //
     // Утилиты работы с векторными данными на DSP
     //
@@ -511,6 +531,10 @@ public class IMPHistogram {
     
     private func addFromData(inout data:[Float], inout toChannel:[Float]){
         vDSP_vadd(&toChannel, 1, &data, 1, &toChannel, 1, vDSP_Length(self.size))
+    }
+    
+    private func mulFromData(inout data:[Float], inout toChannel:[Float]){
+        vDSP_vmul(&toChannel, 1, &data, 1, &toChannel, 1, vDSP_Length(self.size))
     }
     
     private func clearChannel(inout channel:[Float]){
