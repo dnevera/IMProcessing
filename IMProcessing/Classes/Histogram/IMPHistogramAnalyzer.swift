@@ -163,38 +163,39 @@ public class IMPHistogramAnalyzer: IMPFilter {
     }
     
     internal func apply(texture:MTLTexture, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
-        
-        self.context.execute { (commandBuffer) -> Void in
-            //
-            // Обнуляем входной буфер
-            //
-            #if os(iOS)
-                let blitEncoder = commandBuffer.blitCommandEncoder()
-                blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-                blitEncoder.endEncoding()
-            #else
-                memset(buffer.contents(), 0, buffer.length)
-            #endif
-            
-            let commandEncoder = commandBuffer.computeCommandEncoder()
-            
-            //
-            // Создаем вычислительный пайп
-            //
-            commandEncoder.setComputePipelineState(self.kernel.pipeline!);
-            commandEncoder.setTexture(texture, atIndex:0)
-            commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
-            commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
-            commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
-            commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
-            
-            self.configure(self.kernel, command: commandEncoder)
-            
-            //
-            // Запускаем вычисления
-            //
-            commandEncoder.dispatchThreadgroups(self.threadgroups, threadsPerThreadgroup:threadgroupCounts);
-            commandEncoder.endEncoding()
+        autoreleasepool { () -> () in
+            self.context.execute { (commandBuffer) -> Void in
+                //
+                // Обнуляем входной буфер
+                //
+                #if os(iOS)
+                    let blitEncoder = commandBuffer.blitCommandEncoder()
+                    blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
+                    blitEncoder.endEncoding()
+                #else
+                    memset(buffer.contents(), 0, buffer.length)
+                #endif
+                
+                let commandEncoder = commandBuffer.computeCommandEncoder()
+                
+                //
+                // Создаем вычислительный пайп
+                //
+                commandEncoder.setComputePipelineState(self.kernel.pipeline!);
+                commandEncoder.setTexture(texture, atIndex:0)
+                commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
+                commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
+                commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
+                commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
+                
+                self.configure(self.kernel, command: commandEncoder)
+                
+                //
+                // Запускаем вычисления
+                //
+                commandEncoder.dispatchThreadgroups(self.threadgroups, threadsPerThreadgroup:threadgroupCounts);
+                commandEncoder.endEncoding()
+            }
         }
     }
     

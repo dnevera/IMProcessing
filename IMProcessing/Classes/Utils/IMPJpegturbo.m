@@ -108,150 +108,147 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
 + (id<MTLTexture>) updateMTLTexture:(id<MTLTexture>)textureIn withPixelFormat:(MTLPixelFormat)pixelFormat withDevice:(id<MTLDevice>)device fromFile:(NSString*)filePath  maxSize:(CGFloat)maxSize  error:(NSError *__autoreleasing *)error{
     
     
-    const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
-    
-    DPJpegDecompressInfo cinfo;
-    struct DPJpegErrorMgr jerr;
-    FILE         *infile;           /* source file */
-    JSAMPARRAY    buffer;           /* Output row buffer */
-    int           row_stride;       /* physical row width in output buffer */
-    
-    
-    if ((infile = fopen(filename, "rb")) == NULL) {
-        if (error) {
-            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
-                                                 code: ENOENT
-                                             userInfo: @{
-                                                         NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", nil),filePath],
-                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", nil),
-                                                         }];
+    @autoreleasepool {
+        
+        
+        const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
+        
+        DPJpegDecompressInfo cinfo;
+        struct DPJpegErrorMgr jerr;
+        FILE         *infile;           /* source file */
+        JSAMPARRAY    buffer;           /* Output row buffer */
+        int           row_stride;       /* physical row width in output buffer */
+        
+        
+        if ((infile = fopen(filename, "rb")) == NULL) {
+            if (error) {
+                *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
+                                                     code: ENOENT
+                                                 userInfo: @{
+                                                             NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", nil),filePath],
+                                                             NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", nil),
+                                                             }];
+            }
+            return nil;
         }
-        return nil;
-    }
-    
-    /* Step 1: allocate and initialize JPEG decompression object */
-    
-    cinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = my_error_exit;
-    if (setjmp(jerr.setjmp_buffer)) {
+        
+        /* Step 1: allocate and initialize JPEG decompression object */
+        
+        cinfo.err = jpeg_std_error(&jerr.pub);
+        jerr.pub.error_exit = my_error_exit;
+        if (setjmp(jerr.setjmp_buffer)) {
+            jpeg_destroy_decompress(&cinfo);
+            fclose(infile);
+            
+            if (error) {
+                *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
+                                                     code: ENOENT
+                                                 userInfo: @{
+                                                             NSLocalizedDescriptionKey: NSLocalizedString(@"Not enough memory to write jpeg file", nil),
+                                                             NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Not enough memory", nil),
+                                                             }];
+            }
+            
+            return nil;
+        }
+        jpeg_create_decompress(&cinfo);
+        
+        
+        /* Step 2: specify data source (eg, a file) */
+        
+        jpeg_stdio_src(&cinfo, infile);
+        
+        
+        /* Step 3: read file parameters with jpeg_read_header() */
+        
+        (void) jpeg_read_header(&cinfo, TRUE);
+        
+        
+        /* Step 4: set parameters for decompression */
+        
+        cinfo.out_color_space = JCS_EXT_RGBA;
+        
+        /* In this example, we don't need to change any of the defaults set by
+         * jpeg_read_header(), so we do nothing here.
+         */
+        
+        float scale = 1.0;
+        
+        if (maxSize>0.0 && maxSize<fmin(cinfo.image_width,cinfo.image_height) ) {
+            scale = fmin(maxSize/cinfo.image_width,maxSize/cinfo.image_height) ;
+        }
+        
+        cinfo.scale_num   = scale<1.0f?1:scale;
+        cinfo.scale_denom = scale<1.0f?(unsigned int)floor(1.0f/scale):1;
+        
+        /* Step 5: Start decompressor */
+        
+        (void) jpeg_start_decompress(&cinfo);
+        
+        row_stride = cinfo.output_width * cinfo.output_components;
+        buffer = (*cinfo.mem->alloc_sarray)
+        ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+        
+        
+        /* Step 6: while (scan lines remain to be read) */
+        
+        NSUInteger width  = cinfo.output_width;
+        NSUInteger height = cinfo.output_height;
+        
+        id<MTLTexture> texture = textureIn;
+        
+        if (texture == nil
+            ||
+            [texture width]!=width
+            ||
+            [texture height]!=height
+            ){
+            MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                                                                         width:width
+                                                                                                        height:height
+                                                                                                     mipmapped:NO];
+            texture = [device newTextureWithDescriptor:textureDescriptor];
+        }
+        
+        while (cinfo.output_scanline < cinfo.output_height) {
+            
+            (void) jpeg_read_scanlines(&cinfo, buffer, 1);
+            
+            if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
+                int componentsPerPixel = 4;
+                int componentsPerRow   = componentsPerPixel * cinfo.output_width;
+                uint16_t u16[sizeof(uint16_t)*componentsPerRow];
+                
+                for (int i=0; i < componentsPerRow; i++) {
+                    uint16_t  pixel = 0;
+                    uint8_t  *address = buffer[0]+i;
+                    memcpy(&pixel, address, sizeof(uint8_t));
+                    u16[i] = (uint16_t)(pixel<<8);
+                }
+                [texture replaceRegion:MTLRegionMake2D(0, cinfo.output_scanline-1, cinfo.output_width, 1)
+                           mipmapLevel:0
+                             withBytes:u16
+                           bytesPerRow:row_stride*sizeof(uint16_t)/sizeof(uint8_t)];
+            }
+            else{
+                [texture replaceRegion:MTLRegionMake2D(0, cinfo.output_scanline-1, cinfo.output_width, 1)
+                           mipmapLevel:0
+                             withBytes:buffer[0]
+                           bytesPerRow:row_stride];
+            }
+        }
+        
+        /* Step 7: Finish decompression */
+        
+        (void) jpeg_finish_decompress(&cinfo);
+        
+        /* Step 8: Release JPEG decompression object */
+        
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
         
-        if (error) {
-            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
-                                                 code: ENOENT
-                                             userInfo: @{
-                                                         NSLocalizedDescriptionKey: NSLocalizedString(@"Not enough memory to write jpeg file", nil),
-                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Not enough memory", nil),
-                                                         }];
-        }
-        
-        return nil;
+        return texture;
     }
-    jpeg_create_decompress(&cinfo);
-    
-    
-    /* Step 2: specify data source (eg, a file) */
-    
-    jpeg_stdio_src(&cinfo, infile);
-    
-    
-    /* Step 3: read file parameters with jpeg_read_header() */
-    
-    (void) jpeg_read_header(&cinfo, TRUE);
-    
-    
-    /* Step 4: set parameters for decompression */
-    
-    cinfo.out_color_space = JCS_EXT_RGBA;
-    
-    /* In this example, we don't need to change any of the defaults set by
-     * jpeg_read_header(), so we do nothing here.
-     */
-    
-    float scale = 1.0;
-    
-    if (maxSize>0.0 && maxSize<fmin(cinfo.image_width,cinfo.image_height) ) {
-        scale = fmin(maxSize/cinfo.image_width,maxSize/cinfo.image_height) ;
-    }
-    
-    cinfo.scale_num   = scale<1.0f?1:scale;
-    cinfo.scale_denom = scale<1.0f?(unsigned int)floor(1.0f/scale):1;
-    
-    /* Step 5: Start decompressor */
-    
-    (void) jpeg_start_decompress(&cinfo);
-    
-    row_stride = cinfo.output_width * cinfo.output_components;
-    buffer = (*cinfo.mem->alloc_sarray)
-    ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-    
-    
-    /* Step 6: while (scan lines remain to be read) */
-    
-    NSUInteger width  = cinfo.output_width;
-    NSUInteger height = cinfo.output_height;
-    
-    id<MTLTexture> texture = textureIn;
-    
-    if (texture == nil
-        ||
-        [texture width]!=width
-        ||
-        [texture height]!=height
-        ){
-        MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
-                                                                                                     width:width
-                                                                                                    height:height
-                                                                                                 mipmapped:NO];
-        texture = [device newTextureWithDescriptor:textureDescriptor];
-    }
-    
-    while (cinfo.output_scanline < cinfo.output_height) {
-        
-        (void) jpeg_read_scanlines(&cinfo, buffer, 1);
-        
-        if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
-            int componentsPerPixel = 4;
-            int componentsPerRow   = componentsPerPixel * cinfo.output_width;
-            uint16_t u16[sizeof(uint16_t)*componentsPerRow];
-            
-            uint8_t rnd[componentsPerRow];
-            uint8_t rnd2[componentsPerRow];
-            SecRandomCopyBytes(kSecRandomDefault, componentsPerRow, rnd);
-            SecRandomCopyBytes(kSecRandomDefault, componentsPerRow, rnd2);
-            
-            for (int i=0; i < componentsPerRow; i++) {
-                uint16_t  pixel = 0;
-                uint8_t  *address = buffer[0]+i;
-                memcpy(&pixel, address, sizeof(uint8_t));
-                u16[i] = (uint16_t)(pixel<<8);
-            }
-            [texture replaceRegion:MTLRegionMake2D(0, cinfo.output_scanline-1, cinfo.output_width, 1)
-                       mipmapLevel:0
-                         withBytes:u16
-                       bytesPerRow:row_stride*sizeof(uint16_t)/sizeof(uint8_t)];
-        }
-        else{
-            [texture replaceRegion:MTLRegionMake2D(0, cinfo.output_scanline-1, cinfo.output_width, 1)
-                       mipmapLevel:0
-                         withBytes:buffer[0]
-                       bytesPerRow:row_stride];
-        }
-    }
-    
-    
-    /* Step 7: Finish decompression */
-    
-    (void) jpeg_finish_decompress(&cinfo);
-    
-    
-    /* Step 8: Release JPEG decompression object */
-    
-    jpeg_destroy_decompress(&cinfo);
-    fclose(infile);
-    
-    return texture;
 }
 
 
@@ -260,123 +257,125 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
                  writeFinishBlock:(writeFinishBlock)writeFinishBlock
                           quality:(CGFloat)qualityIn error:(NSError *__autoreleasing *)error{
     
-    int quality = round(qualityIn*100.0f); quality=quality<=0?10:quality>100?100:quality;
-    
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    
-    JSAMPROW row_pointer[1];      /* pointer to JSAMPLE row[s] */
-    int row_stride;               /* physical row width in image buffer */
-    
-    /* Step 1: allocate and initialize JPEG compression object */
-    
-    cinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&cinfo);
-    
-    
-    void *userData;
-    if (!writeInitBlock(&cinfo,&userData)) {
-        return;
-    }
-    
-    /* Step 3: set parameters for compression */
-    
-    cinfo.image_width  = (int)[texture width];      /* image width and height, in pixels */
-    cinfo.image_height = (int)[texture height];
-    cinfo.input_components = 4;           /* # of color components per pixel */
-    if (
-        [texture pixelFormat] == MTLPixelFormatBGRA8Unorm
-        ||
-        [texture pixelFormat] == MTLPixelFormatBGRA8Unorm_sRGB
-        ) {
-        cinfo.in_color_space = JCS_EXT_BGRA;  /* colorspace of input image */
-    }
-    else if (
-             [texture pixelFormat] == MTLPixelFormatRGBA8Unorm
-             ||
-             [texture pixelFormat] == MTLPixelFormatRGBA8Unorm_sRGB
-             ) {
-        cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
-    }
-    else if (
-             [texture pixelFormat] == MTLPixelFormatRGBA16Unorm
-             ) {
-        cinfo.in_color_space = JCS_EXT_RGBA;
-    }
-    
-    jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
-    
-    
-    /* Step 4: Start compressor */
-    
-    jpeg_start_compress(&cinfo, TRUE);
-    
-    /* Step 5: while (scan lines remain to be written) */
-    /*           jpeg_write_scanlines(...); */
-    
-    row_stride = (int)cinfo.image_width  * cinfo.input_components; /* JSAMPLEs per row in image_buffer */
-    
-    uint   counts        = cinfo.image_width * 4;
-    uint   componentSize = sizeof(uint8);
-    uint8 *tmp = NULL;
-    if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
-        tmp  = malloc(row_stride);
-        row_stride *= 2;
-        componentSize = sizeof(uint16);
-    }
-    
-    //
-    // Synchronize texture with host memory
-    //
-    id<MTLCommandQueue> queue             = [texture.device newCommandQueue];
-    id<MTLCommandBuffer> commandBuffer    = [queue commandBuffer];
-    id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
-    
-    [blitEncoder synchronizeTexture:texture slice:0 level:0];
-    [blitEncoder endEncoding];
-    
-    [commandBuffer commit];
-    [commandBuffer waitUntilCompleted];
-    
-    void       *image_buffer  = malloc(row_stride);
-    
-    int j=0;
-    while (cinfo.next_scanline < cinfo.image_height) {
+    @autoreleasepool {
+        int quality = round(qualityIn*100.0f); quality=quality<=0?10:quality>100?100:quality;
         
-        MTLRegion region = MTLRegionMake2D(0, cinfo.next_scanline, cinfo.image_width, 1);
+        struct jpeg_compress_struct cinfo;
+        struct jpeg_error_mgr jerr;
         
-        [texture getBytes:image_buffer
-              bytesPerRow:cinfo.image_width * 4 * componentSize
-               fromRegion:region
-              mipmapLevel:0];
+        JSAMPROW row_pointer[1];      /* pointer to JSAMPLE row[s] */
+        int row_stride;               /* physical row width in image buffer */
         
+        /* Step 1: allocate and initialize JPEG compression object */
+        
+        cinfo.err = jpeg_std_error(&jerr);
+        jpeg_create_compress(&cinfo);
+        
+        
+        void *userData;
+        if (!writeInitBlock(&cinfo,&userData)) {
+            return;
+        }
+        
+        /* Step 3: set parameters for compression */
+        
+        cinfo.image_width  = (int)[texture width];      /* image width and height, in pixels */
+        cinfo.image_height = (int)[texture height];
+        cinfo.input_components = 4;           /* # of color components per pixel */
+        if (
+            [texture pixelFormat] == MTLPixelFormatBGRA8Unorm
+            ||
+            [texture pixelFormat] == MTLPixelFormatBGRA8Unorm_sRGB
+            ) {
+            cinfo.in_color_space = JCS_EXT_BGRA;  /* colorspace of input image */
+        }
+        else if (
+                 [texture pixelFormat] == MTLPixelFormatRGBA8Unorm
+                 ||
+                 [texture pixelFormat] == MTLPixelFormatRGBA8Unorm_sRGB
+                 ) {
+            cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
+        }
+        else if (
+                 [texture pixelFormat] == MTLPixelFormatRGBA16Unorm
+                 ) {
+            cinfo.in_color_space = JCS_EXT_RGBA;
+        }
+        
+        jpeg_set_defaults(&cinfo);
+        jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+        
+        
+        /* Step 4: Start compressor */
+        
+        jpeg_start_compress(&cinfo, TRUE);
+        
+        /* Step 5: while (scan lines remain to be written) */
+        /*           jpeg_write_scanlines(...); */
+        
+        row_stride = (int)cinfo.image_width  * cinfo.input_components; /* JSAMPLEs per row in image_buffer */
+        
+        uint   counts        = cinfo.image_width * 4;
+        uint   componentSize = sizeof(uint8);
+        uint8 *tmp = NULL;
         if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
-            uint16 *s = image_buffer;
-            for (int i=0; i<counts; i++) {
-                tmp[i] = (s[i]>>8) & 0xff;
-                j++;
+            tmp  = malloc(row_stride);
+            row_stride *= 2;
+            componentSize = sizeof(uint16);
+        }
+        
+        //
+        // Synchronize texture with host memory
+        //
+        id<MTLCommandQueue> queue             = [texture.device newCommandQueue];
+        id<MTLCommandBuffer> commandBuffer    = [queue commandBuffer];
+        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+        
+        [blitEncoder synchronizeTexture:texture slice:0 level:0];
+        [blitEncoder endEncoding];
+        
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+        
+        void       *image_buffer  = malloc(row_stride);
+        
+        int j=0;
+        while (cinfo.next_scanline < cinfo.image_height) {
+            
+            MTLRegion region = MTLRegionMake2D(0, cinfo.next_scanline, cinfo.image_width, 1);
+            
+            [texture getBytes:image_buffer
+                  bytesPerRow:cinfo.image_width * 4 * componentSize
+                   fromRegion:region
+                  mipmapLevel:0];
+            
+            if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
+                uint16 *s = image_buffer;
+                for (int i=0; i<counts; i++) {
+                    tmp[i] = (s[i]>>8) & 0xff;
+                    j++;
+                }
+                row_pointer[0] = tmp;
             }
-            row_pointer[0] = tmp;
+            else{
+                row_pointer[0] = image_buffer;
+            }
+            (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
         }
-        else{
-            row_pointer[0] = image_buffer;
-        }
-        (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+        
+        free(image_buffer);
+        if (tmp != NULL) free(tmp);
+        
+        /* Step 6: Finish compression */
+        jpeg_finish_compress(&cinfo);
+        
+        /* After finish_compress, we can clear user data. */
+        writeFinishBlock(&cinfo,userData);
+        
+        /* Step 7: release JPEG compression object */
+        jpeg_destroy_compress(&cinfo);
+        
     }
-    
-    free(image_buffer);
-    if (tmp != NULL) free(tmp);
-    
-    /* Step 6: Finish compression */
-    jpeg_finish_compress(&cinfo);
-    
-    /* After finish_compress, we can clear user data. */
-    writeFinishBlock(&cinfo,userData);
-    
-    /* Step 7: release JPEG compression object */
-    jpeg_destroy_compress(&cinfo);
-    
 }
 
 
