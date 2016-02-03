@@ -75,6 +75,15 @@ public class IMPHistogramAnalyzer: IMPFilter {
     }
     internal var regionUniformBuffer:MTLBuffer!
     
+    public func setCenterRegionInPercent(value:Float){
+        var r = IMPCropRegion()
+        r.left   = 0.5-value/2.0
+        r.top    = 0.5-value/2.0
+        r.right  = 1.0-(0.5+value/2.0)
+        r.bottom = 1.0-(0.5+value/2.0)
+        region = r
+    }
+    
     ///
     /// Кernel-функция счета
     ///
@@ -115,10 +124,6 @@ public class IMPHistogramAnalyzer: IMPFilter {
         threadgroups = MTLSizeMake(groups,1,1)
         
         histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer) * Int(groups), options: .CPUCacheModeDefaultCache)
-    
-        
-        // добавляем счетчик как метод фильтра
-        //self.addFunction(kernel);
         
         defer{
             region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
@@ -134,7 +139,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
     ///
     /// Замыкание выполняющаеся после завершения расчета значений солвера.
     /// Замыкание можно определить для обновления значений пользовательской цепочки фильтров.
-    ///    
+    ///
     public func addUpdateObserver(observer:IMPAnalyzerUpdateHandler){
         analizerUpdateHandlers.append(observer)
     }
@@ -201,7 +206,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
     
     public override func apply() {
         
-        if let texture = source?.texture{                        
+        if let texture = source?.texture{
             apply(
                 texture,
                 threadgroupCounts: MTLSizeMake(histogram.size, 1, 1),

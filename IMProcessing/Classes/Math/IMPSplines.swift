@@ -452,9 +452,17 @@ public extension CollectionType where Generator.Element == [Float] {
                 let y = z.rows[xi].z[i]
                 points.append(float2(x,y))
             }
-            let spline = xPoints.catmullRomSpline(points, scale: scale) as [Float]
+            let spline = xPoints.catmullRomSpline(points, scale: 0) as [Float]
             curve.appendContentsOf(spline)
         }
+        
+        if scale>0 {
+            var max:Float = 0
+            vDSP_maxv(curve, 1, &max, vDSP_Length(curve.count))
+            max = scale/max
+            vDSP_vsmul(curve, 1, &max, &curve, 1, vDSP_Length(curve.count))
+        }
+
         return curve
     }
 }

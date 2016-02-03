@@ -228,7 +228,6 @@ public extension SequenceType where Generator.Element == Float {
     
     ///  Create normalized gaussian distribution of discrete values of Y's from mean parameters
     ///
-    ///  - parameter fi:    ƒ
     ///  - parameter mu:    µ
     ///  - parameter sigma: ß
     ///
@@ -239,19 +238,63 @@ public extension SequenceType where Generator.Element == Float {
     
     ///  Create normalized gaussian distribution of discrete values of Y points from two points of means
     ///
-    ///  - parameter fi:    float2(ƒ1,ƒ2)
     ///  - parameter mu:    float2(µ1,µ2)
     ///  - parameter sigma: float2(ß1,ß2)
     ///
     ///  - returns: discrete gaussian distribution
     public func gaussianDistribution(mu mu:float2, sigma:float2) -> [Float]{
-        return self.gaussianDistribution(fi: float2(1), mu: mu, sigma: sigma)
+        return self.gaussianDistribution(fi: float2(1/(sigma.x*sigma.y*sqrt(2*M_PI.float))), mu: mu, sigma: sigma)
+    }
+}
+
+///
+/// In two dimensions, the circular Gaussian function is the distribution function for uncorrelated variates X and Y having
+/// a bivariate normal distribution and equal standard deviation sigma=sigma_x=sigma_y,
+///
+public extension CollectionType where Generator.Element == [Float] {
+    
+    ///  Create 2D gaussian distribution of discrete values of X/Y's
+    ///
+    ///  - parameter fi:    ƒ
+    ///  - parameter mu:    µ
+    ///  - parameter sigma: ß
+    ///
+    ///  - returns: discrete 2D gaussian distribution
+    ///
+    /// http://mathworld.wolfram.com/GaussianFunction.html
+    ///
+    public func gaussianDistribution(fi fi:Float, mu:float2, sigma:float2) -> [Float]{
+        if self.count != 2 {
+            fatalError("CollectionType must have 2 dimension Float array with X-points and Y-points lists...")
+        }
+        
+        var a  = [Float]()
+        for y in self[1 as! Self.Index]{
+            let yd = pow(( y - mu.y ),2) / (2*pow(sigma.y, 2))
+            for x in self[0 as! Self.Index]{
+                let xd = pow(( x - mu.x ),2) / (2*pow(sigma.x, 2))
+                a.append(fi * exp( -(xd+yd) ))
+            }
+        }
+        return a
     }
     
-    //
-    //    public static func range(r:Range<Int>) -> [Float]{ return Float.range(r) }
-    //
-    //    public static func range(start start:Float, step:Float, end:Float) -> [Float] {
-    //        return Float.range(start: start, step: step, end: end)
-    //    }
+    ///  Create normalized 2D gaussian distribution of discrete values of X/Y's
+    ///
+    ///  - parameter mu:    µ
+    ///  - parameter sigma: ß
+    ///
+    ///  - returns: discrete 2D gaussian distribution
+    ///
+    /// http://mathworld.wolfram.com/GaussianFunction.html
+    ///
+    public func gaussianDistribution(mu mu:float2, sigma:float2) -> [Float]{
+        if self.count != 2 {
+            fatalError("CollectionType must have 2 dimension Float array with X-points and Y-points lists...")
+        }
+        let fi = 1/(sigma.x*sigma.y*sqrt(2*M_PI.float))
+        
+        return gaussianDistribution(fi: fi, mu: mu, sigma: sigma)
+    }
+    
 }
