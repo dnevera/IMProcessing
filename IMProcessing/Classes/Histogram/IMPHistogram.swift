@@ -74,7 +74,7 @@ public class IMPHistogram {
     ///  - parameter size:  histogram size, by default is kIMP_HistogramSize
     ///  - parameter type:  channels type
     ///
-    public init(gauss fi:Float, mu:[Float], sigma:[Float], size:Int = Int(kIMP_HistogramSize), type: ChannelsType){
+    public init(gauss fi:Float, mu:[Float], sigma:[Float], size:Int = Int(kIMP_HistogramSize), type: ChannelsType = .XYZW){
         self.size = size
         self.type = type
         channels = [[Float]](count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
@@ -124,9 +124,21 @@ public class IMPHistogram {
         default:
             fatalError("Number of channels is great then it posible: \(channels.count)")
         }
-        self.channels = channels
+        self.channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
         for var c=0; c<channels.count; c++ {
+            memcpy(UnsafeMutablePointer<Void>(self.channels[c]), UnsafePointer<Void>(channels[c]), size*sizeof(Float))
+            updateBinCountForChannel(c)
+        }
+    }
+    
+    public init(histogram:IMPHistogram){
+        size = histogram.size
+        type = histogram.type
+        channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
+        binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
+        for var c=0; c<channels.count; c++ {
+            memcpy(UnsafeMutablePointer<Void>(channels[c]), UnsafePointer<Void>(histogram.channels[c]), size*sizeof(Float))
             updateBinCountForChannel(c)
         }
     }
@@ -548,3 +560,117 @@ public class IMPHistogram {
     }
     
 }
+
+
+public extension IMPHistogram{
+    
+    public struct Extremum {
+        public let i:Int
+        public let y:Float
+    }
+    
+    convenience init(ƒ:Float, µ:Float, ß:Float){
+        self.init(gauss: ƒ, mu: [µ], sigma: [ß], size: ß.int*2, type: .PLANAR)
+    }
+    
+    ///  Find local suffisient peeks of the histogram channel
+    ///
+    ///  - parameter channel: channel no
+    ///  - parameter window:  window size
+    ///
+    ///  - returns: array of extremums
+    ///
+    ///  Source: http://stackoverflow.com/questions/22169492/number-of-peaks-in-histogram
+    ///
+    public func peaks(channel channel:ChannelNo, window:Int = 5)  -> [Extremum] {
+        
+        let N        = window
+        let xt:Float = N.float
+        let yt:Float = 1/size.float
+        
+        // Result indices
+        var indices = [Extremum]()
+        
+        let avrg    = IMPHistogram(channels: [[Float](count: N, repeatedValue: 1/N.float)])
+        
+        // Copy self histogram to avoid smothing effect for itself
+        let src     = IMPHistogram(channels: [self[channel]])
+        
+        // Convolve gaussian filter with filter 3ß
+        src.convolve(channel: .X, filter: avrg, lead: N/2+N%2)
+        
+        // Analyzed histogram channel
+        let y       = src[.X]
+        
+        // Find all local maximas
+        var imax = 0
+        var  max = y[0]
+        
+        var inc = true
+        var dec = false
+        
+        for var i = 1; i < y.count; i++ {
+            
+            // Changed from decline to increase, reset maximum
+            if (dec && y[i - 1] < y[i]) {
+                max = 0
+                dec = false
+                inc = true
+            }
+            
+            // Changed from increase to decline, save index of maximum
+            if (inc && y[i - 1] > y[i]) {
+                indices.append(Extremum(i: imax, y: max));
+                dec = true
+                inc = false
+            }
+            
+            // Update maximum
+            if (y[i] > max) {
+                max = y[i]
+                imax = i
+            }
+        }
+        
+        // If peak size is too small, ignore it
+        var i = 0
+        while (indices.count >= 1 && i < indices.count) {
+            if (y[indices[i].i] < yt) {
+                indices.removeAtIndex(i)
+            } else {
+                i++
+            }
+        }
+        
+        // If two peaks are near to each other, take nly the largest one
+        i = 1;
+        while (indices.count >= 2 && i < indices.count) {
+            let index1 = indices[i - 1].i
+            let index2 = indices[i].i
+            if (abs(index1 - index2).float < xt) {
+                indices.removeAtIndex(y[index1] < y[index2] ? i-1 : i)
+            } else {
+                i++
+            }
+        }
+        return indices;
+    }
+    
+    ///  Get histogram channel multipeak mean
+    ///
+    ///  - parameter channel: channel no
+    ///  - parameter window:  window size
+    ///
+    ///  - returns: mean value
+    public func peaksMean(channel channel:ChannelNo, window:Int = 5) -> Float {
+        
+        let p         = peaks(channel: channel, window: window)
+        var sum:Float = 0
+        for i in p {
+            sum += i.y * i.i.float
+        }
+        
+        return sum/p.count.float/size.float
+    }
+}
+

@@ -103,23 +103,37 @@ public class IMPAutoWBFilter:IMPFilter{
     }
     
     private func updateHsvProfile(solver:IMPColorWeightsSolver){
-        
+
+        let hue = (dominantColor?.rgb.rgb_2_HSV().hue)! * 360
+
         if solver.neutralWeights.neutrals <= preferences.threshold {
             //
             // squre of neutrals < preferensed value ~ 25% by default
             //
-            wbFilter.adjustment.blending.opacity = adjustment.blending.opacity * ( preferences.threshold - solver.neutralWeights.neutrals) / preferences.threshold
+            var opacity = adjustment.blending.opacity * ( preferences.threshold - solver.neutralWeights.neutrals) / preferences.threshold
+            
+            
+            let cyan_blue_weights =
+            (hue.overlapWeight(ramp: IMProcessing.hsv.cyans, overlap: 1) +
+                hue.overlapWeight(ramp: IMProcessing.hsv.blues, overlap: 1))/2
+            
+            if (cyan_blue_weights > 0.5 /* 10% */) {
+                 opacity *= (1-cyan_blue_weights); // it is a cyan/blue image
+            }
+            
+            wbFilter.adjustment.blending.opacity = opacity
+            
+            print("cyan blue ---> \(cyan_blue_weights) opa = \(wbFilter.adjustment.blending.opacity)")
+
         }
         else{
             wbFilter.adjustment.blending.opacity = 0
         }
         
-        let hue = (dominantColor?.rgb.rgb_2_HSV().hue)! * 360
-        
         var reds_yellows_weights =
         hue.overlapWeight(ramp: IMProcessing.hsv.reds, overlap: 1) +
             hue.overlapWeight(ramp: IMProcessing.hsv.yellows, overlap: 1)
-        
+
         let other_colors = solver.colorWeights.cyans +
             solver.colorWeights.greens +
             solver.colorWeights.blues +
@@ -129,7 +143,6 @@ public class IMPAutoWBFilter:IMPFilter{
         if (reds_yellows_weights < 0.0 /* 10% */) {
             reds_yellows_weights = 0.0; // it is a yellow/red image
         }
-        
         //
         // descrease yellows
         //
