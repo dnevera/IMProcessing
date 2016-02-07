@@ -18,9 +18,9 @@ func IMPstep(edge:Float, _ x:Float) -> Float {
     return step(x, edge: edge)
 }
 
-extension float3{
+public extension float3{
     
-    func rgb_2_HSV() -> float3 {
+    public func rgb_2_HSV() -> float3 {
         let K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0)
         let p = mix(float4(self.bg, K.wz), float4(self.gb, K.xy), t: IMPstep(self.b, self.g))
         let q = mix(float4(rgb: p.xyw, a: self.r), float4(self.r, p.yzx), t: IMPstep(p.x, self.r))
@@ -30,7 +30,7 @@ extension float3{
         return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x)
     }
     
-    func HSV_2_rgb() -> float3 {
+    public func HSV_2_rgb() -> float3 {
         let K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
         let p = abs(fract(self.xxx + K.xyz) * 6.0 - K.www);
         return self.z * mix(K.xxx, clamp(p - K.xxx, min: 0.0, max: 1.0), t: self.y);
@@ -39,20 +39,20 @@ extension float3{
 
 public extension float3{
     
-    var hue:Float       { set{ x = hue } get{ return x } }
-    var saturation:Float{ set{ y = saturation } get{ return y } }
-    var value:Float     { set{ z = value } get{ return z } }
+    public var hue:Float       { set{ x = hue } get{ return x } }
+    public var saturation:Float{ set{ y = saturation } get{ return y } }
+    public var value:Float     { set{ z = value } get{ return z } }
     
-    var r:Float{ set{ x = r } get{ return x } }
-    var g:Float{ set{ y = g } get{ return y } }
-    var b:Float{ set{ z = b } get{ return z } }
+    public var r:Float{ set{ x = r } get{ return x } }
+    public var g:Float{ set{ y = g } get{ return y } }
+    public var b:Float{ set{ z = b } get{ return z } }
     
-    var bg:float2 { get{ return float2(b,g) } }
-    var gb:float2 { get{ return float2(g,b) } }
+    public var bg:float2 { get{ return float2(b,g) } }
+    public var gb:float2 { get{ return float2(g,b) } }
     
-    var xxx:float3 { get{ return float3(x,x,x) } }
+    public var xxx:float3 { get{ return float3(x,x,x) } }
     
-    func normalized() -> float3 {
+    public func normalized() -> float3 {
         var vector = self
         var sum = vector.x+vector.y+vector.z
         if (sum==0.0) {
@@ -64,7 +64,7 @@ public extension float3{
         return vector
     }
 
-    init(color:IMPColor){
+    public init(color:IMPColor){
         #if os(iOS)
             var r = CGFloat(0)
             var g = CGFloat(0)
@@ -77,19 +77,19 @@ public extension float3{
         #endif
     }
     
-    init(colors:[String]){
+    public init(colors:[String]){
         self.init(colors[0].floatValue,colors[1].floatValue,colors[2].floatValue)
     }
 }
 
 public extension float4{
     
-    var r:Float{ set{ x = r } get{ return x } }
-    var g:Float{ set{ y = g } get{ return y } }
-    var b:Float{ set{ z = b } get{ return z } }
-    var a:Float{ set{ w = a } get{ return w } }
+    public var r:Float{ set{ x = r } get{ return x } }
+    public var g:Float{ set{ y = g } get{ return y } }
+    public var b:Float{ set{ z = b } get{ return z } }
+    public var a:Float{ set{ w = a } get{ return w } }
     
-    var rgb:float3 {
+    public var rgb:float3 {
         set{
             x = rgb.x
             y = rgb.y
@@ -100,21 +100,21 @@ public extension float4{
         }
     }
     
-    var bg:float2 { get{ return float2(b,g) } }
-    var gb:float2 { get{ return float2(g,b) } }
-    var xy:float2 { get{ return float2(x,y) } }
-    var wz:float2 { get{ return float2(w,z) } }
+    public var bg:float2 { get{ return float2(b,g) } }
+    public var gb:float2 { get{ return float2(g,b) } }
+    public var xy:float2 { get{ return float2(x,y) } }
+    public var wz:float2 { get{ return float2(w,z) } }
     
-    var xxx:float3 { get{ return float3(x,x,x) } }
-    var yyy:float3 { get{ return float3(y,y,y) } }
-    var zzz:float3 { get{ return float3(z,z,z) } }
-    var www:float3 { get{ return float3(w,w,w) } }
+    public var xxx:float3 { get{ return float3(x,x,x) } }
+    public var yyy:float3 { get{ return float3(y,y,y) } }
+    public var zzz:float3 { get{ return float3(z,z,z) } }
+    public var www:float3 { get{ return float3(w,w,w) } }
     
-    var xyw:float3 { get{ return float3(x,y,w) } }
-    var yzx:float3 { get{ return float3(y,z,x) } }
-    var xyz:float3 { get{ return float3(x,y,z) } }
+    public var xyw:float3 { get{ return float3(x,y,w) } }
+    public var yzx:float3 { get{ return float3(y,z,x) } }
+    public var xyz:float3 { get{ return float3(x,y,z) } }
     
-    func normalized() -> float4 {
+    public func normalized() -> float4 {
         var vector = self
         var sum = vector.x+vector.y+vector.z+vector.w
         if (sum==0.0) {
@@ -127,19 +127,19 @@ public extension float4{
         return vector
     }
     
-    init(_ bg:float2, _ wz:float2){
+    public init(_ bg:float2, _ wz:float2){
         self.init(bg.x,bg.y,wz.x,wz.y)
     }
     
-    init(_ r:Float, _ xyz:float3){
+    public init(_ r:Float, _ xyz:float3){
         self.init(r,xyz.x,xyz.y,xyz.z)
     }
     
-    init(rgb:float3,a:Float){
+    public init(rgb:float3,a:Float){
         self.init(rgb.x,rgb.y,rgb.z,a)
     }
     
-    init(color:IMPColor){
+    public init(color:IMPColor){
         #if os(iOS)
             var r = CGFloat(0)
             var g = CGFloat(0)
@@ -152,7 +152,7 @@ public extension float4{
         #endif
     }
     
-    init(colors:[String]){
+    public init(colors:[String]){
         self.init(colors[0].floatValue,colors[1].floatValue,colors[2].floatValue,colors[3].floatValue)
     }
 }

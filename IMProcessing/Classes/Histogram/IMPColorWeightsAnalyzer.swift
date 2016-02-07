@@ -18,28 +18,44 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
 
     public struct ColorWeights{
         
-        let reds:Float
-        let yellows:Float
-        let greens:Float
-        let cyans:Float
-        let blues:Float
-        let magentas:Float
+        public let count = 6
+        
+        public var reds:Float {
+            return weights[0]
+        }
+        public var yellows:Float {
+            return weights[1]
+        }
+        public var greens:Float {
+            return weights[2]
+        }
+        public var cyans:Float {
+            return weights[3]
+        }
+        public var blues:Float {
+            return weights[4]
+        }
+        public var magentas:Float {
+            return weights[5]
+        }
+
+        public subscript(index:Int)-> Float {
+            return weights[index]
+        }
         
         internal init(weights:[Float]){
-            reds = weights[0]
-            yellows = weights[1]
-            greens = weights[2]
-            cyans = weights[3]
-            blues = weights[4]
-            magentas = weights[5]
-        }        
+            self.weights = weights
+        }
+        
+        private var weights:[Float]
     }
     
     public struct NeutralWeights{
-        let saturated:Float
-        let blacks:Float
-        let whites:Float
-        let neutrals:Float
+        
+        public let saturated:Float
+        public let blacks:Float
+        public let whites:Float
+        public let neutrals:Float
         
         internal init(weights:[Float]){
             saturated = weights[0]

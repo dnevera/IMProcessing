@@ -9,6 +9,9 @@
 import Foundation
 import Metal
 
+/// Should return opacity value
+public typealias IMPAutoWBAnalyzeHandler =  ((solver:IMPColorWeightsSolver, opacity:Float, wbFilter:IMPWBFilter, hsvFilter:IMPHSVFilter) -> Float)
+
 public struct IMPAutoWBAdjustment{
     public var blending:IMPBlending = IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1)
 }
@@ -20,7 +23,7 @@ public struct IMPAutoWBPreferences{
         master: IMPHSVLevel.init(hue: 0, saturation: 0, value: 0),
         levels: (
             IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
-            IMPHSVLevel(hue: 0, saturation: -0.15,  value:-0.05), // descrease yellows in default AWB profile
+            IMPHSVLevel(hue: 0, saturation:  0,     value: 0), // descrease yellows in default AWB profile
             IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
             IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
             IMPHSVLevel(hue: 0, saturation:  0,     value: 0),
@@ -64,6 +67,9 @@ public class IMPAutoWBFilter:IMPFilter{
         }
     }
     
+    /// User defined color analyze extention
+    public var colorsAnalyzeHandler:IMPAutoWBAnalyzeHandler?
+    
     public required init(context: IMPContext, optimization:IMPHSVFilter.optimizationLevel) {
         super.init(context: context)
         
@@ -103,50 +109,31 @@ public class IMPAutoWBFilter:IMPFilter{
     }
     
     private func updateHsvProfile(solver:IMPColorWeightsSolver){
-
-        let hue = (dominantColor?.rgb.rgb_2_HSV().hue)! * 360
-
-        if solver.neutralWeights.neutrals <= preferences.threshold {
+        
+        var opacity:Float = 1
+        
+        if solver.neutralWeights.neutrals <= preferences.threshold {            
             //
             // squre of neutrals < preferensed value ~ 25% by default
             //
-            var opacity = adjustment.blending.opacity * ( preferences.threshold - solver.neutralWeights.neutrals) / preferences.threshold
-            
-            
-            let cyan_blue_weights =
-            (hue.overlapWeight(ramp: IMProcessing.hsv.cyans, overlap: 1) +
-                hue.overlapWeight(ramp: IMProcessing.hsv.blues, overlap: 1))/2
-            
-            if (cyan_blue_weights > 0.5 /* 10% */) {
-                 opacity *= (1-cyan_blue_weights); // it is a cyan/blue image
-            }
-            
-            wbFilter.adjustment.blending.opacity = opacity
-            
-            print("cyan blue ---> \(cyan_blue_weights) opa = \(wbFilter.adjustment.blending.opacity)")
-
+            opacity = adjustment.blending.opacity * ( preferences.threshold - solver.neutralWeights.neutrals) / preferences.threshold
         }
         else{
-            wbFilter.adjustment.blending.opacity = 0
+            //
+            // do not apply awb if image has enough gray regions
+            //
+            opacity = 0;
         }
         
-        var reds_yellows_weights =
-        hue.overlapWeight(ramp: IMProcessing.hsv.reds, overlap: 1) +
-            hue.overlapWeight(ramp: IMProcessing.hsv.yellows, overlap: 1)
-
-        let other_colors = solver.colorWeights.cyans +
-            solver.colorWeights.greens +
-            solver.colorWeights.blues +
-            solver.colorWeights.magentas
         
-        reds_yellows_weights -= other_colors
-        if (reds_yellows_weights < 0.0 /* 10% */) {
-            reds_yellows_weights = 0.0; // it is a yellow/red image
+        if colorsAnalyzeHandler != nil {
+            opacity = colorsAnalyzeHandler!(solver: solver, opacity:opacity, wbFilter: wbFilter, hsvFilter: hsvFilter)
         }
+        
         //
-        // descrease yellows
+        // apply final opacity
         //
-        hsvFilter.adjustment.yellows = preferences.hsvProfile.yellows * reds_yellows_weights
+        wbFilter.adjustment.blending.opacity = opacity
     }
     
     private let dominantColorSolver = IMPHistogramDominantColorSolver()
