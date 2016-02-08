@@ -600,11 +600,11 @@ public extension IMPHistogram{
     ///
     ///  Source: http://stackoverflow.com/questions/22169492/number-of-peaks-in-histogram
     ///
-    public func peaks(channel channel:ChannelNo, window:Int = 5)  -> [Extremum] {
+    public func peaks(channel channel:ChannelNo, window:Int = 5, treshold:Float = 0 )  -> [Extremum] {
         
         let N        = window
         let xt:Float = N.float
-        let yt:Float = 1/size.float
+        let yt:Float = treshold > 0 ? treshold : 1/size.float
         
         // Result indices
         var indices = [Extremum]()
@@ -680,9 +680,9 @@ public extension IMPHistogram{
     ///  - parameter window:  window size
     ///
     ///  - returns: mean value
-    public func peaksMean(channel channel:ChannelNo, window:Int = 5) -> Float {
+    public func peaksMean(channel channel:ChannelNo, window:Int = 5, treshold:Float = 0 ) -> Float {
         
-        let p         = peaks(channel: channel, window: window)
+        let p         = peaks(channel: channel, window: window, treshold: treshold)
         var sum:Float = 0
         for i in p {
             sum += i.y * i.i.float
