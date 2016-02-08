@@ -566,15 +566,12 @@ public extension IMPHistogram {
     public func entropy(channel index:ChannelNo) -> Float{
         var e:Float = 0
         let sum     = binCount(index)
-        print("sum \(sum)")
-        
         for var i = 0; i < size; i++ {
             let Hc = self[index][i]
             if Hc > 0 {
                 e += -(Hc/sum) * log10((Hc/sum));
             }
         }
-        
         return e
     }
 }
@@ -689,6 +686,19 @@ public extension IMPHistogram{
         }
         
         return sum/p.count.float/size.float
+    }
+}
+
+public extension CollectionType where Generator.Element == IMPHistogram.Extremum {
+    ///
+    /// Get mean of IMPHistogram peaks
+    ///
+    public func mean() -> Float {
+        var sum:Float = 0
+        for i in self {
+            sum += i.y * i.i.float
+        }
+        return sum/(self.count as! Int).float
     }
 }
 
