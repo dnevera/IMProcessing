@@ -561,7 +561,25 @@ public class IMPHistogram {
     
 }
 
+// MARK: - Statistical measurements
+public extension IMPHistogram {
+    public func entropy(channel index:ChannelNo) -> Float{
+        var e:Float = 0
+        let sum     = binCount(index)
+        print("sum \(sum)")
+        
+        for var i = 0; i < size; i++ {
+            let Hc = self[index][i]
+            if Hc > 0 {
+                e += -(Hc/sum) * log10((Hc/sum));
+            }
+        }
+        
+        return e
+    }
+}
 
+// MARK: - Peaks and valleys
 public extension IMPHistogram{
     
     public struct Extremum {
