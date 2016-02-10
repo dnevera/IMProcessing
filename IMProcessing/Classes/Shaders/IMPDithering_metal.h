@@ -40,18 +40,18 @@ namespace IMProcessing
         uint   denom = 256/size;
         uint2  xy    = uint2(gid.x % w, gid.y % h);
         
-        float  treshold = ditherLut.read(xy).x;
+        float  threshold = ditherLut.read(xy).x;
         float3 rgb      = inColor.rgb/float3(denom);
         
         float  r = rgb.r;
         float  g = rgb.g;
         float  b = rgb.b;
         
-        if (r > treshold) r = float(1);
+        if (r > threshold) r = float(1);
         else r = 0;
-        if (g > treshold) g = float(1);
+        if (g > threshold) g = float(1);
         else g = 0;
-        if (b > treshold) b = float(1);
+        if (b > threshold) b = float(1);
         else b = 0;
         
         rgb = float3(r,g,b);
