@@ -210,7 +210,7 @@ public class IMPHistogram {
     ///
     public func cdf(scale:Float = 1, power pow:Float=1) -> IMPHistogram {
         let _cdf = IMPHistogram(channels:channels);
-        _cdf._distributionType = .SOURCE
+        _cdf._distributionType = .CDF
         for c in 0..<_cdf.channels.count{
             power(pow: pow, A: _cdf.channels[c], B: &_cdf.channels[c])
             integrate(A: &_cdf.channels[c], B: &_cdf.channels[c], size: _cdf.channels[c].count, scale:scale)
@@ -752,8 +752,13 @@ public extension IMPHistogram{
             fatalError("IMPHistogram: source and values vector histograms must have equal size")
         }
         
-        var outcdf = IMPHistogram(size: size, type: .PLANAR)
-        matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:1)
+        var outcdf = IMPHistogram(size: size, type: .PLANAR, distributionType:.CDF)
+        if distributionType == .CDF {
+            matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:1)
+        }
+        else {
+            matchData(&values, target: &cdf().channels[channel.rawValue], outcdf: &outcdf, c:1)
+        }
         return outcdf
     }
     
@@ -771,16 +776,33 @@ public extension IMPHistogram{
             fatalError("IMPHistogram: source and target histograms must have equal channels count")
         }
         
-        var outcdf = IMPHistogram(size: size, type: type)
+        var outcdf = IMPHistogram(size: size, type: type, distributionType:.CDF)
+        
+        var source:IMPHistogram!
+        
+        if histogram.distributionType == .CDF {
+            source = histogram
+        }
+        else{
+            source = histogram.cdf()
+        }
+        
+        var target:IMPHistogram!
+        if distributionType == .CDF {
+            target = self
+        }
+        else{
+            target = cdf()
+        }
         
         for var c = 0; c<channels.count; c++ {
             
-            matchData(&histogram.channels[c], target: &channels[c], outcdf: &outcdf, c: c)
+            matchData(&source.channels[c], target: &target.channels[c], outcdf: &outcdf, c: c)
             
             ////                j=size-1
             ////                repeat {
             ////                    outcdf.channels[c][i] = j.float/(outcdf.size.float-1); j--
-            ////                } while (j>=0 && sc[i] <= tc[j] );
+            ////                } while (j>=0 && source[i] <= target[j] );
         }
         
         return outcdf
