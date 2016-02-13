@@ -402,37 +402,40 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
              compression:(CGFloat)qualityIn
                    error:(NSError *__autoreleasing *)error{
     
-    __block const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
-    
-    [[self class] updateJpegWithMTLTexture:texture
-                            writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
-                                
-                                struct jpeg_compress_struct *cinfo = in_cinfo;
-                                
-                                FILE * outfile;               /* target file */
-                                /* Step 2: specify data destination (eg, a file) */
-                                if ((outfile = fopen(filename, "wb")) == NULL) {
-                                    if (error) {
-                                        *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
-                                                                             code: ENOENT
-                                                                         userInfo: @{
-                                                                                     NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
-                                                                                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
-                                                                                     }];
+    @autoreleasepool {
+        
+        __block const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
+        
+        [[self class] updateJpegWithMTLTexture:texture
+                                writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
+                                    
+                                    struct jpeg_compress_struct *cinfo = in_cinfo;
+                                    
+                                    FILE * outfile;               /* target file */
+                                    /* Step 2: specify data destination (eg, a file) */
+                                    if ((outfile = fopen(filename, "wb")) == NULL) {
+                                        if (error) {
+                                            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
+                                                                                 code: ENOENT
+                                                                             userInfo: @{
+                                                                                         NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
+                                                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
+                                                                                         }];
+                                        }
+                                        return NO;
                                     }
-                                    return NO;
-                                }
-                                jpeg_stdio_dest(cinfo, outfile);
-                                
-                                *userData = outfile;
-                                
-                                return YES;
-                                
-                            } writeFinishBlock:^(void *cinfo, void *userData) {
-                                /* After finish_compress, we can close the output file. */
-                                fclose(userData);
-                            } quality:qualityIn error:error
-     ];
+                                    jpeg_stdio_dest(cinfo, outfile);
+                                    
+                                    *userData = outfile;
+                                    
+                                    return YES;
+                                    
+                                } writeFinishBlock:^(void *cinfo, void *userData) {
+                                    /* After finish_compress, we can close the output file. */
+                                    fclose(userData);
+                                } quality:qualityIn error:error
+         ];
+    }
 }
 
 

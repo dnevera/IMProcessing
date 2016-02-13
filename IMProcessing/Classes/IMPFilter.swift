@@ -80,6 +80,13 @@ public class IMPFilter: NSObject,IMPContextProvider {
         self.context = context
     }
     
+    deinit {
+        self.destination?.texture = nil
+        self.destinationContainer = nil
+        self.texture = nil
+        self.source = nil
+    }
+    
     private var functionList:[IMPFunction] = [IMPFunction]()
     private var filterList:[IMPFilter] = [IMPFilter]()
     private var sourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()

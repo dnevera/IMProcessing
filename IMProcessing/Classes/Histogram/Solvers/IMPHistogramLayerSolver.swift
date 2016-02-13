@@ -26,7 +26,11 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
             IMPHistogramLayerComponent(color: float4([0,0,1,0.7]), width: Float(UInt32.max)),
             IMPHistogramLayerComponent(color: float4([0.8,0.8,0.8,0.8]), width: Float(UInt32.max))),
         backgroundColor: float4([0.1, 0.1, 0.1, 0.7]),
-        backgroundSource: false)
+        backgroundSource: false){
+        didSet{
+            memcpy(layerUniformBiffer.contents(), &layer, layerUniformBiffer.length)
+        }
+    }
     
     public var histogramType:(type:IMPHistogramType,power:Float) = (type:.PDF,power:1){
         didSet{
@@ -41,7 +45,7 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         channelsUniformBuffer = self.context.device.newBufferWithLength(sizeof(UInt), options: .CPUCacheModeDefaultCache)
         histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramFloatBuffer), options: .CPUCacheModeDefaultCache)
         layerUniformBiffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramLayer), options: .CPUCacheModeDefaultCache)
-        memcpy(layerUniformBiffer.contents(), &layer, sizeof(IMPHistogramLayer))
+        memcpy(layerUniformBiffer.contents(), &layer, layerUniformBiffer.length)
     }
     
     public var histogram:IMPHistogram?{
@@ -63,7 +67,6 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         
         for c in 0..<pdf.channels.count{
             let address =  UnsafeMutablePointer<Float>(histogramUniformBuffer.contents())+c*pdf.size
-            memset(address, 0, sizeof(Float)*pdf.size)
             memcpy(address, pdf.channels[c], sizeof(Float)*pdf.size)
         }
         

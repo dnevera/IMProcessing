@@ -123,9 +123,9 @@ public class IMPHistogram {
     ///
     ///  - parameter channels: каналы с данными исходной гистограммы
     ///
-    public init(channels:[[Float]]){
-        self.size = channels[0].count
-        switch channels.count {
+    public init(channels ch:[[Float]]){
+        self.size = ch[0].count
+        switch ch.count {
         case 1:
             type = .PLANAR
         case 2:
@@ -135,12 +135,14 @@ public class IMPHistogram {
         case 4:
             type = .XYZW
         default:
-            fatalError("Number of channels is great then it posible: \(channels.count)")
+            fatalError("Number of channels is great then it posible: \(ch.count)")
         }
-        self.channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
+        channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
         for var c=0; c<channels.count; c++ {
-            memcpy(UnsafeMutablePointer<Void>(self.channels[c]), UnsafePointer<Void>(channels[c]), size*sizeof(Float))
+            for i in 0..<ch[c].count {
+                channels[c][i] = ch[c][i]
+            }
             updateBinCountForChannel(c)
         }
     }
@@ -151,7 +153,9 @@ public class IMPHistogram {
         channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
         for var c=0; c<channels.count; c++ {
-            memcpy(UnsafeMutablePointer<Void>(channels[c]), UnsafePointer<Void>(histogram.channels[c]), size*sizeof(Float))
+            for i in 0..<histogram.channels[c].count {
+                channels[c][i] = histogram.channels[c][i]
+            }
             updateBinCountForChannel(c)
         }
     }
@@ -781,18 +785,18 @@ public extension IMPHistogram{
         var source:IMPHistogram!
         
         if histogram.distributionType == .CDF {
-            source = histogram
+            source = self
         }
         else{
-            source = histogram.cdf()
+            source = cdf()
         }
         
         var target:IMPHistogram!
         if distributionType == .CDF {
-            target = self
+            target = histogram
         }
         else{
-            target = cdf()
+            target = histogram.cdf()
         }
         
         for var c = 0; c<channels.count; c++ {
@@ -807,25 +811,26 @@ public extension IMPHistogram{
         
         return outcdf
     }
-    
+
     private func matchData(inout source:[Float], inout target:[Float], inout outcdf:IMPHistogram, c:Int) {
-        var j  = 0
-        for var i = 0; i<source.count; i++ {
-            while source[j] < target[i] {
-                j++
-                if (source[j] - target[i]) <= (target[i] - source[j-1]) {
-                    outcdf.channels[c][i] = j.float/(outcdf.size.float-1)
-                }
-                else{
-                    outcdf.channels[c][i] = (j.float - 1)/(outcdf.size.float-1)
-                }
+        
+        var j=0
+        let denom = (outcdf.size.float-1)
+        
+        for var i=0; i<source.count; i++ {
+            if source[i] <= target[j] {
+                outcdf.channels[c][i] = j.float/denom
             }
-            
-            if  outcdf.channels[c][i] == 0 {
-                var k=j
-                repeat {
-                    outcdf.channels[c][i] = k.float/(outcdf.size.float-1); k--
-                } while (k>=j && source[k] >= target[i] );
+            else {
+                while source[i] > target[j] {
+                    j++;
+                    if (target[j] - source[i]) > (source[i] - target[j-1] )  {
+                        outcdf.channels[c][i] = j.float/denom
+                    }
+                    else{
+                        outcdf.channels[c][i] = (j.float - 1)/denom
+                    }
+                }
             }
         }
     }

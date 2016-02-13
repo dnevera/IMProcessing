@@ -26,7 +26,7 @@ using namespace metal;
 
 namespace IMProcessing
 {
-    kernel void kernel_histogramLayer(texture2d<float, access::sample>    inTexture   [[texture(0)]],
+    kernel void kernel_histogramLayer__(texture2d<float, access::sample>    inTexture   [[texture(0)]],
                                       texture2d<float, access::write>   outTexture  [[texture(1)]],
                                       constant IMPHistogramFloatBuffer  &histogram  [[buffer(0)]],
                                       constant uint                     &channels   [[buffer(1)]],
@@ -53,7 +53,8 @@ namespace IMProcessing
             result = layer.backgroundColor;
         }
         
-        for (int c=channels-1; c>=0; c--){
+        //for (int c=channels-1; c>=0; c--){
+        for (int c=0; c<channels; c++){
             
             float4 component = layer.components[c].color;
             
