@@ -19,7 +19,7 @@ public struct IMPAutoWBAdjustment{
 
 ///
 /// Auto white balance and color correction filer.
-/// TThe main idea based on seeking a dominant color of the image and 
+/// The main idea based on seeking a dominant color of the image and 
 /// rearrange gamma of the image according to this dominant color. The image becames neutral-balanced.
 ///
 public class IMPAutoWBFilter:IMPFilter{
