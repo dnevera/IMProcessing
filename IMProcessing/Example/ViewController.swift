@@ -54,7 +54,8 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             self.textValueLabel.stringValue = String(format: "%2.5f", value);
-            self.mainFilter.hsvFilter?.overlap = value*4
+            //self.mainFilter.hsvFilter?.overlap = value*4
+            self.mainFilter.noise.adjustment.size = value
         }
     }
     
@@ -87,7 +88,10 @@ class ViewController: NSViewController {
                 //self.mainFilter.blur.radius = (512*sender.floatValue/100).int
             }
             
-            self.mainFilter.dither.adjustment.blending.opacity = sender.floatValue/100
+            self.mainFilter.noise.adjustment.amount.total = (sender.floatValue/100)
+            self.mainFilter.noise.adjustment.amount.color = 1
+            
+            //self.mainFilter.dither.adjustment.blending.opacity = sender.floatValue/100
             
 //            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
 //            self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100
