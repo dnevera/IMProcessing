@@ -432,7 +432,9 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
                                     
                                 } writeFinishBlock:^(void *cinfo, void *userData) {
                                     /* After finish_compress, we can close the output file. */
-                                    fclose(userData);
+                                    FILE * outfile = userData;
+                                    fflush(outfile);
+                                    fclose(outfile);                                    
                                 } quality:qualityIn error:error
          ];
     }
