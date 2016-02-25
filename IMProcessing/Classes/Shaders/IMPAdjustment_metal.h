@@ -23,6 +23,7 @@
 #include "IMPAdjustmentCurves_metal.h"
 #include "IMPAdjustment3DLUT_metal.h"
 #include "IMPAdjustmentHSV_metal.h"
+#include "IMPAdjustmentSaturation_metal.h"
 
 #endif
 
