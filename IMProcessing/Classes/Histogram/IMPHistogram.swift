@@ -617,7 +617,7 @@ public extension IMPHistogram {
         for var i = 0; i < size; i++ {
             let Hc = self[index][i]
             if Hc > 0 {
-                e += -(Hc/sum) * log2((Hc/sum));
+                e += -(Hc/sum) * log2(Hc/sum);
             }
         }
         return e
