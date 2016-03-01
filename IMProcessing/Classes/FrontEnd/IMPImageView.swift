@@ -172,6 +172,12 @@
     /// Image preview window
     public class IMPImageView: IMPViewBase, IMPContextProvider{
         
+        public var dragOperation:IMPDragOperationHandler? {
+            didSet{
+                imageView.dragOperation = dragOperation
+            }
+        }
+        
         /// GPU device context
         public var context:IMPContext!
         

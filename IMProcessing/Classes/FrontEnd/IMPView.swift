@@ -7,12 +7,17 @@
 //
 
 #if os(iOS)
+    
     import UIKit
     import QuartzCore
     public typealias IMPViewBase = UIView
+    
 #else
+    
     import AppKit
     public typealias IMPViewBase = NSView
+    public typealias IMPDragOperationHandler = ((files:[String]) -> Bool)
+
 #endif
 import Metal
 import GLKit.GLKMath
@@ -56,7 +61,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             currentDestination = nil
             
             if let texture = source?.texture{
-                            
+                
                 threadGroups = MTLSizeMake(
                     (texture.width+threadGroupCount.width)/threadGroupCount.width,
                     (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
@@ -101,84 +106,84 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     #if os(iOS)
     
     func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
-        
-        var angle:CGFloat = 0
-        
-        if let orientation = source?.orientation{
-
-            switch orientation {
-                
-            case .Left, .LeftMirrored:
-                angle = Float(90.0).radians.cgloat
-
-            case .Right, .RightMirrored:
-                angle = Float(-90.0).radians.cgloat
-
-            case .Down, .DownMirrored:
-                angle = Float(180.0).radians.cgloat
-                
-            default: break
-            
-            }
-        }
-        
-        return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+    
+    var angle:CGFloat = 0
+    
+    if let orientation = source?.orientation{
+    
+    switch orientation {
+    
+    case .Left, .LeftMirrored:
+    angle = Float(90.0).radians.cgloat
+    
+    case .Right, .RightMirrored:
+    angle = Float(-90.0).radians.cgloat
+    
+    case .Down, .DownMirrored:
+    angle = Float(180.0).radians.cgloat
+    
+    default: break
+    
+    }
+    }
+    
+    return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
     }
     
     private var currentDeviceOrientation = UIDeviceOrientation.Portrait
     public var orientation:UIDeviceOrientation{
-        get{
-            return currentDeviceOrientation
-        }
-        set{
-            setOrientation(orientation, animate: false)
-        }
+    get{
+    return currentDeviceOrientation
+    }
+    set{
+    setOrientation(orientation, animate: false)
+    }
     }
     public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-        currentDeviceOrientation = orientation
-        let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
-
-        UIView.animateWithDuration(
-            duration,
-            delay: 0,
-            usingSpringWithDamping: 1.0,
-            initialSpringVelocity: 0,
-            options: .CurveEaseIn,
-            animations: { () -> Void in
-                
-                if let layer = self.metalLayer {
-                    
-                    var transform = CATransform3DIdentity
-                    
-                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
-                    
-                    var angle:CGFloat = 0
-                    
-                    switch (orientation) {
-                        
-                    case .LandscapeLeft:
-                        angle = Float(-90.0).radians.cgloat
-                        
-                    case .LandscapeRight:
-                        angle = Float(90.0).radians.cgloat
-                        
-                    case .PortraitUpsideDown:
-                        angle = Float(180.0).radians.cgloat
-                        
-                    default:
-                        break
-                    }
-                    
-                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-                    
-                    layer.transform = self.correctImageOrientation(transform);
-
-                    self.layerNeedUpdate = true
-                }
-                
-            },
-            completion:  nil
-        )
+    currentDeviceOrientation = orientation
+    let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+    
+    UIView.animateWithDuration(
+    duration,
+    delay: 0,
+    usingSpringWithDamping: 1.0,
+    initialSpringVelocity: 0,
+    options: .CurveEaseIn,
+    animations: { () -> Void in
+    
+    if let layer = self.metalLayer {
+    
+    var transform = CATransform3DIdentity
+    
+    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+    
+    var angle:CGFloat = 0
+    
+    switch (orientation) {
+    
+    case .LandscapeLeft:
+    angle = Float(-90.0).radians.cgloat
+    
+    case .LandscapeRight:
+    angle = Float(90.0).radians.cgloat
+    
+    case .PortraitUpsideDown:
+    angle = Float(180.0).radians.cgloat
+    
+    default:
+    break
+    }
+    
+    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+    
+    layer.transform = self.correctImageOrientation(transform);
+    
+    self.layerNeedUpdate = true
+    }
+    
+    },
+    completion:  nil
+    )
     }
     #endif
     
@@ -230,6 +235,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             metalLayer.colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)!
             layerContentsRedrawPolicy = .DuringViewResize
             layer?.addSublayer(metalLayer)
+            
+            registerForDraggedTypes([NSFilenamesPboardType])
+            
         #endif
         
         let library:MTLLibrary!  = self.context.device.newDefaultLibrary()
@@ -296,10 +304,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     public var screenSize:CGSize{
-        get {
-            let screen = self.window?.screen ?? UIScreen.mainScreen()
-            return screen.bounds.size
-        }
+    get {
+    let screen = self.window?.screen ?? UIScreen.mainScreen()
+    return screen.bounds.size
+    }
     }
     #endif
     
@@ -316,7 +324,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     internal func refresh() {
-                
+        
         if layerNeedUpdate {
             
             layerNeedUpdate = false
@@ -330,8 +338,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             (actualImageTexture.width+threadGroupCount.width)/threadGroupCount.width,
                             (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                     }
-
-
+                    
+                    
                     dispatch_sync(dispatch_get_main_queue(), { () -> Void in
                         
                         if let drawable = self.metalLayer.nextDrawable(){
@@ -370,7 +378,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     public func display() {
-        self.refresh()
+    self.refresh()
     }
     #else
     override public func display() {
@@ -383,41 +391,41 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     #if os(iOS)
     
     func updateLayer(){
-        if let l = metalLayer {
-            var adjustedSize = bounds.size
-
-            if let t = texture{
-                
-                l.drawableSize = t.size
-                
-                var size:CGFloat!
-                if UIDeviceOrientationIsLandscape(self.orientation)  {
-                    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
-                }
-                else{
-                    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
-                }
-            }
-            
-            var origin = CGPointZero
-            if adjustedSize.height < bounds.height {
-                origin.y = ( bounds.height - adjustedSize.height ) / 2
-            }
-            if adjustedSize.width < bounds.width {
-                origin.x = ( bounds.width - adjustedSize.width ) / 2
-            }
-            
-            l.frame = CGRect(origin: origin, size: adjustedSize)
-            layerNeedUpdate = true
-        }
+    if let l = metalLayer {
+    var adjustedSize = bounds.size
+    
+    if let t = texture{
+    
+    l.drawableSize = t.size
+    
+    var size:CGFloat!
+    if UIDeviceOrientationIsLandscape(self.orientation)  {
+    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
+    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
+    }
+    else{
+    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
+    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+    }
+    }
+    
+    var origin = CGPointZero
+    if adjustedSize.height < bounds.height {
+    origin.y = ( bounds.height - adjustedSize.height ) / 2
+    }
+    if adjustedSize.width < bounds.width {
+    origin.x = ( bounds.width - adjustedSize.width ) / 2
+    }
+    
+    l.frame = CGRect(origin: origin, size: adjustedSize)
+    layerNeedUpdate = true
+    }
     }
     
     override public func layoutSubviews() {
-        super.layoutSubviews()
-        updateLayer()
-        layerNeedUpdate = true
+    super.layoutSubviews()
+    updateLayer()
+    layerNeedUpdate = true
     }
     
     #else
@@ -432,6 +440,31 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         layerNeedUpdate = true
     }
     
+    public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
+        
+        let sourceDragMask = sender.draggingSourceOperationMask()
+        let pboard = sender.draggingPasteboard()
+        
+        if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
+            if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
+                return NSDragOperation.Generic
+            }
+        }
+        
+        return NSDragOperation.None
+    }
+    
+    public var dragOperation:IMPDragOperationHandler?
+    
+    public override func performDragOperation(sender: NSDraggingInfo) -> Bool {
+        if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
+            if let o = dragOperation {
+                return o(files: files as! [String])
+            }
+        }
+        return false
+    }
+    
     #endif
 }
 
@@ -440,7 +473,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     private class IMPDisplayLink {
         
         static let sharedInstance = IMPDisplayLink()
-
+        
         private typealias DisplayLinkCallback = @convention(block) ( CVDisplayLink!, UnsafePointer<CVTimeStamp>, UnsafePointer<CVTimeStamp>, CVOptionFlags, UnsafeMutablePointer<CVOptionFlags>, UnsafeMutablePointer<Void>)->Void
         
         private func displayLinkSetOutputCallback( displayLink:CVDisplayLink, callback:DisplayLinkCallback )
