@@ -105,95 +105,96 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
 //
 @implementation IMPJpegturbo
 
-+ (id<MTLTexture>) updateMTLTexture:(id<MTLTexture>)textureIn withPixelFormat:(MTLPixelFormat)pixelFormat withDevice:(id<MTLDevice>)device fromFile:(NSString*)filePath  maxSize:(CGFloat)maxSize  error:(NSError *__autoreleasing *)error{
++ (id<MTLTexture> _Nullable) updateMTLTexture:(nullable id<MTLTexture>)textureIn withPixelFormat:(MTLPixelFormat)pixelFormat withDevice:(id<MTLDevice>)device fromFile:(NSString*)filePath  maxSize:(CGFloat)maxSize  error:(NSError *__autoreleasing *)error{
     
+    
+    
+    const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
+    
+    DPJpegDecompressInfo cinfo;
+    struct DPJpegErrorMgr jerr;
+    FILE         *infile;           /* source file */
+    JSAMPARRAY    buffer;           /* Output row buffer */
+    int           row_stride;       /* physical row width in output buffer */
+    
+    
+    if ((infile = fopen(filename, "rb")) == NULL) {
+        if (error) {
+            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
+                                                  code: ENOENT
+                                              userInfo: @{
+                                                          NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", ""),filePath],
+                                                          NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", ""),
+                                                          }];
+        }
+        return textureIn;
+    }
+    
+    /* Step 1: allocate and initialize JPEG decompression object */
+    
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = my_error_exit;
+    if (setjmp(jerr.setjmp_buffer)) {
+        jpeg_destroy_decompress(&cinfo);
+        fclose(infile);
+        
+        if (error) {
+            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
+                                                 code: ENOENT
+                                             userInfo: @{
+                                                         NSLocalizedDescriptionKey: NSLocalizedString(@"Not enough memory to write jpeg file", ""),
+                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Not enough memory", ""),
+                                                         }];
+        }
+        
+        return textureIn;
+    }
+    jpeg_create_decompress(&cinfo);
+    
+    
+    /* Step 2: specify data source (eg, a file) */
+    
+    jpeg_stdio_src(&cinfo, infile);
+    
+    
+    /* Step 3: read file parameters with jpeg_read_header() */
+    
+    (void) jpeg_read_header(&cinfo, TRUE);
+    
+    
+    /* Step 4: set parameters for decompression */
+    
+    cinfo.out_color_space = JCS_EXT_RGBA;
+    
+    /* In this example, we don't need to change any of the defaults set by
+     * jpeg_read_header(), so we do nothing here.
+     */
+    
+    float scale = 1.0;
+    
+    if (maxSize>0.0 && maxSize<fmin(cinfo.image_width,cinfo.image_height) ) {
+        scale = fmin(maxSize/cinfo.image_width,maxSize/cinfo.image_height) ;
+    }
+    
+    cinfo.scale_num   = scale<1.0f?1:scale;
+    cinfo.scale_denom = scale<1.0f?(unsigned int)floor(1.0f/scale):1;
+    
+    /* Step 5: Start decompressor */
+    
+    (void) jpeg_start_decompress(&cinfo);
+    
+    row_stride = cinfo.output_width * cinfo.output_components;
+    buffer = (*cinfo.mem->alloc_sarray)
+    ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+    
+    
+    /* Step 6: while (scan lines remain to be read) */
+    
+    NSUInteger width  = cinfo.output_width;
+    NSUInteger height = cinfo.output_height;
     
     @autoreleasepool {
         
-        
-        const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
-        
-        DPJpegDecompressInfo cinfo;
-        struct DPJpegErrorMgr jerr;
-        FILE         *infile;           /* source file */
-        JSAMPARRAY    buffer;           /* Output row buffer */
-        int           row_stride;       /* physical row width in output buffer */
-        
-        
-        if ((infile = fopen(filename, "rb")) == NULL) {
-            if (error) {
-                *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
-                                                     code: ENOENT
-                                                 userInfo: @{
-                                                             NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", nil),filePath],
-                                                             NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", nil),
-                                                             }];
-            }
-            return nil;
-        }
-        
-        /* Step 1: allocate and initialize JPEG decompression object */
-        
-        cinfo.err = jpeg_std_error(&jerr.pub);
-        jerr.pub.error_exit = my_error_exit;
-        if (setjmp(jerr.setjmp_buffer)) {
-            jpeg_destroy_decompress(&cinfo);
-            fclose(infile);
-            
-            if (error) {
-                *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
-                                                     code: ENOENT
-                                                 userInfo: @{
-                                                             NSLocalizedDescriptionKey: NSLocalizedString(@"Not enough memory to write jpeg file", nil),
-                                                             NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Not enough memory", nil),
-                                                             }];
-            }
-            
-            return nil;
-        }
-        jpeg_create_decompress(&cinfo);
-        
-        
-        /* Step 2: specify data source (eg, a file) */
-        
-        jpeg_stdio_src(&cinfo, infile);
-        
-        
-        /* Step 3: read file parameters with jpeg_read_header() */
-        
-        (void) jpeg_read_header(&cinfo, TRUE);
-        
-        
-        /* Step 4: set parameters for decompression */
-        
-        cinfo.out_color_space = JCS_EXT_RGBA;
-        
-        /* In this example, we don't need to change any of the defaults set by
-         * jpeg_read_header(), so we do nothing here.
-         */
-        
-        float scale = 1.0;
-        
-        if (maxSize>0.0 && maxSize<fmin(cinfo.image_width,cinfo.image_height) ) {
-            scale = fmin(maxSize/cinfo.image_width,maxSize/cinfo.image_height) ;
-        }
-        
-        cinfo.scale_num   = scale<1.0f?1:scale;
-        cinfo.scale_denom = scale<1.0f?(unsigned int)floor(1.0f/scale):1;
-        
-        /* Step 5: Start decompressor */
-        
-        (void) jpeg_start_decompress(&cinfo);
-        
-        row_stride = cinfo.output_width * cinfo.output_components;
-        buffer = (*cinfo.mem->alloc_sarray)
-        ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-        
-        
-        /* Step 6: while (scan lines remain to be read) */
-        
-        NSUInteger width  = cinfo.output_width;
-        NSUInteger height = cinfo.output_height;
         
         id<MTLTexture> texture = textureIn;
         
@@ -252,7 +253,7 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
 }
 
 
-+ (void) updateJpegWithMTLTexture:(id<MTLTexture>)texture
++ (void) updateJpegWithMTLTexture:(nonnull id<MTLTexture>)texture
                    writeInitBlock:(writeInitBlock)writeInitBlock
                  writeFinishBlock:(writeFinishBlock)writeFinishBlock
                           quality:(CGFloat)qualityIn error:(NSError *__autoreleasing *)error{
@@ -379,20 +380,23 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
 }
 
 
-+ (NSData*) dataFromMTLTexture:(id<MTLTexture>)texture
-                   compression:(CGFloat)qualityIn{
++ (nullable NSData*) dataFromMTLTexture:(nonnull id<MTLTexture>)texture
+                            compression:(CGFloat)qualityIn{
     
     __block NSMutableData *data = [NSMutableData dataWithCapacity:BLOCK_SIZE];
     
-    [IMPJpegturbo updateJpegWithMTLTexture:texture
-                            writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
-                                struct jpeg_compress_struct *cinfo = in_cinfo;
-                                [data setLength:BLOCK_SIZE];
-                                jpeg_mem_dest_dp(cinfo, data);
-                                return YES;
-                            } writeFinishBlock:^(void *in_cinfo, void *userData) {
-                            } quality:qualityIn error:nil
-     ];
+    if (data) {
+        [IMPJpegturbo updateJpegWithMTLTexture:texture
+                                writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
+                                    struct jpeg_compress_struct *cinfo = in_cinfo;
+                                    [data setLength:BLOCK_SIZE];
+                                    jpeg_mem_dest_dp(cinfo, data);
+                                    return YES;
+                                } writeFinishBlock:^(void *in_cinfo, void *userData) {
+                                } quality:qualityIn error:nil
+         ];
+    }
+    
     
     return data;
 }
@@ -402,42 +406,39 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
              compression:(CGFloat)qualityIn
                    error:(NSError *__autoreleasing *)error{
     
-    @autoreleasepool {
-        
-        __block const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
-        
-        [[self class] updateJpegWithMTLTexture:texture
-                                writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
-                                    
-                                    struct jpeg_compress_struct *cinfo = in_cinfo;
-                                    
-                                    FILE * outfile;               /* target file */
-                                    /* Step 2: specify data destination (eg, a file) */
-                                    if ((outfile = fopen(filename, "wb")) == NULL) {
-                                        if (error) {
-                                            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
-                                                                                 code: ENOENT
-                                                                             userInfo: @{
-                                                                                         NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
-                                                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
-                                                                                         }];
-                                        }
-                                        return NO;
+    __block const char *filename = [filePath cStringUsingEncoding:NSUTF8StringEncoding];
+    
+    [[self class] updateJpegWithMTLTexture:texture
+                            writeInitBlock:^BOOL(void *in_cinfo, void **userData) {
+                                
+                                struct jpeg_compress_struct *cinfo = in_cinfo;
+                                
+                                FILE * outfile;               /* target file */
+                                /* Step 2: specify data destination (eg, a file) */
+                                if ((outfile = fopen(filename, "wb")) == NULL) {
+                                    if (error) {
+                                        *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
+                                                                             code: ENOENT
+                                                                         userInfo: @{
+                                                                                     NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
+                                                                                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
+                                                                                     }];
                                     }
-                                    jpeg_stdio_dest(cinfo, outfile);
-                                    
-                                    *userData = outfile;
-                                    
-                                    return YES;
-                                    
-                                } writeFinishBlock:^(void *cinfo, void *userData) {
-                                    /* After finish_compress, we can close the output file. */
-                                    FILE * outfile = userData;
-                                    fflush(outfile);
-                                    fclose(outfile);                                    
-                                } quality:qualityIn error:error
-         ];
-    }
+                                    return NO;
+                                }
+                                jpeg_stdio_dest(cinfo, outfile);
+                                
+                                *userData = outfile;
+                                
+                                return YES;
+                                
+                            } writeFinishBlock:^(void *cinfo, void *userData) {
+                                /* After finish_compress, we can close the output file. */
+                                FILE * outfile = userData;
+                                fflush(outfile);
+                                fclose(outfile);
+                            } quality:qualityIn error:error
+     ];
 }
 
 

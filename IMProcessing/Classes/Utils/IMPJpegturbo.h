@@ -11,25 +11,25 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
-typedef BOOL (^writeInitBlock)(void *cinfo, void **userData);
-typedef void (^writeFinishBlock)(void *cinfo, void *userData);
+typedef BOOL (^writeInitBlock)( void * _Null_unspecified cinfo,  void *_Null_unspecified*_Null_unspecified userData);
+typedef void (^writeFinishBlock)(void  *_Null_unspecified cinfo, void   *_Null_unspecified userData);
 
 @interface IMPJpegturbo : NSObject
 
-+ (id<MTLTexture>) updateMTLTexture:(id<MTLTexture>)texture
++ (id<MTLTexture> _Nullable) updateMTLTexture:(nullable  id<MTLTexture>)texture
                     withPixelFormat:(MTLPixelFormat)pixelFormat
-                         withDevice:(id<MTLDevice>)device
-                           fromFile:(NSString*)filePath
+                         withDevice:(nonnull id<MTLDevice>)device
+                           fromFile:(nonnull NSString*)filePath
                             maxSize:(CGFloat)maxSize
-                              error:(NSError *__autoreleasing *)error;
+                              error:(NSError *_Null_unspecified __autoreleasing *_Null_unspecified)error;
 
-+ (NSData*) dataFromMTLTexture:(id<MTLTexture>)texture
++ (nullable NSData*) dataFromMTLTexture:(nonnull id<MTLTexture>)texture
                    compression:(CGFloat)quality;
 
-+ (void) writeMTLTexture:(id<MTLTexture>)texture
-              toJpegFile:(NSString *)filePath
++ (void) writeMTLTexture:(nonnull id<MTLTexture>)texture
+              toJpegFile:(nonnull NSString *)filePath
              compression:(CGFloat)quality
-                   error:(NSError *__autoreleasing *)error;
+                   error:(NSError *_Null_unspecified __autoreleasing *_Null_unspecified)error;
 @end
 
 #endif

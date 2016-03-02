@@ -15,12 +15,12 @@ extension IMPImageProvider{
         self.init(context: context)
         self.update(image: image, maxSize: maxSize)
     }
-
+    
     public convenience init(context: IMPContext, file: String, maxSize: Float = 0) throws {
         self.init(context: context)
         try self.updateFromJpeg(file: file, maxSize: maxSize)
     }
-
+    
     public func update(image image:IMPImage, maxSize: Float = 0){
         texture = image.newTexture(context, maxSize: maxSize)
         #if os(iOS)
@@ -35,10 +35,12 @@ extension IMPImageProvider{
     }
     
     public func writeToJpeg(path:String, compression compressionQ:Float) throws {
-        var error:NSError?
-        IMPJpegturbo.writeMTLTexture(self.texture, toJpegFile: path, compression: compressionQ.cgloat, error: &error)
-        if error != nil {
-            throw error!
+        if let t = texture {
+            var error:NSError?
+            IMPJpegturbo.writeMTLTexture(t, toJpegFile: path, compression: compressionQ.cgloat, error: &error)
+            if error != nil {
+                throw error!
+            }
         }
-    }    
+    }
 }
