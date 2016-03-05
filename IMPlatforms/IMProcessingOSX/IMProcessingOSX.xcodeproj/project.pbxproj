@@ -299,6 +299,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -337,6 +338,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -349,7 +351,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = IMProcessingOSX/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MTL_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/Headers/Private/IMProcessing";
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingOSX";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -363,7 +365,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = IMProcessingOSX/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MTL_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/Headers/Private/IMProcessing";
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingOSX";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -379,7 +381,7 @@
 				31D4A7B31C2C13C100A7C278 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		31D4A7B41C2C13C100A7C278 /* Build configuration list for PBXNativeTarget "IMProcessingOSX" */ = {
 			isa = XCConfigurationList;
@@ -388,7 +390,7 @@
 				31D4A7B61C2C13C100A7C278 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

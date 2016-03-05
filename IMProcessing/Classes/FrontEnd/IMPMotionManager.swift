@@ -30,6 +30,9 @@
         
         private var motionRotationHandlers = [IMPMotionRotationHandler]()
         public func addRotationObserver(observer:IMPMotionRotationHandler){
+            if _motionHandler == nil {
+                self.startMotionHandler()
+            }
             motionRotationHandlers.append(observer)
         }
         
@@ -42,7 +45,6 @@
             motionManager = CMMotionManager()
             if motionManager.accelerometerAvailable {
                 motionManager.accelerometerUpdateInterval = 0.2
-                self.startMotionHandler()
             }
             else{
                 deviceOrientationDidChangeTo(.FaceDown)

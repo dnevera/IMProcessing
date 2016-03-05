@@ -29,7 +29,7 @@ public enum IMPLutStatus:Int{
     case UNKNOWN
 }
 
-extension IMPImageProvider{
+public extension IMPImageProvider{
     
     public struct LutDescription {
         public var type = IMPLutType.UNKNOOWN
@@ -44,21 +44,31 @@ extension IMPImageProvider{
     public convenience init(context: IMPContext, cubeFile:String, inout description:LutDescription) throws {
         self.init(context: context)
         do{
-            description = try update(cubeFile)
+            description = try update(cubeFile: cubeFile)
         }
         catch let error as NSError {
             throw error
         }
     }
     
+    public convenience init(context: IMPContext, cubeName:String, inout description:LutDescription) throws {
+        let path = NSBundle.mainBundle().pathForResource(cubeName, ofType:".cube")
+        self.init(context: context)
+        do{
+            description = try update(cubeFile: path!)
+        }
+        catch let error as NSError {
+            throw error
+        }
+    }
     
-    public func update(cubeFile:String) throws ->  LutDescription {
+    public func update(cubeFile cubeFile:String) throws ->  LutDescription {
         
         let manager = NSFileManager.defaultManager()
         var description = LutDescription()
         
         if manager.fileExistsAtPath(cubeFile){
-
+            
             do{
                 let contents = try String(contentsOfFile: cubeFile, encoding: NSUTF8StringEncoding)
                 
@@ -84,12 +94,12 @@ extension IMPImageProvider{
                             else{
                                 switch what {
                                 case .OUT_RANGE:
-                                        throw NSError(domain: IMProcessing.names.prefix+"cube-lut.read",
-                                            code: what.rawValue,
-                                            userInfo: [
-                                                NSLocalizedDescriptionKey: String(format: NSLocalizedString("Adobe Cube LUT file has out of range value in in line: %i", comment:""), linenum),
-                                                NSLocalizedFailureReasonErrorKey: String(format: NSLocalizedString("Adobe Cube LUT file has out of ramge value", comment:""))
-                                            ])
+                                    throw NSError(domain: IMProcessing.names.prefix+"cube-lut.read",
+                                        code: what.rawValue,
+                                        userInfo: [
+                                            NSLocalizedDescriptionKey: String(format: NSLocalizedString("Adobe Cube LUT file has out of range value in in line: %i", comment:""), linenum),
+                                            NSLocalizedFailureReasonErrorKey: String(format: NSLocalizedString("Adobe Cube LUT file has out of ramge value", comment:""))
+                                        ])
                                 case .WRONG_FORMAT:
                                     throw NSError(domain: IMProcessing.names.prefix+"cube-lut.read",
                                         code: what.rawValue,
@@ -118,7 +128,7 @@ extension IMPImageProvider{
                         }
                     }
                 }
-
+                
                 if description.type == .UNKNOOWN {
                     throw NSError(domain: IMProcessing.names.prefix+"cube-lut.read",
                         code: IMPLutStatus.WRONG_FORMAT.rawValue,

@@ -93,7 +93,7 @@ class ViewController: NSViewController {
         histogramContainerView.layer?.backgroundColor = IMPColor.redColor().CGColor
         
         histogramView = IMPHistogramView(frame: histogramContainerView.bounds)
-        histogramView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
+        histogramView.histogramLayer.solver.layer.backgroundColor = IMPPrefs.colors.background
         
         //histogramCDFView = IMPHistogramView(frame: histogramContainerView.bounds)
         //histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
@@ -168,7 +168,7 @@ class ViewController: NSViewController {
             }
             else if type == .LUT {
                 do {
-                    var description = IMPImageProvider.Description()
+                    var description = IMPImageProvider.LutDescription()
                     let lutProvider = try IMPImageProvider(context: self.context, cubeFile: file, description: &description)
                     
                     if let lut = self.lutFilter{

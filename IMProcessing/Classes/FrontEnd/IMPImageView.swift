@@ -30,7 +30,7 @@
             fatalError("init(coder:) has not been implemented")
         }
         
-        func zoomRectForgid(scale:CGFloat, center:CGPoint) -> CGRect {
+        func zoomRectForScale(scale:CGFloat, center:CGPoint) -> CGRect {
             
             var zoomRect = frame
             

@@ -91,9 +91,9 @@ public class IMPContext {
     public func resume(){
         dispatch_semaphore_signal(semaphore)
     }
-
+    
     public var dispatchQueue = dispatch_queue_create("com.improcessing.context", DISPATCH_QUEUE_SERIAL)
-        
+    
     ///  Initialize current context
     ///
     ///  - parameter lazy: true if you need to process without waiting finishing computation in the context.
@@ -122,17 +122,17 @@ public class IMPContext {
     ///
     public final func execute(closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
-        if let commandBuffer =
-            self.isLasy ?
-            self.commandQueue?.commandBufferWithUnretainedReferences() :
-            self.commandQueue?.commandBuffer() {
-                
-                closure(commandBuffer: commandBuffer)
-                commandBuffer.commit()
-                
-              if self.isLasy == false {
-                    commandBuffer.waitUntilCompleted()
-                }
+            if let commandBuffer =
+                self.isLasy ?
+                    self.commandQueue?.commandBufferWithUnretainedReferences() :
+                    self.commandQueue?.commandBuffer() {
+                        
+                        closure(commandBuffer: commandBuffer)
+                        commandBuffer.commit()
+                        
+                        if self.isLasy == false {
+                            commandBuffer.waitUntilCompleted()
+                        }
             }
         }
     }

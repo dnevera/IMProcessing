@@ -164,6 +164,8 @@ public extension IMPHSVAdjustment{
 ///
 public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
+    public static let cubeSize = 64
+    
     ///  Optimization level description
     ///
     ///  - HIGH:   default optimization uses when you need to accelerate hsv adjustment
@@ -189,10 +191,13 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
                 adjustmentLut.blending = adjustment.blending
                 self.updateBuffer(&adjustmentLutBuffer, context:context, adjustment:&adjustmentLut, size:sizeof(IMPAdjustment))
             }
-            updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
             
             if self.optimization == .HIGH {
+                updateBuffer(&adjustmentBuffer, context:context_hsv3DLut, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
                 applyHsv3DLut()
+            }
+            else {
+                updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
             }
             
             dirty = true
@@ -231,9 +236,9 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         self.optimization = optimization
         
         if self.optimization == .HIGH {
+            hsv3DlutTexture = hsv3DLut(IMPHSVFilter.cubeSize)
+            kernel_hsv3DLut = IMPFunction(context: self.context_hsv3DLut, name: "kernel_adjustHSV3DLut")
             kernel = IMPFunction(context: self.context, name: "kernel_adjustLutD3D")
-            kernel_hsv3DLut = IMPFunction(context: self.context, name: "kernel_adjustHSV3DLut")
-            hsv3DlutTexture = hsv3DLut(64)
         }
         else{
             kernel = IMPFunction(context: self.context, name: "kernel_adjustHSV")
@@ -316,24 +321,22 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     private var optimization:optimizationLevel!
 
     //
-    //
+    // Convert HSV transformation to 3D-rgb lut-cube
     //
     //
     private var kernel_hsv3DLut:IMPFunction!
+    private var context_hsv3DLut = IMPContext()
     
     private func applyHsv3DLut(){
         
-        self.context.execute({ (commandBuffer) -> Void in
+        context_hsv3DLut.execute({ (commandBuffer) -> Void in
             
             let width  = self.hsv3DlutTexture!.width
             let height = self.hsv3DlutTexture!.height
             let depth  = self.hsv3DlutTexture!.depth
             
-            let threadgroupCounts = MTLSizeMake(self.kernel_hsv3DLut.groupSize.width, self.kernel_hsv3DLut.groupSize.height,  self.kernel_hsv3DLut.groupSize.height);
-            let threadgroups = MTLSizeMake(
-                (width  + threadgroupCounts.width ) / threadgroupCounts.width ,
-                (height + threadgroupCounts.height) / threadgroupCounts.height,
-                (depth + threadgroupCounts.height) / threadgroupCounts.depth);
+            let threadgroupCounts = MTLSizeMake(4, 4, 4)
+            let threadgroups = MTLSizeMake(width/4, height/4, depth/4)
             
             let commandEncoder = commandBuffer.computeCommandEncoder()
             
@@ -345,6 +348,11 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
 
             commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts)
             commandEncoder.endEncoding()
+            #if os(OSX)
+                let blitEncoder = commandBuffer.blitCommandEncoder()
+                blitEncoder.synchronizeResource(self.hsv3DlutTexture!)
+                blitEncoder.endEncoding()
+            #endif
         })
     }
     
@@ -358,12 +366,12 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         textureDescriptor.height = dimention
         textureDescriptor.depth  = dimention
         
-        textureDescriptor.pixelFormat =  .RGBA8Unorm
+        textureDescriptor.pixelFormat = .RGBA8Unorm
         
         textureDescriptor.arrayLength = 1;
         textureDescriptor.mipmapLevelCount = 1;
         
-        let texture = context.device.newTextureWithDescriptor(textureDescriptor)
+        let texture = context_hsv3DLut.device.newTextureWithDescriptor(textureDescriptor)
         
         return texture
     }

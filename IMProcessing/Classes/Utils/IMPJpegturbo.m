@@ -316,15 +316,17 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
         
         row_stride = (int)cinfo.image_width  * cinfo.input_components; /* JSAMPLEs per row in image_buffer */
         
-        uint   counts        = cinfo.image_width * 4;
-        uint   componentSize = sizeof(uint8);
-        uint8 *tmp = NULL;
+        uint    counts        = cinfo.image_width * 4;
+        uint    componentSize = sizeof(uint8_t);
+        uint8_t *tmp = NULL;
         if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
             tmp  = malloc(row_stride);
             row_stride *= 2;
-            componentSize = sizeof(uint16);
+            componentSize = sizeof(uint16_t);
         }
         
+#if TARGET_OS_IPHONE
+#elif TARGET_OS_MAC
         //
         // Synchronize texture with host memory
         //
@@ -337,7 +339,8 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
         
         [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
-        
+
+#endif
         void       *image_buffer  = malloc(row_stride);
         
         int j=0;
@@ -351,7 +354,7 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
                   mipmapLevel:0];
             
             if (texture.pixelFormat == MTLPixelFormatRGBA16Unorm) {
-                uint16 *s = image_buffer;
+                uint16_t *s = image_buffer;
                 for (int i=0; i<counts; i++) {
                     tmp[i] = (s[i]>>8) & 0xff;
                     j++;

@@ -13,11 +13,14 @@
 		3172A1491C2C2C6800B99091 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3172A1481C2C2C6800B99091 /* Assets.xcassets */; };
 		3172A14C1C2C2C6800B99091 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3172A14A1C2C2C6800B99091 /* LaunchScreen.storyboard */; };
 		3172A1551C2C3D8400B99091 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 3172A1541C2C3D8400B99091 /* IMPMain_metal.metal */; };
+		31897DCF1C8A185200D0AAB4 /* A25_B&W.cube in Resources */ = {isa = PBXBuildFile; fileRef = 31897DCE1C8A185200D0AAB4 /* A25_B&W.cube */; };
+		647B405DAF8F902F5D6748D7 /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 312B7D1BAE2DD7DD3736E2EE /* Pods.framework */; };
 		BD85E57B98EFDA5947B6E7B8 /* Pods_IMProcessingiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMProcessingiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		312B7D1BAE2DD7DD3736E2EE /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3172A13E1C2C2C6800B99091 /* IMProcessingiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessingiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3172A1411C2C2C6800B99091 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3172A1431C2C2C6800B99091 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -26,6 +29,9 @@
 		3172A14B1C2C2C6800B99091 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3172A14D1C2C2C6800B99091 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3172A1541C2C3D8400B99091 /* IMPMain_metal.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = IMPMain_metal.metal; sourceTree = "<group>"; };
+		31897DCE1C8A185200D0AAB4 /* A25_B&W.cube */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "A25_B&W.cube"; path = "Luts/A25_B&W.cube"; sourceTree = "<group>"; };
+		A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
+		AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		B9A5A4EFA727ACA490B98073 /* Pods-IMProcessingiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.release.xcconfig"; sourceTree = "<group>"; };
 		D2BE4AC8520FAFC040981FD1 /* Pods-IMProcessingiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -36,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BD85E57B98EFDA5947B6E7B8 /* Pods_IMProcessingiOS.framework in Frameworks */,
+				647B405DAF8F902F5D6748D7 /* Pods.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,6 +70,7 @@
 		3172A1401C2C2C6800B99091 /* IMProcessingiOS */ = {
 			isa = PBXGroup;
 			children = (
+				31897DCD1C8A183400D0AAB4 /* Luts */,
 				3172A1531C2C3D8400B99091 /* Shaders */,
 				3172A1411C2C2C6800B99091 /* AppDelegate.swift */,
 				3172A1431C2C2C6800B99091 /* ViewController.swift */,
@@ -82,11 +90,21 @@
 			path = Shaders;
 			sourceTree = "<group>";
 		};
+		31897DCD1C8A183400D0AAB4 /* Luts */ = {
+			isa = PBXGroup;
+			children = (
+				31897DCE1C8A185200D0AAB4 /* A25_B&W.cube */,
+			);
+			name = Luts;
+			sourceTree = "<group>";
+		};
 		5FF4B29EDCE3A7A45CDB0DAB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
 				D2BE4AC8520FAFC040981FD1 /* Pods-IMProcessingiOS.debug.xcconfig */,
 				B9A5A4EFA727ACA490B98073 /* Pods-IMProcessingiOS.release.xcconfig */,
+				AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */,
+				A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -95,6 +113,7 @@
 			isa = PBXGroup;
 			children = (
 				03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */,
+				312B7D1BAE2DD7DD3736E2EE /* Pods.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -163,6 +182,7 @@
 				3172A14C1C2C2C6800B99091 /* LaunchScreen.storyboard in Resources */,
 				3172A1491C2C2C6800B99091 /* Assets.xcassets in Resources */,
 				3172A1471C2C2C6800B99091 /* Main.storyboard in Resources */,
+				31897DCF1C8A185200D0AAB4 /* A25_B&W.cube in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,7 +216,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS-frameworks.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		BB95B55A18E626F786F293B7 /* Copy Pods Resources */ = {
@@ -211,7 +231,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -269,6 +289,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -287,6 +308,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -314,6 +336,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -326,6 +349,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -334,12 +358,12 @@
 		};
 		3172A1511C2C2C6800B99091 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D2BE4AC8520FAFC040981FD1 /* Pods-IMProcessingiOS.debug.xcconfig */;
+			baseConfigurationReference = AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = IMProcessingiOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MTL_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/Headers/Private/IMProcessing";
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -347,12 +371,12 @@
 		};
 		3172A1521C2C2C6800B99091 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B9A5A4EFA727ACA490B98073 /* Pods-IMProcessingiOS.release.xcconfig */;
+			baseConfigurationReference = A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = IMProcessingiOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MTL_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/Headers/Private/IMProcessing";
+				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
