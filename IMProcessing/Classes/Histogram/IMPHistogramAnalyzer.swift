@@ -204,7 +204,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
-    public override func apply() {
+    public override func apply() -> IMPImageProvider {
         
         if let texture = source?.texture{
             apply(
@@ -223,5 +223,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
                 o(histogram: histogram)
             }
         }
+        
+        return source!
     }
 }

@@ -82,10 +82,10 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             
             if sender.floatValue < 2 {
-                //self.mainFilter.blur.radius = 0
+                self.mainFilter.blur.radius = 0
             }
             else {
-                //self.mainFilter.blur.radius = (512*sender.floatValue/100).int
+                self.mainFilter.blur.radius = (512*sender.floatValue/100).int
             }
             
             self.mainFilter.noise.adjustment.amount.total = (sender.floatValue/100)

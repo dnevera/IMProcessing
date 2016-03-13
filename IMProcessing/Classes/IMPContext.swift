@@ -116,23 +116,36 @@ public class IMPContext {
         }
     }
     
+    lazy var supportsGPUv2:Bool = {
+        #if os(iOS)
+            return self.device.supportsFeatureSet(.iOS_GPUFamily2_v1)
+        #else
+            return true
+        #endif
+    }()
+    
+    var commandBuffer:MTLCommandBuffer?  {
+        return self.commandQueue?.commandBuffer()
+//            (self.supportsGPUv2 ?
+//            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
+//            self.commandQueue?.commandBuffer())
+    }
+    
     ///  The main idea context execution: all filters should put commands in context queue within the one execution.
     ///
     ///  - parameter closure: execution context
     ///
     public final func execute(closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
-            if let commandBuffer =
-                self.isLasy ?
-                    self.commandQueue?.commandBufferWithUnretainedReferences() :
-                    self.commandQueue?.commandBuffer() {
-                        
-                        closure(commandBuffer: commandBuffer)
-                        commandBuffer.commit()
-                        
-                        if self.isLasy == false {
-                            commandBuffer.waitUntilCompleted()
-                        }
+            
+            if let commandBuffer = self.commandBuffer {
+                
+                closure(commandBuffer: commandBuffer)
+                commandBuffer.commit()
+                
+                if self.isLasy == false {
+                    commandBuffer.waitUntilCompleted()
+                }
             }
         }
     }

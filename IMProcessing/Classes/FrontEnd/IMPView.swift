@@ -59,7 +59,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if let f = self.filter{
                     f.source = source
                 }
-                updateLayerHandler() //updateLayer()
+                updateLayerHandler()
             }
         }
     }
@@ -219,38 +219,34 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                     }
                     
-                    
-                    //dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    if let drawable = self.metalLayer.nextDrawable(){
                         
-                        if let drawable = self.metalLayer.nextDrawable(){
+                        self.context.execute { (commandBuffer) -> Void in
                             
-                            self.context.execute { (commandBuffer) -> Void in
+                            self.context.wait()
                             
-                                self.context.wait()
-                                
-                                commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
-                                    self.context.resume()
-                                })
-                                
-                                let encoder = commandBuffer.computeCommandEncoder()
-                                
-                                encoder.setComputePipelineState(self.pipeline!)
-                                
-                                encoder.setTexture(actualImageTexture, atIndex: 0)
-                                
-                                encoder.setTexture(drawable.texture, atIndex: 1)
-                                
-                                encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-                                
-                                encoder.endEncoding()
-                                
-                                commandBuffer.presentDrawable(drawable)                                
-                            }
+                            commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
+                                self.context.resume()
+                            })
+                            
+                            let encoder = commandBuffer.computeCommandEncoder()
+                            
+                            encoder.setComputePipelineState(self.pipeline!)
+                            
+                            encoder.setTexture(actualImageTexture, atIndex: 0)
+                            
+                            encoder.setTexture(drawable.texture, atIndex: 1)
+                            
+                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+                            
+                            encoder.endEncoding()
+                            
+                            commandBuffer.presentDrawable(drawable)
                         }
-                        else{
-                            self.context.resume()
-                        }
-                   //})
+                    }
+                    else{
+                        self.context.resume()
+                    }
                 }
             })
         }
@@ -293,7 +289,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     override public func layoutSubviews() {
         super.layoutSubviews()
-        updateLayerHandler() //updateLayer()
+        updateLayerHandler()
     }
     
     #else

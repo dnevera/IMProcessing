@@ -11,6 +11,7 @@ import IMProcessing
 import SnapKit
 
 let TEST_CAMERA = true
+let BLUR_FILTER = false
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
     
@@ -18,7 +19,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     var containerView:UIView!
     
     var imageView:IMPImageView!
-    var filter:IMPHSVFilter!
+    var blur:IMPGaussianBlurFilter!
+    var hsv:IMPHSVFilter!
+    
+    var filter:IMPFilter?
+    
     //var filter: IMPLutFilter!
     
     override func viewDidLoad() {
@@ -34,7 +39,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 ))
             self.view.insertSubview(imageView, atIndex: 0)
             
-            filter = IMPHSVFilter(context: imageView.context, optimization: .HIGH)
+            if BLUR_FILTER {
+                blur = IMPGaussianBlurFilter(context: imageView.context)
+                filter = blur
+            }
+            else{
+                hsv = IMPHSVFilter(context: imageView.context, optimization: .NORMAL)
+                filter = hsv
+            }
+            
             imageView.filter = filter
             
             //            do {
@@ -57,8 +70,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             cameraManager = IMPCameraManager(containerView: containerView)
             
-            filter = IMPHSVFilter(context: cameraManager.context, optimization: .HIGH)
-            filter.adjustment.greens.hue = -0.5
+            if BLUR_FILTER {
+                blur = IMPGaussianBlurFilter(context: cameraManager.context)
+                filter = blur
+            }
+            else{
+                hsv = IMPHSVFilter(context: cameraManager.context, optimization: .HIGH)
+                filter = hsv
+            }
+            
             cameraManager.liveView.filter = filter
             
             cameraManager.start { (granted) -> Void in
@@ -102,7 +122,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
 
         let slider = UISlider()
-        slider.value = (filter.adjustment.greens.value/2 + 0.5)
+        slider.value = 0
         slider.addTarget(self, action: "changeValue:", forControlEvents: .ValueChanged)
         view.addSubview(slider)
         
@@ -128,8 +148,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     internal func changeValue(sender:UISlider){
-        dispatch_async(filter.context.dispatchQueue) { () -> Void in
-            self.filter.adjustment.greens.hue = (sender.value - 0.5) * 2
+        dispatch_async(filter!.context.dispatchQueue) { () -> Void in
+            if BLUR_FILTER {
+                self.blur.radius = (128 * sender.value).int
+            }
+            else{
+                self.hsv.adjustment.greens.hue = (sender.value - 0.5) * 2
+            }
         }
     }
     

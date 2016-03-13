@@ -37,14 +37,17 @@ public class IMPFilter: NSObject,IMPContextProvider {
     public var destination:IMPImageProvider?{
         get{
             if enabled {
-                self.apply()
-                return getDestination()
+                return self.apply()
             }
             else{
                 return source
             }
         }
     }
+    
+    private lazy var _destination:IMPImageProvider = {
+        return IMPImageProvider(context: self.context)
+    }()
     
     public var destinationSize:MTLSize?{
         didSet{
@@ -81,10 +84,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
     }
     
     deinit {
-        self.destination?.texture = nil
-        self.destinationContainer = nil
-        self.texture = nil
-        self.source = nil
+        _destination.texture = nil
+        source = nil
     }
     
     private var functionList:[IMPFunction] = [IMPFunction]()
@@ -144,26 +145,6 @@ public class IMPFilter: NSObject,IMPContextProvider {
         }
     }
     
-    private var texture:MTLTexture?
-    private var destinationContainer:IMPImageProvider?
-    
-    internal func getDestination() -> IMPImageProvider? {
-        if !enabled{
-            return source
-        }
-        autoreleasepool { () -> () in
-            if let t = self.texture{
-                if let d = destinationContainer{
-                    d.texture=t
-                }
-                else{
-                    destinationContainer = IMPImageProvider(context: self.context, texture: t)
-                }
-            }
-        }
-        return destinationContainer
-    }
-    
     public func configure(function:IMPFunction, command:MTLComputeCommandEncoder){}
     
     internal func executeSourceObservers(source:IMPImageProvider?){
@@ -184,11 +165,11 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     var passThroughKernel:IMPFunction?
     
-    public func apply(){
-        apply(counts:nil, groups:nil)
+    public func apply() -> IMPImageProvider {
+       return apply(counts:nil, groups:nil)
     }
     
-    public func apply(counts counts:MTLSize?, groups:MTLSize?){
+    public func apply(counts counts:MTLSize?, groups:MTLSize?) -> IMPImageProvider {
         autoreleasepool { () -> () in
             if dirty {
                 
@@ -237,52 +218,56 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                     (height + threadgroupCounts.height) / threadgroupCounts.height,
                                     1);
                                 
-                                if self.texture?.width != width || self.texture?.height != height {
+                                if self._destination.texture?.width != width || self._destination.texture?.height != height {
                                     let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                                         inputTexture.pixelFormat,
                                         width: width, height: height, mipmapped: false)
 
-                                    if self.texture != nil {
-                                        self.texture?.setPurgeableState(MTLPurgeableState.Empty)
+                                    if self._destination.texture != nil {
+                                        self._destination.texture?.setPurgeableState(MTLPurgeableState.Empty)
                                     }
-                                    self.texture = self.context.device.newTextureWithDescriptor(descriptor)
+                                    self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
                                 }
                                 
-                                let commandEncoder = commandBuffer.computeCommandEncoder()
                                 
-                                commandEncoder.setComputePipelineState(function.pipeline!)
+                                if let texture = self._destination.texture {
                                 
-                                commandEncoder.setTexture(inputTexture, atIndex:0)
-                                commandEncoder.setTexture(self.texture, atIndex:1)
-                                
-                                self.configure(function, command: commandEncoder)
-                                
-                                commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts)
-                                commandEncoder.endEncoding()
-                                
-                                if reverseIndex>0 {
+                                    let commandEncoder = commandBuffer.computeCommandEncoder()
                                     
-                                    if self.texture?.width != inputTexture.width || self.texture?.height != inputTexture.height
-                                        ||
-                                        inputTexture === self.source?.texture
-                                    {
-                                        let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-                                            (self.source?.texture!.pixelFormat)!,
-                                            width: (self.texture?.width)!,
-                                            height: (self.texture?.height)!,
-                                            mipmapped: false)
-                                        inputTexture = self.context.device.newTextureWithDescriptor(descriptor)
+                                    commandEncoder.setComputePipelineState(function.pipeline!)
+                                    
+                                    commandEncoder.setTexture(inputTexture, atIndex:0)
+                                    commandEncoder.setTexture(texture, atIndex:1)
+                                    
+                                    self.configure(function, command: commandEncoder)
+                                    
+                                    commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts)
+                                    commandEncoder.endEncoding()
+                                    
+                                    if reverseIndex>0 {
+                                        
+                                        if texture.width != inputTexture.width || texture.height != inputTexture.height
+                                            ||
+                                            inputTexture === self.source?.texture
+                                        {
+                                            let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+                                                (self.source?.texture!.pixelFormat)!,
+                                                width: texture.width,
+                                                height: texture.height,
+                                                mipmapped: false)
+                                            inputTexture = self.context.device.newTextureWithDescriptor(descriptor)
+                                        }
+                                        
+                                        let blit = commandBuffer.blitCommandEncoder()
+                                        blit.copyFromTexture(
+                                            texture,
+                                            sourceSlice: 0,
+                                            sourceLevel: 0,
+                                            sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                                            sourceSize: MTLSizeMake(texture.width, texture.height, self._destination.texture!.depth),
+                                            toTexture: inputTexture, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+                                        blit.endEncoding()
                                     }
-                                    
-                                    let blit = commandBuffer.blitCommandEncoder()
-                                    blit.copyFromTexture(
-                                        self.texture!,
-                                        sourceSlice: 0,
-                                        sourceLevel: 0,
-                                        sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                                        sourceSize: MTLSizeMake(self.texture!.width, self.texture!.height, self.texture!.depth),
-                                        toTexture: inputTexture, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
-                                    blit.endEncoding()
                                 }
                             }
                             
@@ -297,12 +282,12 @@ public class IMPFilter: NSObject,IMPContextProvider {
                             let width  = inputTexture.width
                             let height = inputTexture.height
                             
-                            if self.texture?.width != width || self.texture?.height != height {
+                            if self._destination.texture?.width != width || self._destination.texture?.height != height {
                                 let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                                     inputTexture.pixelFormat,
                                     width: width, height: height, mipmapped: false)
                                 
-                                self.texture = self.context.device.newTextureWithDescriptor(descriptor)
+                                self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
                             }
                             
                             let blit = commandBuffer.blitCommandEncoder()
@@ -311,8 +296,8 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                 sourceSlice: 0,
                                 sourceLevel: 0,
                                 sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                                sourceSize: MTLSizeMake(width, height, self.texture!.depth),
-                                toTexture: self.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+                                sourceSize: MTLSizeMake(width, height, self._destination.texture!.depth),
+                                toTexture: self._destination.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
                             blit.endEncoding()
                         })
                     })
@@ -320,7 +305,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                 
                 if filterList.count > 0 {
                     
-                    guard var newSource = getDestination() ?? source else {
+                    guard var newSource = self._destination ?? source else {
                         return
                     }
                     
@@ -339,12 +324,12 @@ public class IMPFilter: NSObject,IMPContextProvider {
                         fatalError("IMPFilter error: processing stoped at the last chain filter: \(self, filterList.last)")
                     }
                     
-                    if self.texture?.width != newTexture.width || self.texture?.height != newTexture.height {
+                    if self._destination.texture?.width != newTexture.width || self._destination.texture?.height != newTexture.height {
                         let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                             newTexture.pixelFormat,
                             width: newTexture.width,
                             height: newTexture.height, mipmapped: false)
-                        self.texture = self.context.device.newTextureWithDescriptor(descriptor)
+                        self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
                     }
                     
                     self.context.execute({ (commandBuffer) -> Void in
@@ -356,20 +341,19 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                 sourceLevel: 0,
                                 sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
                                 sourceSize: MTLSizeMake(newTexture.width, newTexture.height, newTexture.depth),
-                                toTexture: self.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+                                toTexture: self._destination.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
                             blit.endEncoding()
                         })
                     })
                     
-                    executeDestinationObservers(getDestination())
-                    
+                    executeDestinationObservers(_destination)
                 }
                 else if functionList.count > 0 {
-                    executeDestinationObservers(getDestination())
+                    executeDestinationObservers(_destination)
                 }
-                
                 dirty = false
             }
         }
+        return _destination
     }
 }
