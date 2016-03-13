@@ -16,7 +16,6 @@
 
 #if os(iOS)
     
-    
     class IMPScrollView: UIScrollView {
         
         override init(frame: CGRect) {
@@ -88,20 +87,124 @@
             set{
                 imageView?.source = newValue
                 scrollView.zoomScale = 1
+                setOrientation(orientation, animate: false)
             }
         }
+
         
-        public var orientation:UIDeviceOrientation {
-            get{
-                return imageView.orientation
+        func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
+            
+            var angle:CGFloat = 0
+            
+            if let orientation = source?.orientation{
+                
+                switch orientation {
+                    
+                case .Left, .LeftMirrored:
+                    angle = Float(90.0).radians.cgloat
+                    
+                case .Right, .RightMirrored:
+                    angle = Float(-90.0).radians.cgloat
+                    
+                case .Down, .DownMirrored:
+                    angle = Float(180.0).radians.cgloat
+                    
+                default: break
+                    
+                }
             }
-            set {
-                imageView.orientation = newValue
+            
+            return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+        }
+        
+        private var currentDeviceOrientation = UIDevice.currentDevice().orientation
+        
+        public var orientation:UIDeviceOrientation{
+            get{
+                return currentDeviceOrientation
+            }
+            set{
+                setOrientation(orientation, animate: false)
             }
         }
         
         public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-            imageView.setOrientation(orientation, animate: animate)
+            currentDeviceOrientation = orientation
+            let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+            
+            UIView.animateWithDuration(
+                duration,
+                delay: 0,
+                usingSpringWithDamping: 1.0,
+                initialSpringVelocity: 0,
+                options: .CurveEaseIn,
+                animations: { () -> Void in
+                    
+                    if let layer = self.imageView.metalLayer {
+                        
+                        var transform = CATransform3DIdentity
+                        
+                        transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                        
+                        var angle:CGFloat = 0
+                        
+                        switch (orientation) {
+                            
+                        case .LandscapeLeft:
+                            angle = Float(-90.0).radians.cgloat
+                            
+                        case .LandscapeRight:
+                            angle = Float(90.0).radians.cgloat
+                            
+                        case .PortraitUpsideDown:
+                            angle = Float(180.0).radians.cgloat
+                            
+                        default:
+                            break
+                        }
+                        
+                        transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                        
+                        layer.transform = self.correctImageOrientation(transform);
+                        
+                        self.updateLayer()
+                    }
+                    
+                },
+                completion:  nil
+            )
+        }
+        
+        internal func updateLayer(){
+            if let l = imageView.metalLayer {
+                var adjustedSize = bounds.size
+                
+                if let t = filter?.destination?.texture{
+                    
+                    l.drawableSize = t.size
+                    
+                    var size:CGFloat!
+                    if UIDeviceOrientationIsLandscape(self.orientation)  {
+                        size = t.width < t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
+                    }
+                    else{
+                        size = t.width > t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+                    }
+                }
+                
+                var origin = CGPointZero
+                if adjustedSize.height < bounds.height {
+                    origin.y = ( bounds.height - adjustedSize.height ) / 2
+                }
+                if adjustedSize.width < bounds.width {
+                    origin.x = ( bounds.width - adjustedSize.width ) / 2
+                }
+                
+                l.frame = CGRect(origin: origin, size: adjustedSize)
+                imageView.layerNeedUpdate = true
+            }
         }
         
         private func configure(){
@@ -120,6 +223,7 @@
             self.addSubview(scrollView)
             
             imageView = IMPView(context: self.context, frame: self.bounds)
+            imageView.updateLayerHandler = updateLayer
             imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             imageView.backgroundColor = IMPColor.clearColor()
             

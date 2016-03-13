@@ -80,7 +80,7 @@ public class IMPHistogramView: IMPView {
     private var _filter:histogramLayerFilter! {
         didSet{
             _filter.addDestinationObserver { (destination) -> Void in
-                self.currentDestination = destination
+                //self.currentDestination = destination
                 self.layerNeedUpdate = true
             }
         }

@@ -24,12 +24,11 @@ import GLKit.GLKMath
 import QuartzCore
 
 
+typealias __IMPViewLayerUpdate = (()->Void)
+
 public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var context:IMPContext!
-    
-    internal var currentDestination:IMPImageProvider? = nil
-    internal var currentDestinationLocked:Bool = false
     
     public var filter:IMPFilter?{
         didSet{
@@ -38,27 +37,18 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 self.filter?.source = s
             }
             
-            filter?.addDestinationObserver(destination: { (destination) -> Void in
-                if !self.currentDestinationLocked {
-                    self.currentDestinationLocked = true
-                    self.currentDestination = destination
-                    self.currentDestinationLocked = false
-                }
-                self.layerNeedUpdate = true
-            })
-            
             filter?.addDirtyObserver({ () -> Void in
-                self.currentDestination = nil
-                self.filter?.context.dirty = true
                 self.layerNeedUpdate = true
             })
         }
     }
     
+    lazy internal var updateLayerHandler:__IMPViewLayerUpdate = {
+        return self.updateLayer
+    }()
+    
     public var source:IMPImageProvider?{
         didSet{
-            
-            currentDestination = nil
             
             if let texture = source?.texture{
                 
@@ -69,30 +59,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if let f = self.filter{
                     f.source = source
                 }
-                
-                #if os(iOS)
-                    orientation = currentDeviceOrientation
-                #endif
-                
-                updateLayer()
-            }
-        }
-    }
-    
-    private var texture:MTLTexture?{
-        get{
-            if let t = currentDestination?.texture{
-                return t
-            }
-            else {
-                if currentDestination == nil  && filter != nil {
-                    if !self.currentDestinationLocked {
-                        self.currentDestinationLocked = true
-                        self.currentDestination = filter?.destination
-                        self.currentDestinationLocked = false
-                    }
-                }
-                return nil
+                updateLayerHandler() //updateLayer()
             }
         }
     }
@@ -103,92 +70,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
-    #if os(iOS)
-    
-    func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
-        
-        var angle:CGFloat = 0
-        
-        if let orientation = source?.orientation{
-            
-            switch orientation {
-                
-            case .Left, .LeftMirrored:
-                angle = Float(90.0).radians.cgloat
-                
-            case .Right, .RightMirrored:
-                angle = Float(-90.0).radians.cgloat
-                
-            case .Down, .DownMirrored:
-                angle = Float(180.0).radians.cgloat
-                
-            default: break
-                
-            }
-        }
-        
-        return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
-    }
-    
-    private var currentDeviceOrientation = UIDevice.currentDevice().orientation
-    
-    public var orientation:UIDeviceOrientation{
-        get{
-            return currentDeviceOrientation
-        }
-        set{
-            setOrientation(orientation, animate: false)
-        }
-    }
-    public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-        currentDeviceOrientation = orientation
-        let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
-        
-        UIView.animateWithDuration(
-            duration,
-            delay: 0,
-            usingSpringWithDamping: 1.0,
-            initialSpringVelocity: 0,
-            options: .CurveEaseIn,
-            animations: { () -> Void in
-                
-                if let layer = self.metalLayer {
-                    
-                    var transform = CATransform3DIdentity
-                    
-                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
-                    
-                    var angle:CGFloat = 0
-                    
-                    switch (orientation) {
-                        
-                    case .LandscapeLeft:
-                        angle = Float(-90.0).radians.cgloat
-                        
-                    case .LandscapeRight:
-                        angle = Float(90.0).radians.cgloat
-                        
-                    case .PortraitUpsideDown:
-                        angle = Float(180.0).radians.cgloat
-                        
-                    default:
-                        break
-                    }
-                    
-                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-                    
-                    layer.transform = self.correctImageOrientation(transform);
-                    
-                    if self.layerNeedUpdate {
-                        self.updateLayer()
-                    }
-                }
-                
-            },
-            completion:  nil
-        )
-    }
-    #endif
     
     public init(context contextIn:IMPContext, frame: NSRect=CGRect(x: 0, y: 0, width: 100, height: 100)) {
         super.init(frame: frame)
@@ -225,7 +106,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    private var originalBounds:CGRect?
+    internal var originalBounds:CGRect?
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
@@ -330,7 +211,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             autoreleasepool({ () -> () in
                 
-                if let actualImageTexture = self.texture {
+                if let actualImageTexture = self.filter?.destination?.texture {
                     
                     if threadGroups == nil {
                         threadGroups = MTLSizeMake(
@@ -339,7 +220,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     }
                     
                     
-                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    //dispatch_async(dispatch_get_main_queue(), { () -> Void in
                         
                         if let drawable = self.metalLayer.nextDrawable(){
                             
@@ -369,7 +250,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         else{
                             self.context.resume()
                         }
-                    })
+                   //})
                 }
             })
         }
@@ -389,23 +270,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     
-    func updateLayer(){
+    internal func updateLayer(){
         if let l = metalLayer {
-            var adjustedSize = bounds.size
+            let adjustedSize = bounds.size
             
-            if let t = texture{
-                
+            if let t = filter?.destination?.texture{
                 l.drawableSize = t.size
-                
-                var size:CGFloat!
-                if UIDeviceOrientationIsLandscape(self.orientation)  {
-                    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
-                }
-                else{
-                    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
-                }
             }
             
             var origin = CGPointZero
@@ -423,19 +293,19 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     override public func layoutSubviews() {
         super.layoutSubviews()
-        updateLayer()
+        updateLayerHandler() //updateLayer()
     }
     
     #else
     
     override public func updateLayer(){
         if let l = metalLayer {
-            if let t = texture{
+            if let t = filter?.destination?.texture{
                 l.drawableSize = t.size
             }
             l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+            layerNeedUpdate = true
         }
-        layerNeedUpdate = true
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
