@@ -206,7 +206,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     internal func refresh() {
         
         if layerNeedUpdate {
-            
+        
             layerNeedUpdate = false
             
             autoreleasepool({ () -> () in

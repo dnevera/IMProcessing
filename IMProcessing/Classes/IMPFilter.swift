@@ -64,10 +64,10 @@ public class IMPFilter: NSObject,IMPContextProvider {
     
     public var dirty:Bool{
         set(newDirty){
+            context.dirty = newDirty
             for f in filterList{
                 f.dirty = newDirty
             }
-            context.dirty = newDirty
             if newDirty == true /*&& context.dirty != true*/ {
                 for o in dirtyHandlers{
                     o()

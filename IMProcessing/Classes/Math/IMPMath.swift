@@ -50,7 +50,7 @@ public extension Float{
     }
     public var int:Int{
         get{
-            return Int(self)
+            return self.isFinite ? Int(self):Int.max
         }
         set(newValue){
             self = Float(newValue)
