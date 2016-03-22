@@ -71,7 +71,7 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                 var bsize:int2 = int2(Int32(forwardWidth),Int32(forwardHeight))
                 memcpy(self.bsizeBuffer!.contents(), &bsize, self.bsizeBuffer!.length)
 
-                context.execute({ (commandBuffer) -> Void in
+                context.execute{ (commandBuffer) -> Void in
                     
                     //
                     // horizontal stage
@@ -121,7 +121,7 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                     
                     commandEncoder.dispatchThreadgroups(threadgroupsY, threadsPerThreadgroup:threadgroupCounts)
                     commandEncoder.endEncoding()
-                })
+                }
                 
                 executeDestinationObservers(_destination)
             }

@@ -329,7 +329,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
     private func applyHsv3DLut(){
         
-        context_hsv3DLut.execute({ (commandBuffer) -> Void in
+        context_hsv3DLut.execute{ (commandBuffer) -> Void in
             
             let width  = self.hsv3DlutTexture!.width
             let height = self.hsv3DlutTexture!.height
@@ -353,7 +353,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
                 blitEncoder.synchronizeResource(self.hsv3DlutTexture!)
                 blitEncoder.endEncoding()
             #endif
-        })
+        }
     }
     
     private var hsv3DlutTexture:MTLTexture?

@@ -82,7 +82,7 @@ public class IMPHistogramZonesSolver: NSObject, IMPHistogramSolver {
     
     public var zones = Zones()
     
-    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzerProtocol, histogram: IMPHistogram, imageSize: CGSize) {
         zones.update(histogram[.W],binCount: histogram.binCount(.W))
     }
 }

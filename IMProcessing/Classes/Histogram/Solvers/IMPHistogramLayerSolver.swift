@@ -76,7 +76,7 @@ public class IMPHistogramLayerSolver: IMPFilter, IMPHistogramSolver {
         self.dirty = true;
     }
     
-    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzerProtocol, histogram: IMPHistogram, imageSize: CGSize) {
         self.histogram = histogram
     }
     

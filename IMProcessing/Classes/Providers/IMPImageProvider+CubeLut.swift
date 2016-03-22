@@ -161,7 +161,7 @@ public extension IMPImageProvider{
         let height = desciption.type == .D1D ? 1: width
         let depth  = desciption.type == .D1D ? 1: width
         
-        let componentBytes = sizeof(UInt8);
+        let componentBytes =  IMProcessing.colors.pixelFormat == .RGBA16Unorm  ? sizeof(UInt16) : sizeof(UInt8)
         
         let bytesPerPixel  = 4 * componentBytes
         let bytesPerRow    = bytesPerPixel * width
@@ -174,7 +174,7 @@ public extension IMPImageProvider{
         textureDescriptor.height = height
         textureDescriptor.depth  = depth
         
-        textureDescriptor.pixelFormat =  .RGBA8Unorm //IMProcessing.colors.pixelFormat;
+        textureDescriptor.pixelFormat =  IMProcessing.colors.pixelFormat // .RGBA8Unorm //IMProcessing.colors.pixelFormat;
         
         textureDescriptor.arrayLength = 1;
         textureDescriptor.mipmapLevelCount = 1;
@@ -253,14 +253,20 @@ public extension IMPImageProvider{
             
             isData = true
             
-            let denom:Float = Float(UInt8.max)
+            let denom:Float = IMProcessing.colors.pixelFormat == .RGBA16Unorm  ? Float(UInt16.max) : Float(UInt8.max)
             
             let rgb    = float3(colors: words)/(description.domainMax.x-description.domainMin.x)*denom
             var color  = float4(rgb:rgb, a: denom)
             
             for i in 0..<4 {
-                var c = UInt8(color[i])
-                dataBytes.appendBytes(&c, length: sizeofValue(c))
+                if IMProcessing.colors.pixelFormat == .RGBA16Unorm {
+                    var c = UInt16(color[i])
+                    dataBytes.appendBytes(&c, length: sizeofValue(c))
+                }
+                else {
+                    var c = UInt8(color[i])
+                    dataBytes.appendBytes(&c, length: sizeofValue(c))
+                }
             }
         }
         

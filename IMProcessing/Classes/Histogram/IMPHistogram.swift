@@ -205,6 +205,22 @@ public class IMPHistogram {
     }
     
     
+    public func updateWithConinuesData(dataIn: UnsafeMutablePointer<UInt32>){
+        self.clearHistogram()
+        let address = UnsafePointer<UInt32>(dataIn)
+        for c in 0..<channels.count{
+            self.updateContinuesData(&channels[c], address: address, index: c)
+        }
+    }
+
+    public func update(red red:[vImagePixelCount], green:[vImagePixelCount], blue:[vImagePixelCount], alpha:[vImagePixelCount]){
+        self.clearHistogram()
+        self.updateChannel(&channels[0], address: UnsafePointer<vImagePixelCount>.init(red),   index: 0)
+        self.updateChannel(&channels[1], address: UnsafePointer<vImagePixelCount>.init(blue),  index: 0)
+        self.updateChannel(&channels[2], address: UnsafePointer<vImagePixelCount>.init(green), index: 0)
+        self.updateChannel(&channels[3], address: UnsafePointer<vImagePixelCount>.init(alpha), index: 0)
+    }
+    
     ///
     /// Текущий CDF (комулятивная функция распределения) гистограммы.
     ///
@@ -451,10 +467,19 @@ public class IMPHistogram {
     private func updateChannel(inout channel:[Float], address:UnsafePointer<UInt32>, index:Int){
         let p = address+Int(self.size)*Int(index)
         let dim = self.dim<1 ? 1 : self.dim;
-        //
-        // ковертим из единственно возможного в текущем MSL (atomic_)[uint] во [float]
-        //
-        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(self.size));
+        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(size))
+    }
+    
+    private func updateChannel(inout channel:[Float], address:UnsafePointer<vImagePixelCount>, index:Int){
+        let p = UnsafePointer<UInt32>(address+Int(self.size)*Int(index))
+        let dim = sizeof(vImagePixelCount)/sizeof(UInt32);
+        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(size));
+    }
+    
+    
+    private func updateContinuesData(inout channel:[Float], address:UnsafePointer<UInt32>, index:Int){
+        let p = address+Int(size)*index
+        vDSP_vfltu32(p, 1, &channel, 1, vDSP_Length(size))
     }
     
     //

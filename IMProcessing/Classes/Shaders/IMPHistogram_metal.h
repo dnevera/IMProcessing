@@ -80,8 +80,7 @@ namespace IMProcessing
             //
             float  isBoxed = coordsIsInsideBox(coords, float2(regionIn.left,regionIn.bottom), float2(1.0-regionIn.right,1.0-regionIn.top));
             return sampledColor(inTexture,scale,gid) * isBoxed;
-        }
-        
+        }        
     }
     
     ///  @brief Compute bin index of a color in input texture.
@@ -117,13 +116,13 @@ namespace IMProcessing
                                            constant float                     &scale     [[ buffer(3)]],
                                            uint  tid      [[thread_index_in_threadgroup]],
                                            uint2 groupid  [[threadgroup_position_in_grid]],
-                                           uint2 groupSize[[threadgroups_per_grid]]
+                                           uint2 gridSize [[threadgroups_per_grid]]
                                            )
     {
         threadgroup atomic_int temp[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
         
-        uint w      = uint(float(inTexture.get_width())*scale)/groupSize.x;
-        uint h      = uint(float(inTexture.get_height())*scale);
+        uint w      = uint(float(inTexture.get_width())*scale)/gridSize.x;
+        uint h      = uint(float(inTexture.get_height())*scale)/gridSize.y;
         uint size   = w*h;
         uint offset = kIMP_HistogramSize;
         
@@ -136,7 +135,7 @@ namespace IMProcessing
         for (uint i=0; i<size; i+=offset){
             
             uint  j = i+tid;
-            uint2 gid(j%w+groupid.x*w,j/w);
+            uint2 gid(j%w+groupid.x*w,j/w+groupid.y*h);
             
             uint4  rgby = IMProcessing::channel_binIndex(inTexture,regionIn,scale,gid);
             
@@ -151,10 +150,60 @@ namespace IMProcessing
         threadgroup_barrier(mem_flags::mem_threadgroup);
         
         for (uint i=0; i<channels; i++){
-            outArray[groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
+            outArray[groupid.y*gridSize.x+groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
+        }
+
+    }
+    
+    
+    ///  @brief Compute bin index of a color in input texture.
+    ///
+    ///  @param inTexture       input texture
+    ///  @param regionIn        idents region which explore for the histogram calculation
+    ///  @param scale           scale factor
+    ///  @param gid             position thread in grrid, equal x,y coordiant position of pixel in texure
+    ///
+    ///  @return bin index
+    ///
+    typedef struct {
+        atomic_uint channels[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
+    }IMPHistogramAtomicBuffer;
+    
+    kernel void kernel_impHistogramAtomic(
+                                          texture2d<float, access::sample>   inTexture  [[texture(0)]],
+                                          device IMPHistogramAtomicBuffer    &out       [[ buffer(0)]],
+                                          constant uint                      &channels  [[ buffer(1)]],
+                                          constant IMPCropRegion             &regionIn  [[ buffer(2)]],
+                                          constant float                     &scale     [[ buffer(3)]],
+                                          uint2 gid [[thread_position_in_grid]]
+                                          )
+    {
+        constexpr float3 Im(kIMP_HistogramSize - 1);
+        float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
+        uint   Y   = uint(dot(inColor.rgb,kIMP_Y_YCbCr_factor) * inColor.a * Im.x);
+        uint4  rgby(uint3(inColor.rgb * Im), Y);
+        
+        if (inColor.a>0){
+            for (uint i=0; i<channels; i++){
+                atomic_fetch_add_explicit(&out.channels[i][rgby[i]], 1, memory_order_relaxed);
+            }
         }
     }
     
+    kernel void kernel_impHistogramVImage(
+                                          texture2d<float, access::sample>  inTexture  [[texture(0)]],
+                                          texture2d<float, access::write>  outTexture  [[texture(1)]],
+                                          constant IMPCropRegion           &regionIn   [[ buffer(0)]],
+                                          constant float                   &scale      [[ buffer(1)]],
+                                          uint2 gid [[thread_position_in_grid]]
+                                          )
+    {
+        float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
+        float   Y   = dot(inColor.rgb,kIMP_Y_YCbCr_factor) * inColor.a;
+        float4  rgby(inColor.rgb, Y);
+        outTexture.write(rgby,gid);
+    }
+
     inline void circle_bin_positionPartial(float3 hsv,
                                            device IMPHistogramBuffer *outArray,
                                            constant IMPColorWeightsClipping   &clipping,
@@ -240,13 +289,13 @@ namespace IMProcessing
                                               constant IMPColorWeightsClipping   &clipping  [[ buffer(4)]],
                                               uint  tid      [[thread_index_in_threadgroup]],
                                               uint2 groupid  [[threadgroup_position_in_grid]],
-                                              uint2 groupSize[[threadgroups_per_grid]]
+                                              uint2 gridSize [[threadgroups_per_grid]]
                                               )
     {
         threadgroup atomic_int temp[kIMP_HistogramMaxChannels][kIMP_HistogramSize];
         
-        uint w      = uint(float(inTexture.get_width())*scale)/groupSize.x;
-        uint h      = uint(float(inTexture.get_height())*scale);
+        uint w      = uint(float(inTexture.get_width())*scale)/gridSize.x;
+        uint h      = uint(float(inTexture.get_height())*scale)/gridSize.y;
         uint size   = w*h;
         uint offset = kIMP_HistogramSize;
         
@@ -259,7 +308,7 @@ namespace IMProcessing
         for (uint i=0; i<size; i+=offset){
             
             uint  j = i+tid;
-            uint2 gid(j%w+groupid.x*w,j/w);
+            uint2 gid(j%w+groupid.x*w,j/w+groupid.y*h);
             
             uint4  rgby = IMProcessing::channel_binIndex(inTexture,regionIn,scale,gid);
             
@@ -279,7 +328,7 @@ namespace IMProcessing
         threadgroup_barrier(mem_flags::mem_threadgroup);
         
         for (uint i=0; i<channels; i++){
-            outArray[groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
+            outArray[groupid.y*gridSize.x+groupid.x].channels[i][tid]=atomic_load_explicit(&(temp[i][tid]), memory_order_relaxed);
         }
     }
     

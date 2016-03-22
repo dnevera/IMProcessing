@@ -13,6 +13,44 @@ import SnapKit
 let TEST_CAMERA = true
 let BLUR_FILTER = false
 
+
+class IMPTestFilter: IMPFilter {
+    
+    var rangeSolver = IMPHistogramRangeSolver()
+    var contrast:IMPContrastFilter!
+    var histogram:IMPHistogramAnalyzer!
+    
+    required init(context: IMPContext) {
+        super.init(context: context)
+        
+        histogram = IMPHistogramAnalyzer(context: context, hardware: .GPU)
+        
+        histogram.downScaleFactor = 0.5
+        
+        rangeSolver.clipping.shadows = 0.1
+        rangeSolver.clipping.highlights = 0.1
+        
+        histogram.addSolver(rangeSolver)
+        
+        histogram.addUpdateObserver { (histogram) -> Void in
+            self.contrast.adjustment.minimum = self.rangeSolver.minimum
+            self.contrast.adjustment.maximum = self.rangeSolver.maximum
+        }
+        
+        contrast = IMPContrastFilter(context: context)
+        
+        contrast.addSourceObserver { (source) -> Void in
+            //let t1 = NSDate.timeIntervalSinceReferenceDate()
+            self.histogram.source = source
+            //let t2 = NSDate.timeIntervalSinceReferenceDate()
+            //print(" hist\(self.histogram.hardware) time = \(t2-t1)")
+        }
+        
+        addFilter(contrast)
+    }
+}
+
+
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
     
     var cameraManager:IMPCameraManager!
@@ -20,45 +58,36 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     var imageView:IMPImageView!
     var blur:IMPGaussianBlurFilter!
-    var hsv:IMPHSVFilter!
+    var test:IMPTestFilter!
     
     var filter:IMPFilter?
-    
-    //var filter: IMPLutFilter!
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         self.view.backgroundColor = IMProcessing.css.background
+
+        let context = IMPContext(lazy: true)
         
+        if BLUR_FILTER {
+            blur = IMPGaussianBlurFilter(context: context)
+            filter = blur
+        }
+        else{
+            test = IMPTestFilter(context: context)
+            filter = test
+        }
+        
+
         if !TEST_CAMERA {
-            imageView = IMPImageView(frame: CGRectMake( 0, 20,
+            imageView = IMPImageView(context: (filter?.context)!,  frame: CGRectMake( 0, 20,
                 self.view.bounds.size.width,
                 self.view.bounds.size.height*3/4
                 ))
             self.view.insertSubview(imageView, atIndex: 0)
             
-            if BLUR_FILTER {
-                blur = IMPGaussianBlurFilter(context: imageView.context)
-                filter = blur
-            }
-            else{
-                hsv = IMPHSVFilter(context: imageView.context, optimization: .NORMAL)
-                filter = hsv
-            }
-            
             imageView.filter = filter
-            
-            //            do {
-            //                var description = IMPImageProvider.LutDescription()
-            //                let lutProvider = try IMPImageProvider(context: imageView.context, cubeName: "A25_B&W", description: &description)
-            //                filter = IMPLutFilter(context: imageView.context, lut: lutProvider, description: description)
-            //                imageView.filter = filter
-            //            }
-            //            catch let error as NSError {
-            //                print("error: \(error)")
-            //            }
         }
         else {
             containerView = UIView(frame: CGRectMake( 0, 20,
@@ -69,15 +98,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             
             cameraManager = IMPCameraManager(containerView: containerView)
-            
-            if BLUR_FILTER {
-                blur = IMPGaussianBlurFilter(context: cameraManager.context)
-                filter = blur
-            }
-            else{
-                hsv = IMPHSVFilter(context: cameraManager.context, optimization: .HIGH)
-                filter = hsv
-            }
             
             cameraManager.liveView.filter = filter
             
@@ -113,7 +133,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         albumButton.backgroundColor = IMPColor.clearColor()
         albumButton.tintColor = IMPColor.whiteColor()
         albumButton.setImage(IMPImage(named: "select-photos"), forState: .Normal)
-        albumButton.addTarget(self, action: "openAlbum:", forControlEvents: .TouchUpInside)
+        albumButton.addTarget(self, action: #selector(ViewController.openAlbum(_:)), forControlEvents: .TouchUpInside)
         view.addSubview(albumButton)
         
         albumButton.snp_makeConstraints { (make) -> Void in
@@ -123,7 +143,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 
         let slider = UISlider()
         slider.value = 0
-        slider.addTarget(self, action: "changeValue:", forControlEvents: .ValueChanged)
+        slider.addTarget(self, action: #selector(ViewController.changeValue(_:)), forControlEvents: .ValueChanged)
         view.addSubview(slider)
         
         slider.snp_makeConstraints { (make) -> Void in
@@ -153,7 +173,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 self.blur.radius = (128 * sender.value).int
             }
             else{
-                self.hsv.adjustment.greens.hue = (sender.value - 0.5) * 2
+                //self.hsv.adjustment.greens.hue = (sender.value - 0.5) * 2
+                self.test.contrast.adjustment.blending.opacity = sender.value
             }
         }
     }
@@ -181,7 +202,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         if let actualImage = chosenImage{
             
-            let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 0)
+            let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1500)
             imageView?.source = image
         }
     }

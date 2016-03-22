@@ -12,23 +12,85 @@
     import Cocoa
 #endif
 
+import Accelerate
+
+///
+/// Histogram updates handler.
+///
 public typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
 
 ///
-/// Протокол солверов статистики гистограммы. Солверами будем решать конкретные задачи обработки данных прилетевших в контейнер.
+/// Hardware uses to compute histogram.
+///
+public enum IMPHistogramAnalizerHardware {
+    case GPU
+    case DSP
+}
+
+///
+/// Common protocol defines histogram class API.
+///
+public protocol IMPHistogramAnalyzerProtocol:NSObjectProtocol,IMPFilterProtocol {
+    
+    var hardware:IMPHistogramAnalizerHardware {get}
+    var histogram:IMPHistogram {get set}
+    var downScaleFactor:Float! {get set}
+    var region:IMPCropRegion!  {get set}
+    
+    func addSolver(solver:IMPHistogramSolver)
+    func addUpdateObserver(observer:IMPAnalyzerUpdateHandler)
+    
+}
+
+///
+/// Histogram solvers protocol. Solvers define certain computations to calculate measurements metrics such as:
+/// 1. histogram range (dynamic range)
+/// 2. get peaks and valyes
+/// 3. ... etc
 ///
 public protocol IMPHistogramSolver {
-    func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize);
+    func analizerDidUpdate(analizer: IMPHistogramAnalyzerProtocol, histogram: IMPHistogram, imageSize: CGSize);
 }
 
 
+public extension IMPHistogramAnalyzerProtocol {
+    public func setCenterRegionInPercent(value:Float){
+        let half = value/2.0
+        region = IMPCropRegion(top:    0.5 - half,
+                               right:  1.0 - (0.5+half),
+                               left:   0.5 - half,
+                               bottom: 1.0 - (0.5+half)
+        )
+    }
+}
+
+
+extension IMPContext {
+    func hasFastAtomic() -> Bool {
+        #if os(iOS)
+            return self.device.supportsFeatureSet(.iOS_GPUFamily2_v1)
+        #else
+            return false
+        #endif
+    }
+}
+
 ///
-/// Базовый анализатор гистограммы четырех канальной гистограммы.
+/// Histogram analizer uses to create IMPHistogram object from IMPImageProvider source.
 ///
-public class IMPHistogramAnalyzer: IMPFilter {
+public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     
     ///
-    /// Тут храним наши вычисленные распределения поканальных интенсивностей.
+    /// Defines wich hardware uses to compute final histogram.
+    /// DSP is faster but needs memory twice, GPU is slower but doesn't additanal memory.
+    ///
+    public var hardware:IMPHistogramAnalizerHardware {
+        return _hardware
+    }
+    var _hardware:IMPHistogramAnalizerHardware!
+    
+    ///
+    /// Histogram
     ///
     public var histogram = IMPHistogram(){
         didSet{
@@ -75,15 +137,6 @@ public class IMPHistogramAnalyzer: IMPFilter {
     }
     internal var regionUniformBuffer:MTLBuffer!
     
-    public func setCenterRegionInPercent(value:Float){
-        var r = IMPCropRegion()
-        r.left   = 0.5-value/2.0
-        r.top    = 0.5-value/2.0
-        r.right  = 1.0-(0.5+value/2.0)
-        r.bottom = 1.0-(0.5+value/2.0)
-        region = r
-    }
-    
     ///
     /// Кernel-функция счета
     ///
@@ -105,7 +158,7 @@ public class IMPHistogramAnalyzer: IMPFilter {
     // 2. GPU:kernel:сборка частичных гистограмм в глобальную блочную память группы
     // 3. CPU/DSP:сборка групп гистограм в финальную из частичных блочных
     //
-    private var threadgroups = MTLSizeMake(1,1,1)
+    private var threadgroups = MTLSizeMake(8,8,1)
     
     ///
     /// Конструктор анализатора с произвольным счетчиком, который
@@ -113,17 +166,23 @@ public class IMPHistogramAnalyzer: IMPFilter {
     /// как контейнером данных гистограммы.
     ///
     ///
-    public init(context: IMPContext, function: String) {
+    public init(context: IMPContext, function: String, hardware:IMPHistogramAnalizerHardware = .GPU) {
         super.init(context: context)
-        
+
+        _hardware = hardware
+
         // инициализируем счетчик
         _kernel = IMPFunction(context: self.context, name:function)
         
-        let groups = kernel.pipeline!.maxTotalThreadsPerThreadgroup/histogram.size
-        
-        threadgroups = MTLSizeMake(groups,1,1)
-        
-        histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer) * Int(groups), options: .CPUCacheModeDefaultCache)
+        if context.hasFastAtomic() || hardware == .DSP
+        {
+            histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer), options: MTLResourceOptions.CPUCacheModeDefaultCache)
+        }
+        else {
+            let groups = kernel.pipeline!.maxTotalThreadsPerThreadgroup/histogram.size
+            threadgroups = MTLSizeMake(groups,groups,1)
+            histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramBuffer) * Int(threadgroups.width*threadgroups.height), options: .CPUCacheModeDefaultCache)
+        }
         
         defer{
             region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
@@ -132,8 +191,22 @@ public class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
+    convenience public init(context: IMPContext, hardware:IMPHistogramAnalizerHardware) {
+        if hardware == .GPU {
+            if context.hasFastAtomic() {
+                self.init(context:context, function: "kernel_impHistogramAtomic", hardware: hardware)
+            }
+            else {
+                self.init(context:context, function: "kernel_impHistogramPartial", hardware: hardware)
+            }
+        }
+        else {
+            self.init(context:context, function: "kernel_impHistogramVImage", hardware: hardware)
+        }
+    }
+    
     convenience required public init(context: IMPContext) {
-        self.init(context:context, function: "kernel_impHistogramPartial")
+        self.init(context:context, hardware: .GPU)
     }
     
     ///
@@ -167,61 +240,185 @@ public class IMPHistogramAnalyzer: IMPFilter {
         }
     }
     
-    internal func apply(texture:MTLTexture, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
-        autoreleasepool { () -> () in
-            self.context.execute { (commandBuffer) -> Void in
-                //
-                // Обнуляем входной буфер
-                //
-                #if os(iOS)
-                    let blitEncoder = commandBuffer.blitCommandEncoder()
-                    blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-                    blitEncoder.endEncoding()
-                #else
-                    memset(buffer.contents(), 0, buffer.length)
-                #endif
-                
-                let commandEncoder = commandBuffer.computeCommandEncoder()
-                
-                //
-                // Создаем вычислительный пайп
-                //
-                commandEncoder.setComputePipelineState(self.kernel.pipeline!);
-                commandEncoder.setTexture(texture, atIndex:0)
-                commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
-                commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
-                commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
-                commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
-                
-                self.configure(self.kernel, command: commandEncoder)
-                
-                //
-                // Запускаем вычисления
-                //
-                commandEncoder.dispatchThreadgroups(self.threadgroups, threadsPerThreadgroup:threadgroupCounts);
-                commandEncoder.endEncoding()
-            }
+    func applyKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer, commandBuffer:MTLCommandBuffer) {
+        #if os(iOS)
+            let blitEncoder = commandBuffer.blitCommandEncoder()
+            blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
+            blitEncoder.endEncoding()
+        #else
+            memset(buffer.contents(), 0, buffer.length)
+        #endif
+        
+        let commandEncoder = commandBuffer.computeCommandEncoder()
+        
+        //
+        // Создаем вычислительный пайп
+        //
+        commandEncoder.setComputePipelineState(self.kernel.pipeline!);
+        commandEncoder.setTexture(texture, atIndex:0)
+        commandEncoder.setBuffer(buffer, offset:0, atIndex:0)
+        commandEncoder.setBuffer(self.channelsToComputeBuffer,offset:0, atIndex:1)
+        commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:2)
+        commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:3)
+        
+        self.configure(self.kernel, command: commandEncoder)
+        
+        //
+        // Запускаем вычисления
+        //
+        commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts);
+        commandEncoder.endEncoding()
+    }
+    
+    func applyPartialKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
+        self.context.execute(complete: true) { (commandBuffer) -> Void in
+            self.applyKernel(texture,
+                threadgroups: threadgroups,
+                threadgroupCounts: threadgroupCounts,
+                buffer: buffer,
+                commandBuffer: commandBuffer)
         }
+        histogram.update(data:histogramUniformBuffer.contents(), dataCount: threadgroups.width*threadgroups.height)
+    }
+    
+    func applyAtomicKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
+        context.execute(complete: true) { (commandBuffer) in
+            self.applyKernel(texture,
+                threadgroups: threadgroups,
+                threadgroupCounts: threadgroupCounts,
+                buffer: buffer,
+                commandBuffer: commandBuffer)
+        }
+        histogram.update(data: buffer.contents())
+    }
+    
+    private var analizeTexture:MTLTexture?
+    private var imageBuffer:MTLBuffer?
+    
+    func applyVImageKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
+        context.execute(complete: true) { (commandBuffer) in
+            
+            let width  = Int(floor(Float(texture.width) * self.downScaleFactor))
+            let height = Int(floor(Float(texture.height) * self.downScaleFactor))
+            
+            if self.analizeTexture?.width != width || self.analizeTexture?.height != height {
+                let textureDescription = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+                    texture.pixelFormat,
+                    width: width,
+                    height:height, mipmapped: false)
+                self.analizeTexture = self.context.device.newTextureWithDescriptor(textureDescription)
+            }
+            
+            let commandEncoder = commandBuffer.computeCommandEncoder()
+            
+            commandEncoder.setComputePipelineState(self.kernel.pipeline!);
+            commandEncoder.setTexture(texture, atIndex:0)
+            commandEncoder.setTexture(self.analizeTexture, atIndex:1)
+            commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:0)
+            commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:1)
+            
+            commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts);
+            commandEncoder.endEncoding()
+            
+            let imageBufferSize = width*height*4
+            if self.imageBuffer?.length != imageBufferSize {
+                self.imageBuffer = self.context.device.newBufferWithLength( imageBufferSize, options: MTLResourceOptions.CPUCacheModeDefaultCache)
+            }
+            
+            let blitEncoder = commandBuffer.blitCommandEncoder()
+            
+            blitEncoder.copyFromTexture(self.analizeTexture!,
+                sourceSlice: 0,
+                sourceLevel: 0,
+                sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                sourceSize: MTLSize(width: self.analizeTexture!.width, height: self.analizeTexture!.height, depth: 1),
+                toBuffer: self.imageBuffer!,
+                destinationOffset: 0,
+                destinationBytesPerRow: width*4,
+                destinationBytesPerImage: 0)
+            blitEncoder.endEncoding()
+        }
+        
+        var vImage = vImage_Buffer(
+            data: (imageBuffer?.contents())!,
+            height: vImagePixelCount(analizeTexture!.height),
+            width: vImagePixelCount(analizeTexture!.width),
+            rowBytes: analizeTexture!.width*4)
+        
+        let red   = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
+        let green = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
+        let blue  = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
+        let alpha = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
+        
+        let redPtr   = UnsafeMutablePointer<vImagePixelCount>(red)
+        let greenPtr = UnsafeMutablePointer<vImagePixelCount>(green)
+        let bluePtr  = UnsafeMutablePointer<vImagePixelCount> (blue)
+        let alphaPtr = UnsafeMutablePointer<vImagePixelCount>(alpha)
+        
+        let rgba = [redPtr, greenPtr, bluePtr, alphaPtr]
+        
+        let hist = UnsafeMutablePointer<UnsafeMutablePointer<vImagePixelCount>>(rgba)
+        vImageHistogramCalculation_ARGB8888(&vImage, hist, 0)
+        
+        histogram.update(red: red, green: green, blue: blue, alpha: alpha)
+    }
+    
+    public func executeSolverObservers(texture:MTLTexture) {
+        for s in solvers {
+            let size = CGSizeMake(CGFloat(texture.width), CGFloat(texture.height))
+            s.analizerDidUpdate(self, histogram: self.histogram, imageSize: size)
+        }
+        
+        for o in analizerUpdateHandlers{
+            o(histogram: histogram)
+        }
+    }
+    
+    func computeOptions(texture:MTLTexture) -> (MTLSize,MTLSize) {
+        let width  = Int(floor(Float(texture.width) * self.downScaleFactor))
+        let height = Int(floor(Float(texture.height) * self.downScaleFactor))
+        
+        let threadgroupCounts = MTLSizeMake(Int(self.kernel.groupSize.width), Int(self.kernel.groupSize.height), 1)
+        
+        let threadgroups = MTLSizeMake(
+            (width  +  threadgroupCounts.width ) / threadgroupCounts.width ,
+            (height + threadgroupCounts.height) / threadgroupCounts.height,
+            1)
+        
+        return (threadgroups,threadgroupCounts)
     }
     
     public override func apply() -> IMPImageProvider {
         
         if let texture = source?.texture{
-            apply(
-                texture,
-                threadgroupCounts: MTLSizeMake(histogram.size, 1, 1),
-                buffer: histogramUniformBuffer)
             
-            histogram.update(data:histogramUniformBuffer.contents(), dataCount: threadgroups.width)
-            
-            for s in solvers {
-                let size = CGSizeMake(CGFloat(texture.width), CGFloat(texture.height))
-                s.analizerDidUpdate(self, histogram: self.histogram, imageSize: size)
+            if hardware == .GPU {
+                
+                if context.hasFastAtomic() {
+                    let (threadgroups,threadgroupCounts) = computeOptions(texture)
+                    applyAtomicKernel(texture,
+                                      threadgroups: threadgroups,
+                                      threadgroupCounts: threadgroupCounts,
+                                      buffer: histogramUniformBuffer)
+                }
+                else {
+                    applyPartialKernel(
+                        texture,
+                        threadgroups: threadgroups,
+                        threadgroupCounts: MTLSizeMake(histogram.size, 1, 1),
+                        buffer: histogramUniformBuffer)
+                }
+            }
+                
+            else if hardware == .DSP {
+                let (threadgroups,threadgroupCounts) = computeOptions(texture)
+                applyVImageKernel(texture,
+                                  threadgroups: threadgroups,
+                                  threadgroupCounts: threadgroupCounts,
+                                  buffer: histogramUniformBuffer)
             }
             
-            for o in analizerUpdateHandlers{
-                o(histogram: histogram)
-            }
+            executeSolverObservers(texture)
         }
         
         return source!

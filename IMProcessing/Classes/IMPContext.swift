@@ -1,4 +1,4 @@
-//
+    //
 //  IMPContext.swift
 //  IMProcessing
 //
@@ -116,7 +116,7 @@ public class IMPContext {
         }
     }
     
-    lazy var supportsGPUv2:Bool = {
+    public lazy var supportsGPUv2:Bool = {
         #if os(iOS)
             return self.device.supportsFeatureSet(.iOS_GPUFamily2_v1)
         #else
@@ -125,17 +125,17 @@ public class IMPContext {
     }()
     
     var commandBuffer:MTLCommandBuffer?  {
-        return self.commandQueue?.commandBuffer()
-//            (self.supportsGPUv2 ?
-//            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
-//            self.commandQueue?.commandBuffer())
+        return
+            (self.supportsGPUv2 ?
+            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
+            self.commandQueue?.commandBuffer())
     }
     
     ///  The main idea context execution: all filters should put commands in context queue within the one execution.
     ///
     ///  - parameter closure: execution context
     ///
-    public final func execute(closure: IMPContextExecution) {
+    public final func execute(complete complete :Bool = false, closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
             
             if let commandBuffer = self.commandBuffer {
@@ -143,7 +143,7 @@ public class IMPContext {
                 closure(commandBuffer: commandBuffer)
                 commandBuffer.commit()
                 
-                if self.isLasy == false {
+                if !self.isLasy || complete {
                     commandBuffer.waitUntilCompleted()
                 }
             }
@@ -154,12 +154,12 @@ public class IMPContext {
     public static var maximumTextureSize:Int{
         
         set(newMaximumTextureSize){
-        IMPContext.sharedContainer.currentMaximumTextureSize = 0
-        var size = IMPContext.sharedContainer.deviceMaximumTextureSize()
-        if newMaximumTextureSize <= size {
-        size = newMaximumTextureSize
-        }
-        IMPContext.sharedContainer.currentMaximumTextureSize = size
+            IMPContext.sharedContainer.currentMaximumTextureSize = 0
+            var size = IMPContext.sharedContainer.deviceMaximumTextureSize()
+            if newMaximumTextureSize <= size {
+                size = newMaximumTextureSize
+            }
+            IMPContext.sharedContainer.currentMaximumTextureSize = size
         }
         
         get {
@@ -170,7 +170,6 @@ public class IMPContext {
                 return IMPContext.sharedContainer.deviceMaximumTextureSize()
             }
         }
-        
     }
     
     ///  Get texture size alligned to maximum size which is suported by the current device

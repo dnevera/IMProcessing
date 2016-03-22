@@ -17,7 +17,14 @@ public typealias IMPFilterSourceHandler = ((source:IMPImageProvider) -> Void)
 public typealias IMPFilterDestinationHandler = ((destination:IMPImageProvider) -> Void)
 public typealias IMPFilterDirtyHandler = (() -> Void)
 
-public class IMPFilter: NSObject,IMPContextProvider {
+public protocol IMPFilterProtocol:IMPContextProvider {
+    var source:IMPImageProvider? {get set}
+    var destination:IMPImageProvider? {get}
+    var dirty:Bool {get set}    
+    func apply() -> IMPImageProvider
+}
+
+public class IMPFilter: NSObject,IMPFilterProtocol {
     
     public var context:IMPContext!
     
@@ -192,7 +199,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                 
                 if functionList.count > 0 {
                     
-                    self.context.execute({ (commandBuffer) -> Void in
+                    self.context.execute() { (commandBuffer) -> Void in
                         
                         autoreleasepool({ () -> () in
                             
@@ -273,10 +280,10 @@ public class IMPFilter: NSObject,IMPContextProvider {
                             
                             inputTexture = nil
                         })
-                    })
+                    }
                 }
                 else {
-                    self.context.execute({ (commandBuffer) -> Void in
+                    self.context.execute { (commandBuffer) -> Void in
                         autoreleasepool({ () -> () in
                             let inputTexture:MTLTexture! = self.source!.texture
                             let width  = inputTexture.width
@@ -300,7 +307,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                 toTexture: self._destination.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
                             blit.endEncoding()
                         })
-                    })
+                    }
                 }
                 
                 if filterList.count > 0 {
@@ -332,7 +339,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                         self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
                     }
                     
-                    self.context.execute({ (commandBuffer) -> Void in
+                    self.context.execute{ (commandBuffer) -> Void in
                         autoreleasepool({ () -> () in
                             let blit = commandBuffer.blitCommandEncoder()
                             blit.copyFromTexture(
@@ -344,7 +351,7 @@ public class IMPFilter: NSObject,IMPContextProvider {
                                 toTexture: self._destination.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
                             blit.endEncoding()
                         })
-                    })
+                    }
                     
                     executeDestinationObservers(_destination)
                 }

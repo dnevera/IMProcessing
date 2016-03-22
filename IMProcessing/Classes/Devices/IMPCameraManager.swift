@@ -33,7 +33,7 @@
         ///
         ///  - parameter containerView: container view contains live view window
         ///
-        public init(containerView:UIView) {
+        public init(containerView:UIView, context:IMPContext? = nil) {
             
             super.init()
             
@@ -42,9 +42,14 @@
                 
                 var _context:IMPContext!
                 
-                dispatch_sync(sessionQueue, { () -> Void in
-                    _context = IMPContext(lazy: true)
-                })
+                if context == nil {
+                    dispatch_sync(sessionQueue, { () -> Void in
+                        _context = IMPContext(lazy: true)
+                    })
+                }
+                else {
+                    _context = context
+                }
                 
                 self.liveView = IMPView(context: _context)
                 self.liveView.frame = containerView.bounds
