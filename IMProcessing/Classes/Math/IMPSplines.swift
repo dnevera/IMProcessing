@@ -73,7 +73,7 @@ public extension CollectionType where Generator.Element == Float {
         var F = [Float](count: count, repeatedValue: 0)
         var G = [Float](count: count, repeatedValue: 0)
         
-        for var i=0; i<count; i++ {
+        for i in 0 ..< count {
             X[i]=points[i].x
             Y[i]=points[i].y
         }
@@ -92,7 +92,8 @@ public extension CollectionType where Generator.Element == Float {
         // Slopes here are a weighted average of the slopes
         // to each of the adjcent control points.
         
-        for j = start + 2; j < end; ++j {
+        //for j = start + 2; j < end; j += 1 {
+        for j in (start + 2)  ..< end {
             
             let C =  X[j] - X[j-1]
             let D = (Y[j] - Y[j-1]) / C
@@ -113,7 +114,8 @@ public extension CollectionType where Generator.Element == Float {
             G [start] = 0.75 * (S [start] + S [start+1])
             G [end-1] = 0.75 * (S [end-2] + S [end-1])
             
-            for j = start+1; j < end - 1; ++j {
+            //for j = start+1; j < end - 1; j += 1 {
+            for j in (start+1) ..< (end-1) {
                 
                 A = (X [j+1] - X [j-1]) * 2.0
                 
@@ -123,7 +125,8 @@ public extension CollectionType where Generator.Element == Float {
                 
             }
             
-            for j = start+1; j < end; ++j {
+            //for j = start+1; j < end; j += 1 {
+            for j in (start+1) ..< end {
                 
                 A = 1.0 - F [j-1] * E [j]
                 
@@ -133,11 +136,13 @@ public extension CollectionType where Generator.Element == Float {
                 
             }
             
-            for j = end - 2; j >= start; --j {
+            for j = end - 2; j >= start; j -= 1 {
+            //for j = end - 2; j >= start; j -= 1 {
                 G [j] = G [j] - F [j] * G [j+1]
             }
             
-            for j = start; j < end; ++j {
+            //for j = start; j < end; j += 1 {
+            for j in start ..< end {
                 S [j] = G [j]
             }
         }
@@ -366,8 +371,9 @@ public struct IMPMatrix3D{
         var yi = 0
         for y in points[1] {
             var row = (y,z:[Float]())
-            for var xi = 0; xi < columns.count; xi++ {
-                row.z.append(zMatrix[yi++])
+            for _ in 0 ..< columns.count {
+                row.z.append(zMatrix[yi])
+                yi += 1
             }
             rows.append(row)
         }
@@ -377,14 +383,14 @@ public struct IMPMatrix3D{
         get{
             var s = String("[")
             var i=0
-            for var yi=0; yi<rows.count; yi++ {
+            for yi in 0 ..< rows.count {
                 let row = rows[yi]
                 var ci = 0
                 for obj in row.z {
                     if i>0 {
                         s += ""
                     }
-                    i++
+                    i += 1
                     s += String(format: "%2.4f", obj)
                     if i<rows.count*columns.count {
                         if ci<self.columns.count-1 {
@@ -394,7 +400,7 @@ public struct IMPMatrix3D{
                             s += ";"
                         }
                     }
-                    ci++
+                    ci += 1
                 }
                 if (yi<rows.count-1){
                     s += "\n"
@@ -424,11 +430,11 @@ public extension CollectionType where Generator.Element == [Float] {
         // y-z
         //
         var ysplines = [Float]()
-        for var i=0; i < controlPoints.columns.count; i++ {
+        for i in 0 ..< controlPoints.columns.count {
             
             var points = [float2]()
             
-            for var yi=0; yi < controlPoints.rows.count; yi++ {
+            for yi in 0 ..< controlPoints.rows.count {
                 let y = controlPoints.rows[yi].y
                 let z = controlPoints.rows[yi].z[i]
                 points.append(float2(y,z))
@@ -443,11 +449,11 @@ public extension CollectionType where Generator.Element == [Float] {
         //
         // x-y-z
         //
-        for var i=0; i < yPoints.count; i++ {
+        for i in 0 ..< yPoints.count {
             
             var points = [float2]()
             
-            for var xi=0; xi<controlPoints.columns.count; xi++ {
+            for xi in 0 ..< controlPoints.columns.count {
                 let x = controlPoints.columns[xi]
                 let y = z.rows[xi].z[i]
                 points.append(float2(x,y))

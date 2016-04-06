@@ -37,7 +37,7 @@ public extension Int {
                     
                     var retVal = [Float]()
                     
-                    for var i = 0; i < size; i++ {
+                    for i in 0 ..< size {
                         retVal.append(kernel[i])
                     }
                     return retVal
@@ -71,7 +71,7 @@ public extension Float {
         let mean      = Float(size/2)
         var sum:Float = 0.0
         
-        for var x = 0; x < size; ++x {
+        for var x = 0; x < size; x += 1 {
             kernel[x] = sqrt( exp( -0.5 * (pow((x.float-mean)/sigma, 2.0) + pow((mean)/sigma,2.0)) )
                 / (M_2_PI.float * sigma * sigma) )
             sum += kernel[x]

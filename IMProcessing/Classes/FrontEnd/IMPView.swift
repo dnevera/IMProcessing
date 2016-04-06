@@ -17,7 +17,7 @@
     import AppKit
     public typealias IMPViewBase = NSView
     public typealias IMPDragOperationHandler = ((files:[String]) -> Bool)
-
+    
 #endif
 import Metal
 import GLKit.GLKMath
@@ -26,16 +26,36 @@ import QuartzCore
 
 typealias __IMPViewLayerUpdate = (()->Void)
 
+
+/// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
+
+    //typealias viewReadyHandlerType = (()->Void)
     
+    /// Current Metal device context
     public var context:IMPContext!
     
+    /// Current image filter
     public var filter:IMPFilter?{
         didSet{
             
-            if let s = self.source{
-                self.filter?.source = s
-            }
+//            if let s = self.source{
+//                self.filter?.source = s
+//            }
+            
+            filter?.addNewSourceObserver(source: { (source) in
+                
+                //self.layerNeedUpdate = true
+
+                if let texture = self.filter?.source?.texture{
+                    
+                    self.threadGroups = MTLSizeMake(
+                        (texture.width+self.threadGroupCount.width)/self.threadGroupCount.width,
+                        (texture.height+self.threadGroupCount.height)/self.threadGroupCount.height, 1)
+                    
+                    self.updateLayerHandler()
+                }
+            })
             
             filter?.addDirtyObserver({ () -> Void in
                 self.layerNeedUpdate = true
@@ -47,22 +67,23 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         return self.updateLayer
     }()
     
-    public var source:IMPImageProvider?{
-        didSet{
-            
-            if let texture = source?.texture{
-                
-                threadGroups = MTLSizeMake(
-                    (texture.width+threadGroupCount.width)/threadGroupCount.width,
-                    (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
-                
-                if let f = self.filter{
-                    f.source = source
-                }
-                updateLayerHandler()
-            }
-        }
-    }
+    
+//    public var source:IMPImageProvider?{
+//        didSet{
+//            
+//            if let texture = source?.texture{
+//                
+//                threadGroups = MTLSizeMake(
+//                    (texture.width+threadGroupCount.width)/threadGroupCount.width,
+//                    (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
+//                
+//                if let f = self.filter{
+//                    f.source = source
+//                }
+//                updateLayerHandler()
+//            }
+//        }
+//    }
     
     public var isPaused:Bool = false {
         didSet{
@@ -156,7 +177,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if timer != nil {
                     timer.removeFromRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
                 }
-                timer = CADisplayLink(target: self, selector: "refresh")
+                timer = CADisplayLink(target: self, selector: #selector(IMPView.refresh))
             #else
                 timer = IMPDisplayLink.sharedInstance
                 timer?.addView(self)
@@ -173,7 +194,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     deinit{
         #if os(OSX)
-        timer?.removeView(self)
+            timer?.removeView(self)
         #endif
     }
     
@@ -194,7 +215,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var scaleFactor:Float{
         get {
             #if os(iOS)
-                return  Float(UIScreen.mainScreen().scale) 
+                return  Float(UIScreen.mainScreen().scale)
             #else
                 let screen = self.window?.screen ?? NSScreen.mainScreen()
                 let scaleFactor = screen?.backingScaleFactor ?? 1.0
@@ -203,10 +224,13 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
+    public var viewReadyHandler:(()->Void)?
+    private var isFirstFrame = true
+    
     internal func refresh() {
         
         if layerNeedUpdate {
-        
+            
             layerNeedUpdate = false
             
             autoreleasepool({ () -> () in
@@ -242,6 +266,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             encoder.endEncoding()
                             
                             commandBuffer.presentDrawable(drawable)
+                            
+                            if self.isFirstFrame && self.viewReadyHandler !=  nil {
+                                self.isFirstFrame = false
+                                self.viewReadyHandler!()
+                            }
                         }
                     }
                     else{
@@ -258,7 +287,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #else
     override public func display() {
-        self.refresh()
+    self.refresh()
     }
     #endif
     
@@ -295,38 +324,38 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     #else
     
     override public func updateLayer(){
-        if let l = metalLayer {
-            if let t = filter?.destination?.texture{
-                l.drawableSize = t.size
-            }
-            l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
-            layerNeedUpdate = true
-        }
+    if let l = metalLayer {
+    if let t = filter?.destination?.texture{
+    l.drawableSize = t.size
+    }
+    l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+    layerNeedUpdate = true
+    }
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
-        
-        let sourceDragMask = sender.draggingSourceOperationMask()
-        let pboard = sender.draggingPasteboard()
-        
-        if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
-            if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
-                return NSDragOperation.Generic
-            }
-        }
-        
-        return NSDragOperation.None
+    
+    let sourceDragMask = sender.draggingSourceOperationMask()
+    let pboard = sender.draggingPasteboard()
+    
+    if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
+    if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
+    return NSDragOperation.Generic
+    }
+    }
+    
+    return NSDragOperation.None
     }
     
     public var dragOperation:IMPDragOperationHandler?
     
     public override func performDragOperation(sender: NSDraggingInfo) -> Bool {
-        if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
-            if let o = dragOperation {
-                return o(files: files as! [String])
-            }
-        }
-        return false
+    if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
+    if let o = dragOperation {
+    return o(files: files as! [String])
+    }
+    }
+    return false
     }
     
     #endif

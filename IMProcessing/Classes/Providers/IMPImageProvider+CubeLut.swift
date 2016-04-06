@@ -79,15 +79,15 @@ public extension IMPImageProvider{
                 var isData = false
                 
                 for line in lines {
-                    linenum++
-                    let words = line.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+                    linenum += 1
+                    var words = line.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
                     
                     if line.hasPrefix("#") || words[0].characters.count==0 {
                         continue;
                     }
                     else{
                         if (words.count>1) {
-                            let what = updateBytes(words, isData: &isData, dataBytes: &dataBytes, description: &description)
+                            let what = updateBytes(&words, isData: &isData, dataBytes: &dataBytes, description: &description)
                             if what == .OK  {
                                 continue
                             }
@@ -186,7 +186,7 @@ public extension IMPImageProvider{
         self.texture!.replaceRegion(region, mipmapLevel:0, slice:0, withBytes:data.bytes, bytesPerRow:bytesPerRow, bytesPerImage:bytesPerImage)
     }
     
-    private func updateBytes(var words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: LutDescription) -> IMPLutStatus {
+    private func updateBytes(inout words:[String], inout isData:Bool, inout dataBytes:NSMutableData, inout description: LutDescription) -> IMPLutStatus {
         
         let keyword = words[0];
         

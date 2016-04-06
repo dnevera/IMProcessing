@@ -88,7 +88,7 @@ public extension IMPImage{
             
             if IMProcessing.colors.pixelFormat == .RGBA16Unorm {
                 var u16:[UInt16] = [UInt16](count: componentsPerRow*resultHeight, repeatedValue: 0)
-                for var i=0; i < componentsPerRow*resultHeight; i++ {
+                for i in 0 ..< componentsPerRow*resultHeight {
                     var pixel = UInt16()
                     let address = UnsafePointer<UInt8>(rawData)+i
                     memcpy(&pixel, address, sizeof(UInt8))
@@ -134,7 +134,7 @@ public extension IMPImage{
             // Currently, OSX does not have work version of texture.getBytes version.
             // Use blit encoder to copy data from device memory
             //
-            provider.context.execute({ (commandBuffer) -> Void in
+            provider.context.execute(closure: { (commandBuffer) in
                 
                 let blitEncoder = commandBuffer.blitCommandEncoder()
                 

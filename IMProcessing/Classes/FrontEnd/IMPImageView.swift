@@ -20,7 +20,7 @@
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            let doubleTap = UITapGestureRecognizer(target: self, action: "zoom:")
+            let doubleTap = UITapGestureRecognizer(target: self, action: #selector(IMPScrollView.zoom(_:)))
             doubleTap.numberOfTapsRequired = 2
             self.addGestureRecognizer(doubleTap)
         }
@@ -77,26 +77,30 @@
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
+                filter?.addNewSourceObserver(source: { (source) in
+                    self.scrollView.zoomScale = 1
+                    //self.setOrientation(self.orientation, animate: false)
+                })
             }
         }
         
-        public var source:IMPImageProvider?{
-            get{
-                return imageView.source
-            }
-            set{
-                imageView?.source = newValue
-                scrollView.zoomScale = 1
-                setOrientation(orientation, animate: false)
-            }
-        }
+//        public var source:IMPImageProvider?{
+//            get{
+//                return imageView.source
+//            }
+//            set{
+//                imageView?.source = newValue
+//                scrollView.zoomScale = 1
+//                setOrientation(orientation, animate: false)
+//            }
+//        }
 
         
         func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
             
             var angle:CGFloat = 0
             
-            if let orientation = source?.orientation{
+            if let orientation = filter?.source?.orientation{
                 
                 switch orientation {
                     
@@ -117,7 +121,7 @@
             return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
         }
         
-        private var currentDeviceOrientation = UIDevice.currentDevice().orientation
+        private var currentDeviceOrientation = UIDeviceOrientation.Portrait
         
         public var orientation:UIDeviceOrientation{
             get{
@@ -179,7 +183,7 @@
             if let l = imageView.metalLayer {
                 var adjustedSize = bounds.size
                 
-                if let t = filter?.destination?.texture{
+                if let t = filter?.destination?.texture {
                     
                     l.drawableSize = t.size
                     
@@ -203,7 +207,7 @@
                 }
                 
                 l.frame = CGRect(origin: origin, size: adjustedSize)
-                imageView.layerNeedUpdate = true
+                imageView.layerNeedUpdate = true                
             }
         }
         
@@ -304,20 +308,20 @@
         }
         
         /// Image source
-        public var source:IMPImageProvider?{
-            get{
-                return imageView.source
-            }
-            set{
-                if let texture = newValue?.texture{
-                    imageView.frame = CGRect(x: 0, y: 0,
-                        width:  Int(texture.width.float/imageView.scaleFactor),
-                        height: Int(texture.height.float/imageView.scaleFactor))
-                }
-                imageView?.source = newValue
-                imageView.filter?.dirty = true
-            }
-        }
+//        public var source:IMPImageProvider?{
+//            get{
+//                return imageView.source
+//            }
+//            set{
+//                if let texture = newValue?.texture{
+//                    imageView.frame = CGRect(x: 0, y: 0,
+//                        width:  Int(texture.width.float/imageView.scaleFactor),
+//                        height: Int(texture.height.float/imageView.scaleFactor))
+//                }
+//                imageView?.source = newValue
+//                imageView.filter?.dirty = true
+//            }
+//        }
         
         ///  Magnify image to fit rectangle
         ///

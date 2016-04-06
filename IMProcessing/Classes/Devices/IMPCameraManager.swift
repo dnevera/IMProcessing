@@ -16,6 +16,9 @@
     
     /// Camera manager
     public class IMPCameraManager: NSObject,IMPContextProvider,AVCaptureVideoDataOutputSampleBufferDelegate {
+        
+        public typealias cameraReadyBlockType = ((camera:IMPCameraManager)->Void)
+        
         //
         // Public API
         //
@@ -44,20 +47,15 @@
                 
                 if context == nil {
                     dispatch_sync(sessionQueue, { () -> Void in
-                        _context = IMPContext(lazy: true)
+                        self.context = IMPContext(lazy: true)
                     })
                 }
                 else {
-                    _context = context
+                    self.context = context
                 }
                 
-                self.liveView = IMPView(context: _context)
-                self.liveView.frame = containerView.bounds
-                self.liveView.backgroundColor = IMPColor.yellowColor()
-                self.liveView.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
-                containerView.addSubview(self.liveView)
-                
-                self.liveView.filter = IMPFilter(context: _context)
+                liveView.frame = containerView.frame
+                containerView.addSubview(liveView)
                 
                 dispatch_sync(sessionQueue, { () -> Void in
                     self.initSession()
@@ -73,6 +71,7 @@
         public func start(access:AccessHandler) {
             requestAccess({ (granted) -> Void in
                 if granted {
+                    
                     //
                     // start...
                     //
@@ -96,21 +95,37 @@
             }
         }
         
+        ///  Pause video frames capturing and present in liveView
         public func pause() {
+            
         }
         
+        ///  Resume paused presentation of video frames in liveView
         public func resume() {
         }
         
-        /// Live view Metal devilce context
-        public var context:IMPContext! {
-            get{
-                return liveView.context
-            }
-        }
+        /// Live view Metal device context
+        public var context:IMPContext!
         
         /// Live view
-        public var liveView:IMPView!
+        private lazy var _liveView:IMPView = {
+            let view  = IMPView(context: self.context)
+            view.backgroundColor = IMPColor.clearColor()
+            view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
+            view.filter = IMPFilter(context: self.context)
+            
+            view.viewReadyHandler = {
+                for o in self.liveViewReadyHandlers{
+                    o(camera: self)
+                }
+            }
+            
+            return view
+        }()
+        
+        public var liveView:IMPView {
+            return _liveView
+        }
         
         /// Make compression of still images with hardware compression layer instead of turbojpeg lib
         public var compression = IMPCameraManager.Compression(isHardware: false, quality: 1){
@@ -146,19 +161,39 @@
                 }
                 
                 if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                    if liveView.source == nil {
-                        liveView.source = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
+                    if liveView.filter?.source == nil {
+                        liveView.filter?.source = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
                     }
                     else {
-                        liveView.source?.update(pixelBuffer: pixelBuffer)
+                        liveView.filter?.source?.update(pixelBuffer: pixelBuffer)
                     }
                 }
             }
         }
         
+        ///  Add new ready observer. It calse
+        ///
+        ///  - parameter observer: camera ready block
+        public func addReadyObserver(observer:cameraReadyBlockType){
+            readyHandlers.append(observer)
+        }
+
+        public func addStopObserver(observer:cameraReadyBlockType){
+            stopHandlers.append(observer)
+        }
+
+        public func addReadyLiveViewObserver(observer:cameraReadyBlockType){
+            liveViewReadyHandlers.append(observer)
+        }
+        
         //
         // Internal utils and vars
         //
+        
+        var readyHandlers  = [cameraReadyBlockType]()
+        var stopHandlers   = [cameraReadyBlockType]()
+        var liveViewReadyHandlers = [cameraReadyBlockType]()
+        
         
         ///  Check access to camera
         ///

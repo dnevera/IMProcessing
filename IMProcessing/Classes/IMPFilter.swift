@@ -38,6 +38,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         didSet{
             source?.filter=self
             dirty = true
+            executeNewSourceObservers(source)
         }
     }
     
@@ -97,6 +98,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     private var functionList:[IMPFunction] = [IMPFunction]()
     private var filterList:[IMPFilter] = [IMPFilter]()
+    private var newSourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
     private var sourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
     private var destinationObservers:[IMPFilterDestinationHandler] = [IMPFilterDestinationHandler]()
     private var dirtyHandlers:[IMPFilterDirtyHandler] = [IMPFilterDirtyHandler]()
@@ -136,7 +138,11 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
             self.dirty = true
         }
     }
-    
+
+    public final func addNewSourceObserver(source observer:IMPFilterSourceHandler){
+        newSourceObservers.append(observer)
+    }
+
     public final func addSourceObserver(source observer:IMPFilterSourceHandler){
         sourceObservers.append(observer)
     }
@@ -153,7 +159,15 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     }
     
     public func configure(function:IMPFunction, command:MTLComputeCommandEncoder){}
-    
+
+    internal func executeNewSourceObservers(source:IMPImageProvider?){
+        if let s = source{
+            for o in newSourceObservers {
+                o(source: s)
+            }
+        }
+    }
+
     internal func executeSourceObservers(source:IMPImageProvider?){
         if let s = source{
             for o in sourceObservers {
@@ -209,7 +223,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                             
                             for function in self.functionList {
                                 
-                                --reverseIndex
+                                reverseIndex -= 1
                                 
                                 var width  = inputTexture.width
                                 var height = inputTexture.height

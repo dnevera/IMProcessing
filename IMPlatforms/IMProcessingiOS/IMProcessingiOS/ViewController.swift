@@ -40,10 +40,7 @@ class IMPTestFilter: IMPFilter {
         contrast = IMPContrastFilter(context: context)
         
         contrast.addSourceObserver { (source) -> Void in
-            //let t1 = NSDate.timeIntervalSinceReferenceDate()
             self.histogram.source = source
-            //let t2 = NSDate.timeIntervalSinceReferenceDate()
-            //print(" hist\(self.histogram.hardware) time = \(t2-t1)")
         }
         
         addFilter(contrast)
@@ -126,32 +123,53 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 }
             }
             
+            cameraManager.addReadyLiveViewObserver({ (camera) in
+                print(" Live view ready! ")
+            })
         }
 
+        let triggerButton = UIButton(type: .System)
+        
+        if TEST_CAMERA {
+            triggerButton.backgroundColor = IMPColor.clearColor()
+            triggerButton.tintColor = IMPColor.whiteColor()
+            triggerButton.setImage(IMPImage(named: "trigger"), forState: .Normal)
+            triggerButton.addTarget(self, action: #selector(self.capturePhoto(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(triggerButton)
+            
+            triggerButton.snp_makeConstraints(closure: { (make) in
+                make.top.equalTo(containerView.snp_bottom).offset(10)
+                make.centerX.equalTo(view).offset(0)
+            })
+        }
+        
         let albumButton = UIButton(type: .System)
         
         albumButton.backgroundColor = IMPColor.clearColor()
         albumButton.tintColor = IMPColor.whiteColor()
         albumButton.setImage(IMPImage(named: "select-photos"), forState: .Normal)
-        albumButton.addTarget(self, action: #selector(ViewController.openAlbum(_:)), forControlEvents: .TouchUpInside)
+        albumButton.addTarget(self, action: #selector(self.openAlbum(_:)), forControlEvents: .TouchUpInside)
         view.addSubview(albumButton)
         
         albumButton.snp_makeConstraints { (make) -> Void in
             make.bottom.equalTo(view).offset(-40)
             make.left.equalTo(view).offset(40)
         }
-
+        
+        
+        
         let slider = UISlider()
         slider.value = 0
         slider.addTarget(self, action: #selector(ViewController.changeValue(_:)), forControlEvents: .ValueChanged)
         view.addSubview(slider)
         
         slider.snp_makeConstraints { (make) -> Void in
-            make.bottom.equalTo(view).offset(-40)
             if TEST_CAMERA {
+                make.top.equalTo(triggerButton.snp_bottom).offset(5)
                 make.left.equalTo(view).offset(20)
             }
             else {
+                make.bottom.equalTo(view).offset(-40)
                 make.left.equalTo(albumButton.snp_right).offset(20)
             }
             make.right.equalTo(view).offset(-20)
@@ -179,6 +197,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    internal func capturePhoto(sender:UIButton){
+        print("... capture... ")
+    }
+    
     internal func openAlbum(sender:UIButton){
         imagePicker = UIImagePickerController()
     }
@@ -203,7 +225,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         if let actualImage = chosenImage{
             
             let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1500)
-            imageView?.source = image
+            imageView?.filter?.source = image
         }
     }
     

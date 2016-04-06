@@ -70,18 +70,22 @@ public class IMPHistogramView: IMPView {
         }
     }
     
-    override public var source:IMPImageProvider?{
-        didSet{
-            _filter.source = source
-            _filter.apply()
-        }
-    }
+//    override public var source:IMPImageProvider?{
+//        didSet{
+//            _filter.source = source
+//            _filter.apply()
+//        }
+//    }
     
     private var _filter:histogramLayerFilter! {
         didSet{
             _filter.addDestinationObserver { (destination) -> Void in
                 //self.currentDestination = destination
                 self.layerNeedUpdate = true
+            }
+            
+            _filter.addNewSourceObserver { (source) in
+                self._filter.apply()
             }
         }
     }
