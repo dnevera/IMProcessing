@@ -29,8 +29,6 @@ typealias __IMPViewLayerUpdate = (()->Void)
 
 /// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
-
-    //typealias viewReadyHandlerType = (()->Void)
     
     /// Current Metal device context
     public var context:IMPContext!
@@ -39,14 +37,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var filter:IMPFilter?{
         didSet{
             
-//            if let s = self.source{
-//                self.filter?.source = s
-//            }
-            
             filter?.addNewSourceObserver(source: { (source) in
                 
-                //self.layerNeedUpdate = true
-
                 if let texture = self.filter?.source?.texture{
                     
                     self.threadGroups = MTLSizeMake(
@@ -66,24 +58,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     lazy internal var updateLayerHandler:__IMPViewLayerUpdate = {
         return self.updateLayer
     }()
-    
-    
-//    public var source:IMPImageProvider?{
-//        didSet{
-//            
-//            if let texture = source?.texture{
-//                
-//                threadGroups = MTLSizeMake(
-//                    (texture.width+threadGroupCount.width)/threadGroupCount.width,
-//                    (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
-//                
-//                if let f = self.filter{
-//                    f.source = source
-//                }
-//                updateLayerHandler()
-//            }
-//        }
-//    }
     
     public var isPaused:Bool = false {
         didSet{

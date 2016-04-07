@@ -58,7 +58,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     var test:IMPTestFilter!
     
     var filter:IMPFilter?
-        
+    
+    let pauseButton = UIButton(type: .System)
+    let toggleCamera = UIButton(type:.System)
+    let stopButton = UIButton(type: .System)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -124,26 +128,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 }
             }
             
-            cameraManager.addVideoStartObserver({ (camera) in
-                NSLog(" Video started ")
+            cameraManager.addCameraObserver({ (camera, ready) in
+                NSLog(" Camera ready = \(ready) ")
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.stopButton.setTitle(ready ? "Stop" : "Start", forState: .Normal)
+                })
             })
             
-            cameraManager.addVideoStopObserver({ (camera) in
-                NSLog(" Video stoped ")
+            cameraManager.addVideoObserver({ (camera, running) in
+                NSLog(" Video running = \(running) ")
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.pauseButton.setTitle(running ? "Pause" : "Pause", forState: .Normal)
+                })
             })
-
+            
             cameraManager.addLiveViewReadyObserver({ (camera) in
                 NSLog(" Live view ready! ")
-            })
-            
-            cameraManager.addCameraReadyObserver({ (camera, ready) in
-                NSLog(" Camera ready = \(ready) ")
-
             })
         }
 
         let triggerButton = UIButton(type: .System)
-        
         if TEST_CAMERA {
             triggerButton.backgroundColor = IMPColor.clearColor()
             triggerButton.tintColor = IMPColor.whiteColor()
@@ -156,7 +160,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 make.centerX.equalTo(view).offset(0)
             })
             
-            let stopButton = UIButton(type: .System)
             stopButton.setTitle("Stop", forState: .Normal)
             stopButton.addTarget(self, action: #selector(self.stopCamera(_:)), forControlEvents: .TouchUpInside)
             view.addSubview(stopButton)
@@ -166,13 +169,22 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 make.left.equalTo(view).offset(10)
             })
             
-            let pauseButton = UIButton(type: .System)
             
             pauseButton.setTitle("Pause", forState: .Normal)
             pauseButton.addTarget(self, action: #selector(self.pauseCamera(_:)), forControlEvents: .TouchUpInside)
             view.addSubview(pauseButton)
             
             pauseButton.snp_makeConstraints(closure: { (make) in
+                make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
+                make.left.equalTo(stopButton.snp_right).offset(20)
+            })
+            
+            
+            toggleCamera.setTitle("Back", forState: .Normal)
+            toggleCamera.addTarget(self, action: #selector(self.toggeleCamera(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(toggleCamera)
+            
+            toggleCamera.snp_makeConstraints(closure: { (make) in
                 make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
                 make.right.equalTo(view).offset(-10)
             })
@@ -238,39 +250,32 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     internal func stopCamera(sender:UIButton){
-        if cameraManager.isRunnig {
+        if cameraManager.isReady {
             print("... stop ... ")
             cameraManager.stop()
-            dispatch_async(dispatch_get_main_queue(), {
-                sender.setTitle("Start", forState: .Normal)
-            })
         }
         else {
             print("... start ... ")
             cameraManager.start({ (granted) in
                 print("... starting ... \(granted)")
-                dispatch_async(dispatch_get_main_queue(), { 
-                    sender.setTitle("Stop", forState: .Normal)
-                })
             })
         }
     }
     
     internal func pauseCamera(sender:UIButton){
-        if !cameraManager.isPaused {
-            print("... pause ... ")
+        if cameraManager.isRunning {
+            print("... resume ... ")
             cameraManager.pause()
-            dispatch_async(dispatch_get_main_queue(), {
-                sender.setTitle("Resume", forState: .Normal)
-            })
         }
         else {
-            print("... resume ... ")
+            print("... paused ... ")
             cameraManager.resume()
-            dispatch_async(dispatch_get_main_queue(), {
-                sender.setTitle("Pause", forState: .Normal)
-            })
         }
+    }
+    
+    internal func toggeleCamera(sender:UIButton){
+        let toggled = cameraManager.toggleCamera()
+        print("... toggle camera ... \(toggled)")
     }
     
     internal func openAlbum(sender:UIButton){

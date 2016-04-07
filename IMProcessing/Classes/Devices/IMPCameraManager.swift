@@ -17,8 +17,10 @@
     /// Camera manager
     public class IMPCameraManager: NSObject,IMPContextProvider,AVCaptureVideoDataOutputSampleBufferDelegate {
         
-        public typealias cameraEventBlockType = ((camera:IMPCameraManager)->Void)
-        public typealias cameraReadyBlockType = ((camera:IMPCameraManager, ready:Bool)->Void)
+        public typealias AccessHandler = ((Bool) -> Void)
+        public typealias liveViewEventBlockType = ((camera:IMPCameraManager)->Void)
+        public typealias cameraEventBlockType   = ((camera:IMPCameraManager, ready:Bool)->Void)
+        public typealias videoEventBlockType    = ((camera:IMPCameraManager, running:Bool)->Void)
         
         //
         // Public API
@@ -30,16 +32,25 @@
             let quality:Float
         }
         
-        public typealias AccessHandler = ((Bool) -> Void)
-        
-        public var isRunnig:Bool {
+        /// Test camera session state
+        public var isReady:Bool {
             return session.running
         }
-
-        public var isPaused:Bool {
-            return isVideoPaused
+        
+        /// Test camera video streaming state
+        public var isRunning:Bool {
+            return !isVideoPaused
         }
-
+        
+        
+        /// Live view Metal device context
+        public var context:IMPContext!
+        
+        /// Live video viewport
+        public var liveView:IMPView {
+            return _liveView
+        }
+        
         ///
         ///  Create Camera Manager instance
         ///
@@ -77,7 +88,7 @@
         ///
         ///  - parameter access: access handler
         ///
-        public func start(access:AccessHandler) {
+        public func start(access:AccessHandler?=nil) {
             requestAccess({ (granted) -> Void in
                 if granted {
                     
@@ -93,7 +104,9 @@
                         })
                     }
                 }
-                access(granted)
+                if let a = access {
+                    a(granted)
+                }
             })
         }
         
@@ -110,34 +123,23 @@
         ///  Pause video frames capturing and present in liveView
         public func pause() {
             isVideoPaused = true
-            self.videoStopObserversHandle()
+            self.videoObserversHandle()
         }
         
         ///  Resume paused presentation of video frames in liveView
         public func resume() {
-            isVideoPaused = false
+            if !isReady{
+                start()
+            }
+            else {
+                isVideoPaused = false
+            }
         }
         
-        /// Live view Metal device context
-        public var context:IMPContext!
-        
-        /// Live view
-        private lazy var _liveView:IMPView = {
-            let view  = IMPView(context: self.context)
-            view.backgroundColor = IMPColor.clearColor()
-            view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
-            view.filter = IMPFilter(context: self.context)
-            
-            view.viewReadyHandler = {
-                self.liveViewReadyObserversHandle()
-            }
-            
-            return view
-        }()
-        
-        /// Live video viewport
-        public var liveView:IMPView {
-            return _liveView
+        public func toggleCamera() -> Bool {
+            let position = cameraPosition
+            rotateCamera()
+            return position == cameraPosition
         }
         
         /// Make compression of still images with hardware compression layer instead of turbojpeg lib
@@ -172,16 +174,9 @@
                 if !isVideoStarted || isVideoSuspended{
                     isVideoStarted = true
                     isVideoSuspended = false
-                    videoStartObserversHandle()
+                    videoObserversHandle()
                 }
                 
-                if (connection.supportsVideoOrientation){
-                    connection.videoOrientation = AVCaptureVideoOrientation.Portrait
-                }
-                
-                if (connection.supportsVideoMirroring) {
-                    connection.videoMirrored = false
-                }
                 
                 if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
                     if liveView.filter?.source == nil {
@@ -194,35 +189,46 @@
             }
         }
         
-        public func addCameraReadyObserver(observer:cameraReadyBlockType){
-            readyHandlers.append(observer)
+        ///  Add new observer calls when camera device change session state on ready to capture and vice versa.
+        ///
+        ///  - parameter observer: camera event block
+        public func addCameraObserver(observer:cameraEventBlockType){
+            cameraEventHandlers.append(observer)
         }
         
-        ///  Add new observer calls when video capturing session starts first time after creating or resumnig after pause.
+        ///  Add new observer calls when video capturing change video streanming state.
         ///
         ///  - parameter observer: camera event block
-        public func addVideoStartObserver(observer:cameraEventBlockType){
-            videoStartHandlers.append(observer)
+        public func addVideoObserver(observer:videoEventBlockType){
+            videoEventHandlers.append(observer)
         }
-
-        /// Add new observer calls when camera stops for capturing.
-        ///
-        ///  - parameter observer: camera event block
-        public func addVideoStopObserver(observer:cameraEventBlockType){
-            videoStopHandlers.append(observer)
-        }
-
+        
         ///  Add new observer calls when the first frame from video stream presents in live viewport after camera starting.
         ///
         ///  - parameter observer: camera event block
-        public func addLiveViewReadyObserver(observer:cameraEventBlockType){
+        public func addLiveViewReadyObserver(observer:liveViewEventBlockType){
             liveViewReadyHandlers.append(observer)
         }
-        
         
         //
         // Internal utils and vars
         //
+        
+        /// Live view
+        private lazy var _liveView:IMPView = {
+            let view  = IMPView(context: self.context)
+            view.backgroundColor = IMPColor.clearColor()
+            view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
+            view.filter = IMPFilter(context: self.context)
+            
+            view.viewReadyHandler = {
+                self.liveViewReadyObserversHandle()
+            }
+            
+            return view
+        }()
+        
+        
         var isVideoStarted   = false
         var isVideoPaused    = true {
             didSet {
@@ -231,20 +237,19 @@
         }
         var isVideoSuspended      = false
         
-        var readyHandlers  = [cameraReadyBlockType]()
-        var videoStartHandlers  = [cameraEventBlockType]()
-        var videoStopHandlers   = [cameraEventBlockType]()
-        var liveViewReadyHandlers = [cameraEventBlockType]()
+        var cameraEventHandlers = [cameraEventBlockType]()
+        var videoEventHandlers  = [videoEventBlockType]()
+        var liveViewReadyHandlers = [liveViewEventBlockType]()
         
-        func videoStartObserversHandle() {
-            for o in videoStartHandlers {
-                o(camera: self)
+        func cameraObserversHandle() {
+            for o in cameraEventHandlers {
+                o(camera: self, ready: isReady)
             }
         }
-
-        func videoStopObserversHandle() {
-            for o in videoStopHandlers {
-                o(camera: self)
+        
+        func videoObserversHandle() {
+            for o in videoEventHandlers {
+                o(camera: self, running: isRunning)
             }
         }
         
@@ -277,12 +282,27 @@
         }
         
         func runningNotification(event:NSNotification) {
-            for  o in readyHandlers {
-                o(camera: self, ready: isRunnig)
+            for  o in cameraEventHandlers {
+                o(camera: self, ready:isReady)
             }
         }
         
         var sessionQueue = dispatch_queue_create(IMProcessing.names.prefix+"preview.video", DISPATCH_QUEUE_SERIAL)
+        
+        func updateConnection()  {
+            //
+            // Current capture connection
+            //
+            currentConnection = liveViewOutput.connectionWithMediaType(AVMediaTypeVideo)
+            currentConnection.automaticallyAdjustsVideoMirroring = false
+            if (currentConnection.supportsVideoOrientation){
+                currentConnection.videoOrientation = AVCaptureVideoOrientation.Portrait
+            }
+            
+            if (currentConnection.supportsVideoMirroring) {
+                currentConnection.videoMirrored = currentCamera == frontCamera
+            }
+        }
         
         func initSession() {
             if session == nil {
@@ -316,31 +336,78 @@
                             s.addOutput(liveViewOutput)
                         }
                         
+                        s.commitConfiguration()
+                        
                         //
                         // Full size Image
                         //
                         stillImageOutput = AVCaptureStillImageOutput()
                         updateStillImageSettings()
-                        
-                        //
-                        // Current capture connection
-                        //
-                        currentConnection = liveViewOutput.connectionWithMediaType(AVMediaTypeVideo)
-                        currentConnection.automaticallyAdjustsVideoMirroring = false
-                        
-                        s.commitConfiguration()
+
+                        updateConnection()
                         
                         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.runningNotification(_:)), name: AVCaptureSessionDidStartRunningNotification, object: session)
                         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.runningNotification(_:)), name:
                             AVCaptureSessionDidStopRunningNotification, object: session)
                     }
                 }
-                catch {}
+                catch let error as NSError {
+                    NSLog("IMPCameraManager error: \(error) \(__FILE__):\(__LINE__)")
+                }
             }
         }
+        
+        lazy var hasFrontCamera:Bool = {
+            let devices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo)
+            for d in devices{
+                if d.position == .Front {
+                    return true
+                }
+            }
+            return false
+        }()
+        
+        func rotateCamera() {
+            do {
+                if !hasFrontCamera {
+                    return;
+                }
+                
+                session.beginConfiguration()
+                
+                session.removeInput(videoInput)
+                
+                if (self.currentCamera == self.backCamera) {
+                    _currentCamera = self.frontCamera;
+                }
+                else{
+                    _currentCamera = self.backCamera;
+                }
+                
+                videoInput = try AVCaptureDeviceInput(device: currentCamera)
+                
+                if session.canAddInput(videoInput) {
+                    self.session.addInput(videoInput)
+                }
+                
+                session.commitConfiguration()
+                
+                updateConnection()
+                
+            }
+            catch let error as NSError {
+                NSLog("IMPCameraManager error: \(error) \(__FILE__):\(__LINE__)")
+            }
+        }
+        
         var session:AVCaptureSession!
         
         var videoInput:AVCaptureDeviceInput!
+        
+        lazy var cameraPosition:AVCaptureDevicePosition = {
+            return self.videoInput.device.position
+        }()
+        
         var liveViewOutput:AVCaptureVideoDataOutput!
         var stillImageOutput:AVCaptureStillImageOutput!
         var currentConnection:AVCaptureConnection!
