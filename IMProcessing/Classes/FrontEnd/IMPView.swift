@@ -287,7 +287,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #else
     override public func display() {
-    self.refresh()
+        self.refresh()
     }
     #endif
     

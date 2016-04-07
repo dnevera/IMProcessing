@@ -17,7 +17,8 @@
     /// Camera manager
     public class IMPCameraManager: NSObject,IMPContextProvider,AVCaptureVideoDataOutputSampleBufferDelegate {
         
-        public typealias cameraReadyBlockType = ((camera:IMPCameraManager)->Void)
+        public typealias cameraEventBlockType = ((camera:IMPCameraManager)->Void)
+        public typealias cameraReadyBlockType = ((camera:IMPCameraManager, ready:Bool)->Void)
         
         //
         // Public API
@@ -31,6 +32,14 @@
         
         public typealias AccessHandler = ((Bool) -> Void)
         
+        public var isRunnig:Bool {
+            return session.running
+        }
+
+        public var isPaused:Bool {
+            return isVideoPaused
+        }
+
         ///
         ///  Create Camera Manager instance
         ///
@@ -77,7 +86,9 @@
                     //
                     
                     if !self.session.running {
+                        self.isVideoStarted = false
                         dispatch_async(self.sessionQueue, { () -> Void in
+                            self.isVideoPaused = false
                             self.session.startRunning()
                         })
                     }
@@ -91,17 +102,20 @@
             if session.running {
                 dispatch_async(sessionQueue, { () -> Void in
                     self.session.stopRunning()
+                    self.isVideoStarted = false
                 })
             }
         }
         
         ///  Pause video frames capturing and present in liveView
         public func pause() {
-            
+            isVideoPaused = true
+            self.videoStopObserversHandle()
         }
         
         ///  Resume paused presentation of video frames in liveView
         public func resume() {
+            isVideoPaused = false
         }
         
         /// Live view Metal device context
@@ -115,14 +129,13 @@
             view.filter = IMPFilter(context: self.context)
             
             view.viewReadyHandler = {
-                for o in self.liveViewReadyHandlers{
-                    o(camera: self)
-                }
+                self.liveViewReadyObserversHandle()
             }
             
             return view
         }()
         
+        /// Live video viewport
         public var liveView:IMPView {
             return _liveView
         }
@@ -146,11 +159,21 @@
         }
         
         //
-        // Capturing video frames and update live-view to apply IMP-filter
+        // Capturing video frames and update live-view to apply IMP-filter.
         //
         public func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
             
+            if isVideoPaused {
+                return
+            }
+            
             if connection == currentConnection {
+                
+                if !isVideoStarted || isVideoSuspended{
+                    isVideoStarted = true
+                    isVideoSuspended = false
+                    videoStartObserversHandle()
+                }
                 
                 if (connection.supportsVideoOrientation){
                     connection.videoOrientation = AVCaptureVideoOrientation.Portrait
@@ -171,29 +194,65 @@
             }
         }
         
-        ///  Add new ready observer. It calse
-        ///
-        ///  - parameter observer: camera ready block
-        public func addReadyObserver(observer:cameraReadyBlockType){
+        public func addCameraReadyObserver(observer:cameraReadyBlockType){
             readyHandlers.append(observer)
         }
-
-        public func addStopObserver(observer:cameraReadyBlockType){
-            stopHandlers.append(observer)
+        
+        ///  Add new observer calls when video capturing session starts first time after creating or resumnig after pause.
+        ///
+        ///  - parameter observer: camera event block
+        public func addVideoStartObserver(observer:cameraEventBlockType){
+            videoStartHandlers.append(observer)
         }
 
-        public func addReadyLiveViewObserver(observer:cameraReadyBlockType){
+        /// Add new observer calls when camera stops for capturing.
+        ///
+        ///  - parameter observer: camera event block
+        public func addVideoStopObserver(observer:cameraEventBlockType){
+            videoStopHandlers.append(observer)
+        }
+
+        ///  Add new observer calls when the first frame from video stream presents in live viewport after camera starting.
+        ///
+        ///  - parameter observer: camera event block
+        public func addLiveViewReadyObserver(observer:cameraEventBlockType){
             liveViewReadyHandlers.append(observer)
         }
+        
         
         //
         // Internal utils and vars
         //
+        var isVideoStarted   = false
+        var isVideoPaused    = true {
+            didSet {
+                isVideoSuspended = oldValue
+            }
+        }
+        var isVideoSuspended      = false
         
         var readyHandlers  = [cameraReadyBlockType]()
-        var stopHandlers   = [cameraReadyBlockType]()
-        var liveViewReadyHandlers = [cameraReadyBlockType]()
+        var videoStartHandlers  = [cameraEventBlockType]()
+        var videoStopHandlers   = [cameraEventBlockType]()
+        var liveViewReadyHandlers = [cameraEventBlockType]()
         
+        func videoStartObserversHandle() {
+            for o in videoStartHandlers {
+                o(camera: self)
+            }
+        }
+
+        func videoStopObserversHandle() {
+            for o in videoStopHandlers {
+                o(camera: self)
+            }
+        }
+        
+        func liveViewReadyObserversHandle() {
+            for o in liveViewReadyHandlers{
+                o(camera: self)
+            }
+        }
         
         ///  Check access to camera
         ///
@@ -214,6 +273,12 @@
             }
             else {
                 stillImageOutput.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(unsignedInt: kCVPixelFormatType_32BGRA)]
+            }
+        }
+        
+        func runningNotification(event:NSNotification) {
+            for  o in readyHandlers {
+                o(camera: self, ready: isRunnig)
             }
         }
         
@@ -264,6 +329,10 @@
                         currentConnection.automaticallyAdjustsVideoMirroring = false
                         
                         s.commitConfiguration()
+                        
+                        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.runningNotification(_:)), name: AVCaptureSessionDidStartRunningNotification, object: session)
+                        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.runningNotification(_:)), name:
+                            AVCaptureSessionDidStopRunningNotification, object: session)
                     }
                 }
                 catch {}

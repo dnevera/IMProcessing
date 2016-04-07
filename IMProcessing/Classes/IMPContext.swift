@@ -125,10 +125,10 @@ public class IMPContext {
     }()
     
     var commandBuffer:MTLCommandBuffer?  {
-        return
-            (self.supportsGPUv2 ?
-            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
-            self.commandQueue?.commandBuffer())
+        return self.commandQueue?.commandBuffer()
+//            (self.supportsGPUv2 ?
+//            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
+//            self.commandQueue?.commandBuffer())
     }
     
     ///  The main idea context execution: all filters should put commands in context queue within the one execution.

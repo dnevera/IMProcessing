@@ -87,16 +87,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             imageView.filter = filter
         }
         else {
-            containerView = UIView(frame: CGRectMake( 0, 20,
+            containerView = UIView(frame: CGRectMake( 0, 0,
                 self.view.bounds.size.width,
                 self.view.bounds.size.height*3/4
                 ))
             self.view.insertSubview(containerView, atIndex: 0)
             
-            
             cameraManager = IMPCameraManager(containerView: containerView)
             
             cameraManager.liveView.filter = filter
+            
+            NSLog(" Camera staring ... ")
             
             cameraManager.start { (granted) -> Void in
                 
@@ -123,8 +124,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 }
             }
             
-            cameraManager.addReadyLiveViewObserver({ (camera) in
-                print(" Live view ready! ")
+            cameraManager.addVideoStartObserver({ (camera) in
+                NSLog(" Video started ")
+            })
+            
+            cameraManager.addVideoStopObserver({ (camera) in
+                NSLog(" Video stoped ")
+            })
+
+            cameraManager.addLiveViewReadyObserver({ (camera) in
+                NSLog(" Live view ready! ")
+            })
+            
+            cameraManager.addCameraReadyObserver({ (camera, ready) in
+                NSLog(" Camera ready = \(ready) ")
+
             })
         }
 
@@ -141,6 +155,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 make.top.equalTo(containerView.snp_bottom).offset(10)
                 make.centerX.equalTo(view).offset(0)
             })
+            
+            let stopButton = UIButton(type: .System)
+            stopButton.setTitle("Stop", forState: .Normal)
+            stopButton.addTarget(self, action: #selector(self.stopCamera(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(stopButton)
+            
+            stopButton.snp_makeConstraints(closure: { (make) in
+                make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
+                make.left.equalTo(view).offset(10)
+            })
+            
+            let pauseButton = UIButton(type: .System)
+            
+            pauseButton.setTitle("Pause", forState: .Normal)
+            pauseButton.addTarget(self, action: #selector(self.pauseCamera(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(pauseButton)
+            
+            pauseButton.snp_makeConstraints(closure: { (make) in
+                make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
+                make.right.equalTo(view).offset(-10)
+            })
+            
         }
         
         let albumButton = UIButton(type: .System)
@@ -199,6 +235,42 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     internal func capturePhoto(sender:UIButton){
         print("... capture... ")
+    }
+    
+    internal func stopCamera(sender:UIButton){
+        if cameraManager.isRunnig {
+            print("... stop ... ")
+            cameraManager.stop()
+            dispatch_async(dispatch_get_main_queue(), {
+                sender.setTitle("Start", forState: .Normal)
+            })
+        }
+        else {
+            print("... start ... ")
+            cameraManager.start({ (granted) in
+                print("... starting ... \(granted)")
+                dispatch_async(dispatch_get_main_queue(), { 
+                    sender.setTitle("Stop", forState: .Normal)
+                })
+            })
+        }
+    }
+    
+    internal func pauseCamera(sender:UIButton){
+        if !cameraManager.isPaused {
+            print("... pause ... ")
+            cameraManager.pause()
+            dispatch_async(dispatch_get_main_queue(), {
+                sender.setTitle("Resume", forState: .Normal)
+            })
+        }
+        else {
+            print("... resume ... ")
+            cameraManager.resume()
+            dispatch_async(dispatch_get_main_queue(), {
+                sender.setTitle("Pause", forState: .Normal)
+            })
+        }
     }
     
     internal func openAlbum(sender:UIButton){

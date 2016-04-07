@@ -190,14 +190,27 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
        return apply(counts:nil, groups:nil)
     }
     
+    func updateDestination(width:Int, height:Int, inputTexture:MTLTexture) {
+        if _destination.texture?.width != width || _destination.texture?.height != height {
+            let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+                inputTexture.pixelFormat,
+                width: width, height: height, mipmapped: false)
+            
+            if _destination.texture != nil {
+                _destination.texture?.setPurgeableState(MTLPurgeableState.Empty)
+            }
+            _destination.texture = context.device.newTextureWithDescriptor(descriptor)
+        }
+    }
+    
     public func apply(counts counts:MTLSize?, groups:MTLSize?) -> IMPImageProvider {
-        autoreleasepool { () -> () in
+        if self.source?.texture == nil {
+            dirty = false
+            return _destination
+        }
+        
+        //autoreleasepool { () -> () in
             if dirty {
-                
-                if self.source?.texture == nil {
-                    dirty = false
-                    return
-                }
                 
                 if functionList.count == 0 && filterList.count == 0 {
                     //
@@ -238,18 +251,8 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                                     (width  + threadgroupCounts.width ) / threadgroupCounts.width ,
                                     (height + threadgroupCounts.height) / threadgroupCounts.height,
                                     1);
-                                
-                                if self._destination.texture?.width != width || self._destination.texture?.height != height {
-                                    let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-                                        inputTexture.pixelFormat,
-                                        width: width, height: height, mipmapped: false)
 
-                                    if self._destination.texture != nil {
-                                        self._destination.texture?.setPurgeableState(MTLPurgeableState.Empty)
-                                    }
-                                    self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
-                                }
-                                
+                                self.updateDestination(width, height: height, inputTexture: inputTexture)
                                 
                                 if let texture = self._destination.texture {
                                 
@@ -302,14 +305,8 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                             let inputTexture:MTLTexture! = self.source!.texture
                             let width  = inputTexture.width
                             let height = inputTexture.height
-                            
-                            if self._destination.texture?.width != width || self._destination.texture?.height != height {
-                                let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-                                    inputTexture.pixelFormat,
-                                    width: width, height: height, mipmapped: false)
-                                
-                                self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
-                            }
+
+                            self.updateDestination(width, height: height, inputTexture: inputTexture)
                             
                             let blit = commandBuffer.blitCommandEncoder()
                             blit.copyFromTexture(
@@ -327,7 +324,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                 if filterList.count > 0 {
                     
                     guard var newSource = self._destination ?? source else {
-                        return
+                        return _destination
                     }
                     
                     for filter in filterList {
@@ -335,7 +332,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                         filter.source = newSource
                         
                         if filter.destination == nil {
-                            return
+                            return _destination
                         }
                         
                         newSource  = filter.destination!
@@ -344,14 +341,8 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                     guard let newTexture = newSource.texture else {
                         fatalError("IMPFilter error: processing stoped at the last chain filter: \(self, filterList.last)")
                     }
-                    
-                    if self._destination.texture?.width != newTexture.width || self._destination.texture?.height != newTexture.height {
-                        let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-                            newTexture.pixelFormat,
-                            width: newTexture.width,
-                            height: newTexture.height, mipmapped: false)
-                        self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
-                    }
+
+                    self.updateDestination(newTexture.width, height: newTexture.height, inputTexture: newTexture)
                     
                     self.context.execute{ (commandBuffer) -> Void in
                         autoreleasepool({ () -> () in
@@ -373,7 +364,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                     executeDestinationObservers(_destination)
                 }
                 dirty = false
-            }
+            //}
         }
         return _destination
     }
