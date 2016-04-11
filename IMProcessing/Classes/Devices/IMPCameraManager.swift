@@ -15,12 +15,13 @@
     
     
     /// Camera manager
-    public class IMPCameraManager: NSObject,IMPContextProvider,AVCaptureVideoDataOutputSampleBufferDelegate {
+    public class IMPCameraManager: NSObject, IMPContextProvider, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         public typealias AccessHandler = ((Bool) -> Void)
-        public typealias liveViewEventBlockType = ((camera:IMPCameraManager)->Void)
-        public typealias cameraEventBlockType   = ((camera:IMPCameraManager, ready:Bool)->Void)
-        public typealias videoEventBlockType    = ((camera:IMPCameraManager, running:Bool)->Void)
+        public typealias liveViewEventBlockType    = ((camera:IMPCameraManager)->Void)
+        public typealias cameraEventBlockType      = ((camera:IMPCameraManager, ready:Bool)->Void)
+        public typealias cameraCompleteBlockType   = ((camera:IMPCameraManager)->Void)
+        public typealias videoEventBlockType       = ((camera:IMPCameraManager, running:Bool)->Void)
         
         //
         // Public API
@@ -160,6 +161,34 @@
             return _currentCamera
         }
         
+        ///  Auto Exposure at a point of interest.
+        ///
+        ///  - parameter point:    POI
+        ///  - parameter complete: complete operations
+        public func exposure(atPoint point:CGPoint, complete:cameraCompleteBlockType?=nil){
+            controlCamera(atPoint: point, action: { (poi) in
+                self.currentCamera.exposurePointOfInterest = poi
+                self.currentCamera.exposureMode = .AutoExpose
+                }, complete: complete)
+        }
+        
+        ///  Auto Focus at a point of interest
+        ///
+        ///  - parameter point:    POI
+        ///  - parameter complete: complete focusing block
+        public func focus(atPoint point:CGPoint, complete:cameraCompleteBlockType?=nil)  {
+            
+            controlCamera(atPoint: point, action: { (poi) in
+                self.currentCamera.focusPointOfInterest = poi
+                self.currentCamera.focusMode = .AutoFocus
+                }, complete: nil)
+            
+            if let complete = complete {
+                autofocusCompleteQueue.append(completeFunction(complete: complete))
+                currentCamera.addObserver(self, forKeyPath: "adjustingFocus", options: .New, context: &IMPCameraManager.focusPointOfInterestContext)
+            }
+        }
+        
         //
         // Capturing video frames and update live-view to apply IMP-filter.
         //
@@ -176,7 +205,6 @@
                     isVideoSuspended = false
                     videoObserversHandle()
                 }
-                
                 
                 if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
                     if liveView.filter?.source == nil {
@@ -259,10 +287,10 @@
             }
         }
         
-        ///  Check access to camera
-        ///
-        ///  - parameter complete: complete hanlder
-        ///
+        //  Check access to camera
+        //
+        //  - parameter complete: complete hanlder
+        //
         func requestAccess(complete:AccessHandler) {
             AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo, completionHandler: {
                 (granted: Bool) -> Void in
@@ -270,7 +298,84 @@
             });
         }
         
-        var        _currentCamera:AVCaptureDevice!
+        var _currentCamera:AVCaptureDevice! {
+            willSet{
+                if (_currentCamera != nil) {
+                    self.removeCameraObservers()
+                }
+            }
+            didSet{
+                self.addCameraObservers()
+            }
+        }
+        
+        func controlCamera(atPoint point:CGPoint, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+            dispatch_async(sessionQueue){
+                if self.currentCamera == nil {
+                    return
+                }
+                
+                if self.currentCamera.focusPointOfInterestSupported
+                    &&
+                    self.currentCamera.isFocusModeSupported(.AutoFocus)
+                {
+                    let poi = self.pointOfInterestForLocation(point)
+                    
+                    do {
+                        try self.currentCamera.lockForConfiguration()
+                        
+                        action(poi: poi)
+                        
+                        self.currentCamera.unlockForConfiguration()
+                        
+                        if let complete = complete {
+                            complete(camera:self)
+                        }
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+        }
+        
+        //
+        // Observe camera properties...
+        //
+        
+        static var focusPointOfInterestContext = "focusPointOfInterestContext"
+        
+        class completeFunction {
+            var block:cameraCompleteBlockType? = nil
+            init(complete:cameraCompleteBlockType){
+                self.block = complete
+            }
+        }
+        
+        var autofocusCompleteQueue = [completeFunction]()
+
+        func addCameraObservers() {
+            currentCamera.addObserver(self, forKeyPath: "focusPointOfInterest", options: .New, context: nil)
+        }
+        
+        func removeCameraObservers() {
+            currentCamera.removeObserver(self, forKeyPath: "focusPointOfInterest", context: nil)
+        }
+
+        override public func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+            
+            if  context == &IMPCameraManager.focusPointOfInterestContext {
+                
+                if let new = change?["new"] as? Int {
+                    if new == 0 {
+                        currentCamera.removeObserver(self, forKeyPath: "adjustingFocus", context: context)
+                        if let complete = autofocusCompleteQueue.popLast()?.block {
+                            complete(camera:self)
+                        }
+                    }
+                }
+            }
+        }
         
         func updateStillImageSettings() {
             if compression.isHardware {
@@ -352,7 +457,7 @@
                     }
                 }
                 catch let error as NSError {
-                    NSLog("IMPCameraManager error: \(error) \(__FILE__):\(__LINE__)")
+                    NSLog("IMPCameraManager error: \(error) \(#file):\(#line)")
                 }
             }
         }
@@ -396,7 +501,7 @@
                 
             }
             catch let error as NSError {
-                NSLog("IMPCameraManager error: \(error) \(__FILE__):\(__LINE__)")
+                NSLog("IMPCameraManager error: \(error) \(#file):\(#line)")
             }
         }
         
@@ -431,6 +536,18 @@
             return device
         }
         
+        func pointOfInterestForLocation(location:CGPoint) -> CGPoint {
+            
+            let  frameSize = self.liveView.bounds.size
+            var  newLocaltion = location
+            
+            if self.cameraPosition == .Front {
+                newLocaltion.x = frameSize.width - location.x
+            }
+            
+            return CGPointMake(newLocaltion.y / frameSize.height, 1 - (newLocaltion.x / frameSize.width));
+        }
+
     }
     
 #endif

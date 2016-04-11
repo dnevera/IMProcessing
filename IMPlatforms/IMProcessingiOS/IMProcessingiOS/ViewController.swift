@@ -145,6 +145,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             cameraManager.addLiveViewReadyObserver({ (camera) in
                 NSLog(" Live view ready! ")
             })
+            
+            let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusHandler(_:)))
+            focusTap.numberOfTapsRequired = 1
+            cameraManager.liveView.addGestureRecognizer(focusTap)
+            
+            let exposureDoubleTap = UITapGestureRecognizer(target: self, action: #selector(exposureHandler(_:)))
+            exposureDoubleTap.numberOfTapsRequired = 2
+            cameraManager.liveView.addGestureRecognizer(exposureDoubleTap)
+            
         }
 
         let triggerButton = UIButton(type: .System)
@@ -168,7 +177,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
                 make.left.equalTo(view).offset(10)
             })
-            
             
             pauseButton.setTitle("Pause", forState: .Normal)
             pauseButton.addTarget(self, action: #selector(self.pauseCamera(_:)), forControlEvents: .TouchUpInside)
@@ -233,7 +241,29 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    internal func changeValue(sender:UISlider){
+    func focusHandler(gesture: UITapGestureRecognizer) {
+        if gesture.state == .Ended {
+            let point = gesture.locationInView(self.cameraManager.liveView)
+            
+            NSLog("... auto focus at \(point) start ... ")
+            cameraManager.focus(atPoint: point, complete: { (camera) in
+                NSLog("... auto focus at \(point) done!")
+            })
+        }
+    }
+
+    func exposureHandler(gesture: UITapGestureRecognizer) {
+        if gesture.state == .Ended {
+            let point = gesture.locationInView(self.cameraManager.liveView)
+            
+            NSLog("... auto exposure at \(point) start ...")
+            cameraManager.exposure(atPoint: point, complete: { (camera) in
+                NSLog("... auto exposure at \(point) done!")
+            })
+        }
+    }
+
+    func changeValue(sender:UISlider){
         dispatch_async(filter!.context.dispatchQueue) { () -> Void in
             if BLUR_FILTER {
                 self.blur.radius = (128 * sender.value).int
@@ -245,11 +275,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    internal func capturePhoto(sender:UIButton){
+    func capturePhoto(sender:UIButton){
         print("... capture... ")
     }
     
-    internal func stopCamera(sender:UIButton){
+    func stopCamera(sender:UIButton){
         if cameraManager.isReady {
             print("... stop ... ")
             cameraManager.stop()
@@ -262,7 +292,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    internal func pauseCamera(sender:UIButton){
+    func pauseCamera(sender:UIButton){
         if cameraManager.isRunning {
             print("... resume ... ")
             cameraManager.pause()
@@ -273,16 +303,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    internal func toggeleCamera(sender:UIButton){
+    func toggeleCamera(sender:UIButton){
         let toggled = cameraManager.toggleCamera()
         print("... toggle camera ... \(toggled)")
     }
     
-    internal func openAlbum(sender:UIButton){
+    func openAlbum(sender:UIButton){
         imagePicker = UIImagePickerController()
     }
     
-    private var imagePicker:UIImagePickerController!{
+    var imagePicker:UIImagePickerController!{
         didSet{
             self.imagePicker.delegate = self
             self.imagePicker.allowsEditing = false
