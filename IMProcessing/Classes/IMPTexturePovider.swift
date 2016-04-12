@@ -56,7 +56,7 @@ public extension MTLDevice {
         
         let width = buffers[0].count
         
-        for var i=1; i<buffers.count; i++ {
+        for i in 1 ..< buffers.count {
             if (width != buffers[i].count) {
                 fatalError("texture buffers must have identical size...")
             }
@@ -112,7 +112,7 @@ public extension MTLTexture {
         if height != buffer.count {
             fatalError("MTLTexture.update(buffer:[UInt8]) is not equal texture size...")
         }
-        for var i=0; i<height; i++ {
+        for i in 0 ..< height {
             self.replaceRegion(MTLRegionMake2D(0, i, width, 1), mipmapLevel: 0, withBytes: buffer[i], bytesPerRow: width)
         }
     }
@@ -125,7 +125,7 @@ public extension MTLTexture {
         let region = MTLRegionMake2D(0, 0, width, 1)
         let bytesPerRow = region.size.width * sizeof(Float32)
         
-        for var index=0; index<buffers.count; index++ {
+        for index in 0 ..< buffers.count {
             let curve = buffers[index]
             if width != curve.count {
                 fatalError("MTLTexture.update(buffer:[[Float]]) is not equal texture size...")

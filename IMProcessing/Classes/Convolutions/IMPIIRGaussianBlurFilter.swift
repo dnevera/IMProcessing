@@ -27,11 +27,10 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
         }
     }
     
-    override public func apply() {
+    override public func apply() -> IMPImageProvider {
         
         if radius <= 1 {
-            super.apply()
-            return
+            return super.apply()
         }
         
         if dirty {
@@ -48,12 +47,12 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                 let threadgroupsX = MTLSizeMake(1, t.height,1);
                 let threadgroupsY = MTLSizeMake(t.width,1,1);
 
-                if self.texture?.width != width || self.texture?.height != height {
+                if self._destination.texture?.width != width || self._destination.texture?.height != height {
                     let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                         inputTexture.pixelFormat,
                         width: width, height: height, mipmapped: false)
                     
-                    self.texture = self.context.device.newTextureWithDescriptor(descriptor)
+                    self._destination.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
 
                 let forwardWidth  = width+radius*3
@@ -72,7 +71,7 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                 var bsize:int2 = int2(Int32(forwardWidth),Int32(forwardHeight))
                 memcpy(self.bsizeBuffer!.contents(), &bsize, self.bsizeBuffer!.length)
 
-                context.execute({ (commandBuffer) -> Void in
+                context.execute{ (commandBuffer) -> Void in
                     
                     //
                     // horizontal stage
@@ -87,7 +86,7 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                     commandEncoder.setComputePipelineState(self.kernel_iirFilterHorizontal.pipeline!)
                     
                     commandEncoder.setTexture(inputTexture,    atIndex: 0)
-                    commandEncoder.setTexture(self.texture,    atIndex: 1)
+                    commandEncoder.setTexture(self._destination.texture,    atIndex: 1)
                     commandEncoder.setTexture(self.bTexture,   atIndex: 2)
                     commandEncoder.setTexture(self.aTexture,   atIndex: 3)
                     commandEncoder.setBuffer(self.inoutBuffer,  offset: 0, atIndex: 0)
@@ -111,8 +110,8 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                     
                     commandEncoder.setComputePipelineState(self.kernel_iirFilterVertical.pipeline!)
                     
-                    commandEncoder.setTexture(self.texture,    atIndex: 0)
-                    commandEncoder.setTexture(self.texture,    atIndex: 1)
+                    commandEncoder.setTexture(self._destination.texture,    atIndex: 0)
+                    commandEncoder.setTexture(self._destination.texture,    atIndex: 1)
                     commandEncoder.setTexture(self.bTexture,   atIndex: 2)
                     commandEncoder.setTexture(self.aTexture,   atIndex: 3)
                     commandEncoder.setBuffer(self.inoutBuffer,  offset: 0, atIndex: 0)
@@ -122,31 +121,37 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
                     
                     commandEncoder.dispatchThreadgroups(threadgroupsY, threadsPerThreadgroup:threadgroupCounts)
                     commandEncoder.endEncoding()
-                })
+                }
                 
-                executeDestinationObservers(getDestination())
+                executeDestinationObservers(_destination)
             }
         }
         dirty = false
+        return _destination
     }
     
-    private var destinationContainer:IMPImageProvider?
+    lazy var _destination:IMPImageProvider = {
+        return IMPImageProvider(context: self.context)
+    }()
     
-    internal override func getDestination() -> IMPImageProvider? {
-        if !enabled{
-            return source
-        }
-        if let t = self.texture{
-            if let d = destinationContainer{
-                d.texture=t
-            }
-            else{
-                destinationContainer = IMPImageProvider(context: self.context, texture: t)
-            }
-        }
-        return destinationContainer
-    }
-        
+    
+//    private var destinationContainer:IMPImageProvider?
+//    
+//    internal func getDestination() -> IMPImageProvider? {
+//        if !enabled{
+//            return source
+//        }
+//        if let t = self.texture{
+//            if let d = destinationContainer{
+//                d.texture=t
+//            }
+//            else{
+//                destinationContainer = IMPImageProvider(context: self.context, texture: t)
+//            }
+//        }
+//        return destinationContainer
+//    }
+    
     func update(){
         if radius>1{
             radiusBuffer = radiusBuffer ?? context.device.newBufferWithLength(sizeofValue(radius), options: .CPUCacheModeDefaultCache)
@@ -163,7 +168,7 @@ public class IMPIIRGaussianBlurFilter: IMPFilter {
     private var radiusBuffer:MTLBuffer!
     private var inoutBuffer :MTLBuffer?
     private var inoutBuffer2:MTLBuffer?
-    private var texture     :MTLTexture?
+    //private var texture     :MTLTexture?
     private var bsizeBuffer:MTLBuffer?
     
 

@@ -60,28 +60,32 @@ public class IMPHistogramView: IMPView {
             self.view = view
         }
         
-        override public func apply() {
+        override public func apply() -> IMPImageProvider {
             if let v = view{
                 var size = MTLSize(cgsize: v.bounds.size)*(v.scaleFactor,v.scaleFactor,1)
                 size.depth = 1
                 solver.destinationSize = size
             }
-            super.apply()
+            return super.apply()
         }
     }
     
-    override public var source:IMPImageProvider?{
-        didSet{
-            _filter.source = source
-            _filter.apply()
-        }
-    }
+//    override public var source:IMPImageProvider?{
+//        didSet{
+//            _filter.source = source
+//            _filter.apply()
+//        }
+//    }
     
     private var _filter:histogramLayerFilter! {
         didSet{
             _filter.addDestinationObserver { (destination) -> Void in
-                self.currentDestination = destination
+                //self.currentDestination = destination
                 self.layerNeedUpdate = true
+            }
+            
+            _filter.addNewSourceObserver { (source) in
+                self._filter.apply()
             }
         }
     }

@@ -89,7 +89,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
         }
     }
     
-    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzerProtocol, histogram: IMPHistogram, imageSize: CGSize) {
         //
         // hues placed at start of channel W
         //

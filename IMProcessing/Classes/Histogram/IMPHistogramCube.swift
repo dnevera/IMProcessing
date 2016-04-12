@@ -223,12 +223,12 @@ public class IMPHistogramCube{
             
             var filtered = [LocalMaximum]()
             
-            for var k = 0; k < maxima.count ; k++ {
+            for k in 0 ..< maxima.count  {
                 
                 let max1 = maxima[k]
                 var isDistinct = true
                 
-                for var n = 0; n<k; n++ {
+                for n in 0 ..< k {
                     let max2 = maxima[n]
                     
                     let delta = max1.color-max2.color
@@ -257,7 +257,7 @@ public class IMPHistogramCube{
             var temp     = [LocalMaximum]()
             var threshold = Float(0.1)
             
-            for var k = 0 ; k<10 ; k++ {
+            for _ in 0  ..< 10  {
                 temp = distinctMaxima(filtered, threshold: threshold)
                 if temp.count <= count {
                     break

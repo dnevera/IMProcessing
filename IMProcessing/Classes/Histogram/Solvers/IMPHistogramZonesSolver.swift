@@ -29,11 +29,11 @@ public class IMPHistogramZonesSolver: NSObject, IMPHistogramSolver {
         
         public init() {}
         
-        public mutating func update(var histogram:[Float], binCount:Float){
+        public mutating func update(inout histogram:[Float], binCount:Float){
             
             var zone_value:Float = 0
             
-            for var i=0; i<steps.count; i++ {
+            for i in 0 ..< steps.count {
                 
                 let index = Zones.indices[i]
                 
@@ -82,7 +82,8 @@ public class IMPHistogramZonesSolver: NSObject, IMPHistogramSolver {
     
     public var zones = Zones()
     
-    public func analizerDidUpdate(analizer: IMPHistogramAnalyzer, histogram: IMPHistogram, imageSize: CGSize) {
-        zones.update(histogram[.W],binCount: histogram.binCount(.W))
+    public func analizerDidUpdate(analizer: IMPHistogramAnalyzerProtocol, histogram: IMPHistogram, imageSize: CGSize) {
+        var h = histogram[.W]
+        zones.update(&h, binCount: histogram.binCount(.W))
     }
 }

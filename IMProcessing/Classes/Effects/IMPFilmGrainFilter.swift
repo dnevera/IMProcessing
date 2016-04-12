@@ -23,7 +23,7 @@ public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
             var times = [Float](count: 4, repeatedValue: 0)
             
             let timer  = UInt32(modf(NSDate.timeIntervalSinceReferenceDate()).0)
-            for var i=0; i < times.count; i++ {
+            for i in 0 ..< times.count {
                 times[i] = Float(arc4random_uniform(timer))/Float(timer)
             }
             

@@ -29,9 +29,20 @@ import Metal
 public typealias IMPSize  = CGSize
 
 public enum IMProcessing{
+    
+    public struct meta {
+        
+        static let version                  = 1.0
+        static let versionKey               = "IMProcessingVersion"
+        static let imageOrientationKey      = "Orientation"
+        static let imageSourceExposureMode  = "SourceExposureMode"
+        static let imageSourceFocusMode     = "SourceFocusMode"
+    }
+    
     public struct names {
         static let prefix = "com.improcessing."
     }
+    
     public struct colors {
         #if os(iOS)
         static let pixelFormat = MTLPixelFormat.RGBA8Unorm
@@ -54,7 +65,24 @@ public extension IMPColor{
     public convenience init(red:Float, green:Float, blue:Float) {
         self.init(rgb:float3(red,green,blue))
     }
+    #if os(iOS)
+    public var rgb:float3{
+        get{
+            return rgba.xyz
+        }
+    }
     
+    public var rgba:float4{
+        get{
+            var red:CGFloat   = 0.0
+            var green:CGFloat = 0.0
+            var blue:CGFloat  = 0.0
+            var alpha:CGFloat = 0.0
+            getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+            return float4(red.float,green.float,blue.float,alpha.float)
+        }
+    }
+    #else
     public var rgb:float3{
         get{
             return float3(redComponent.float,greenComponent.float,blueComponent.float)
@@ -66,13 +94,12 @@ public extension IMPColor{
             return float4(redComponent.float,greenComponent.float,blueComponent.float,alphaComponent.float)
         }
     }
+    #endif
 }
 
 public func * (left:IMPColor, right:Float) -> IMPColor {
-    return IMPColor(
-        red: left.redComponent.float*right,
-        green: left.greenComponent.float*right,
-        blue: left.blueComponent.float*right)
+    let rgb = left.rgb
+    return IMPColor( red: rgb.r*right, green: rgb.g*right, blue: rgb.b*right)
 }
 
 public extension IMPBlendingMode{

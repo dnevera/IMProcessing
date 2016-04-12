@@ -94,10 +94,10 @@ public class IMPHistogram {
 
         let m = Float(size-1)
         
-        for var c=0; c<channels.count; c++ {
-            for var i=0; i<size; i++ {
+        for c in 0 ..< channels.count {
+            for i in 0 ..< size {
                 let v = Float(i)/m
-                for var p=0; p<mu.count; p++ {
+                for p in 0 ..< mu.count {
                     channels[c][i] += v.gaussianPoint(fi: fi, mu: mu[p], sigma: sigma[p])
                 }
             }
@@ -112,7 +112,7 @@ public class IMPHistogram {
         channels = [[Float]](
             count: Int(type.rawValue), repeatedValue: [Float](count: self.size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
-        for var c=0; c<channels.count; c++ {
+        for c in 0 ..< channels.count {
             self.ramp(&channels[c], ramp: ramp)
             updateBinCountForChannel(c)
         }
@@ -139,7 +139,7 @@ public class IMPHistogram {
         }
         channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
-        for var c=0; c<channels.count; c++ {
+        for c in 0 ..< channels.count {
             for i in 0..<ch[c].count {
                 channels[c][i] = ch[c][i]
             }
@@ -152,7 +152,7 @@ public class IMPHistogram {
         type = histogram.type
         channels = [[Float]](count: type.rawValue, repeatedValue: [Float](count: size, repeatedValue: 0))
         binCounts = [Float](count: Int(type.rawValue), repeatedValue: 0)
-        for var c=0; c<channels.count; c++ {
+        for c in 0 ..< channels.count {
             for i in 0..<histogram.channels[c].count {
                 channels[c][i] = histogram.channels[c][i]
             }
@@ -204,6 +204,22 @@ public class IMPHistogram {
         updateBinCountForChannel(channel.rawValue)
     }
     
+    
+    public func updateWithConinuesData(dataIn: UnsafeMutablePointer<UInt32>){
+        self.clearHistogram()
+        let address = UnsafePointer<UInt32>(dataIn)
+        for c in 0..<channels.count{
+            self.updateContinuesData(&channels[c], address: address, index: c)
+        }
+    }
+
+    public func update(red red:[vImagePixelCount], green:[vImagePixelCount], blue:[vImagePixelCount], alpha:[vImagePixelCount]){
+        self.clearHistogram()
+        self.updateChannel(&channels[0], address: UnsafePointer<vImagePixelCount>.init(red),   index: 0)
+        self.updateChannel(&channels[1], address: UnsafePointer<vImagePixelCount>.init(blue),  index: 0)
+        self.updateChannel(&channels[2], address: UnsafePointer<vImagePixelCount>.init(green), index: 0)
+        self.updateChannel(&channels[3], address: UnsafePointer<vImagePixelCount>.init(alpha), index: 0)
+    }
     
     ///
     /// Текущий CDF (комулятивная функция распределения) гистограммы.
@@ -292,7 +308,7 @@ public class IMPHistogram {
     ///  - parameter lead:    phase-lead in ticks of the histogram
     ///  - parameter scale:   scale
     public func convolve(filter:IMPHistogram, lead:Int, scale:Float=1){
-        for var c=0; c<channels.count; c++ {
+        for c in 0 ..< channels.count {
             convolve(filter.channels[c], channel: ChannelNo(rawValue: c)!, lead: lead, scale: scale)
         }
     }
@@ -365,7 +381,7 @@ public class IMPHistogram {
     ///  - returns: a random distributed histogram
     public func random(scale scale:Float = 1) -> IMPHistogram {
         let h = IMPHistogram(ramp: 0..<size, size:size, type: type)
-        for var c=0; c<h.channels.count; c++ {
+        for c in 0 ..< h.channels.count {
             var data  = [UInt8](count: h.size, repeatedValue: 0)
             SecRandomCopyBytes(kSecRandomDefault, data.count, &data)
             h.channels[c] = [Float](count: h.size, repeatedValue: 0)
@@ -391,7 +407,7 @@ public class IMPHistogram {
     ///
     ///  - parameter histogram: another histogram
     public func add(histogram:IMPHistogram){
-        for var c=0; c<histogram.channels.count; c++ {
+        for c in 0 ..< histogram.channels.count {
             addFromData(histogram.channels[c], toChannel: &channels[c])
         }
     }
@@ -411,7 +427,7 @@ public class IMPHistogram {
     ///
     ///  - parameter histogram: another histogram
     public func mul(histogram:IMPHistogram){
-        for var c=0; c<histogram.channels.count; c++ {
+        for c in 0 ..< histogram.channels.count {
             mulFromData(histogram.channels[c], toChannel: &channels[c])
         }
     }
@@ -451,10 +467,19 @@ public class IMPHistogram {
     private func updateChannel(inout channel:[Float], address:UnsafePointer<UInt32>, index:Int){
         let p = address+Int(self.size)*Int(index)
         let dim = self.dim<1 ? 1 : self.dim;
-        //
-        // ковертим из единственно возможного в текущем MSL (atomic_)[uint] во [float]
-        //
-        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(self.size));
+        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(size))
+    }
+    
+    private func updateChannel(inout channel:[Float], address:UnsafePointer<vImagePixelCount>, index:Int){
+        let p = UnsafePointer<UInt32>(address+Int(self.size)*Int(index))
+        let dim = sizeof(vImagePixelCount)/sizeof(UInt32);
+        vDSP_vfltu32(p, dim, &channel, 1, vDSP_Length(size));
+    }
+    
+    
+    private func updateContinuesData(inout channel:[Float], address:UnsafePointer<UInt32>, index:Int){
+        let p = address+Int(size)*index
+        vDSP_vfltu32(p, 1, &channel, 1, vDSP_Length(size))
     }
     
     //
@@ -614,7 +639,7 @@ public extension IMPHistogram {
     public func entropy(channel index:ChannelNo) -> Float{
         var e:Float = 0
         let sum     = binCount(index)
-        for var i = 0; i < size; i++ {
+        for i in 0 ..< size {
             let Hc = self[index][i]
             if Hc > 0 {
                 e += -(Hc/sum) * log2(Hc/sum);
@@ -676,7 +701,7 @@ public extension IMPHistogram{
         var inc = true
         var dec = false
         
-        for var i = 1; i < y.count; i++ {
+        for i in 1 ..< y.count {
             
             // Changed from decline to increase, reset maximum
             if (dec && y[i - 1] < y[i]) {
@@ -705,7 +730,7 @@ public extension IMPHistogram{
             if (y[indices[i].i] < yt) {
                 indices.removeAtIndex(i)
             } else {
-                i++
+                i += 1
             }
         }
         
@@ -717,7 +742,7 @@ public extension IMPHistogram{
             if (abs(index1 - index2).float < xt) {
                 indices.removeAtIndex(y[index1] < y[index2] ? i-1 : i)
             } else {
-                i++
+                i += 1
             }
         }
         return indices;
@@ -751,7 +776,7 @@ public extension IMPHistogram{
     ///  - parameter channel: channel number
     ///
     ///  - returns: matched histogram instance has .PLANAR type and .CDF distribution type
-    public func match(var values:[Float], channel:ChannelNo) -> IMPHistogram {
+    public func match(inout values:[Float], channel:ChannelNo) -> IMPHistogram {
         if values.count != size {
             fatalError("IMPHistogram: source and values vector histograms must have equal size")
         }
@@ -799,7 +824,7 @@ public extension IMPHistogram{
             target = histogram.cdf()
         }
         
-        for var c = 0; c<channels.count; c++ {
+        for c in 0 ..< channels.count {
             
             matchData(&source.channels[c], target: &target.channels[c], outcdf: &outcdf, c: c)
             
@@ -817,13 +842,13 @@ public extension IMPHistogram{
         var j=0
         let denom = (outcdf.size.float-1)
         
-        for var i=0; i<source.count; i++ {
+        for i in 0 ..< source.count {
             if source[i] <= target[j] {
                 outcdf.channels[c][i] = j.float/denom
             }
             else {
                 while source[i] > target[j] {
-                    j++;
+                    j += 1;
                     if (target[j] - source[i]) > (source[i] - target[j-1] )  {
                         outcdf.channels[c][i] = j.float/denom
                     }

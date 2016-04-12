@@ -21,7 +21,11 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     
     public var context:IMPContext!
     public var texture:MTLTexture?
-
+    
+    public lazy var videoCache:IMPVideoTextureCache = {
+        return IMPVideoTextureCache(context: self.context)
+    }()
+    
     public required init(context: IMPContext) {
         self.context = context
     }

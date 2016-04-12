@@ -17,85 +17,47 @@
     import AppKit
     public typealias IMPViewBase = NSView
     public typealias IMPDragOperationHandler = ((files:[String]) -> Bool)
-
+    
 #endif
 import Metal
 import GLKit.GLKMath
 import QuartzCore
 
 
+typealias __IMPViewLayerUpdate = (()->Void)
+
+
+/// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
     
+    /// Current Metal device context
     public var context:IMPContext!
     
-    internal var currentDestination:IMPImageProvider?
-    internal var currentDestinationLocked:Bool = false
-    
+    /// Current image filter
     public var filter:IMPFilter?{
         didSet{
             
-            if let s = self.source{
-                self.filter?.source = s
-            }
-            
-            filter?.addDestinationObserver(destination: { (destination) -> Void in
-                if !self.currentDestinationLocked {
-                    self.currentDestinationLocked = true
-                    self.currentDestination = destination
-                    self.currentDestinationLocked = false
+            filter?.addNewSourceObserver(source: { (source) in
+                
+                if let texture = self.filter?.source?.texture{
+                    
+                    self.threadGroups = MTLSizeMake(
+                        (texture.width+self.threadGroupCount.width)/self.threadGroupCount.width,
+                        (texture.height+self.threadGroupCount.height)/self.threadGroupCount.height, 1)
+                    
+                    self.updateLayerHandler()
                 }
-                self.layerNeedUpdate = true
             })
             
             filter?.addDirtyObserver({ () -> Void in
-                self.currentDestination = nil
-                self.filter?.context.dirty = true
                 self.layerNeedUpdate = true
             })
         }
     }
     
-    public var source:IMPImageProvider?{
-        didSet{
-            
-            currentDestination = nil
-            
-            if let texture = source?.texture{
-                
-                threadGroups = MTLSizeMake(
-                    (texture.width+threadGroupCount.width)/threadGroupCount.width,
-                    (texture.height+threadGroupCount.height)/threadGroupCount.height, 1)
-                
-                if let f = self.filter{
-                    f.source = source
-                }
-                
-                #if os(iOS)
-                    orientation = currentDeviceOrientation
-                #endif
-                
-                updateLayer()
-            }
-        }
-    }
-    
-    private var texture:MTLTexture?{
-        get{
-            if let t = currentDestination?.texture{
-                return t
-            }
-            else {
-                if currentDestination == nil  && filter != nil {
-                    if !self.currentDestinationLocked {
-                        self.currentDestinationLocked = true
-                        self.currentDestination = filter?.destination
-                        self.currentDestinationLocked = false
-                    }
-                }
-                return nil
-            }
-        }
-    }
+    lazy internal var updateLayerHandler:__IMPViewLayerUpdate = {
+        return self.updateLayer
+    }()
     
     public var isPaused:Bool = false {
         didSet{
@@ -103,89 +65,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
-    #if os(iOS)
-    
-    func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
-    
-    var angle:CGFloat = 0
-    
-    if let orientation = source?.orientation{
-    
-    switch orientation {
-    
-    case .Left, .LeftMirrored:
-    angle = Float(90.0).radians.cgloat
-    
-    case .Right, .RightMirrored:
-    angle = Float(-90.0).radians.cgloat
-    
-    case .Down, .DownMirrored:
-    angle = Float(180.0).radians.cgloat
-    
-    default: break
-    
-    }
-    }
-    
-    return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
-    }
-    
-    private var currentDeviceOrientation = UIDeviceOrientation.Portrait
-    public var orientation:UIDeviceOrientation{
-    get{
-    return currentDeviceOrientation
-    }
-    set{
-    setOrientation(orientation, animate: false)
-    }
-    }
-    public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-    currentDeviceOrientation = orientation
-    let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
-    
-    UIView.animateWithDuration(
-    duration,
-    delay: 0,
-    usingSpringWithDamping: 1.0,
-    initialSpringVelocity: 0,
-    options: .CurveEaseIn,
-    animations: { () -> Void in
-    
-    if let layer = self.metalLayer {
-    
-    var transform = CATransform3DIdentity
-    
-    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
-    
-    var angle:CGFloat = 0
-    
-    switch (orientation) {
-    
-    case .LandscapeLeft:
-    angle = Float(-90.0).radians.cgloat
-    
-    case .LandscapeRight:
-    angle = Float(90.0).radians.cgloat
-    
-    case .PortraitUpsideDown:
-    angle = Float(180.0).radians.cgloat
-    
-    default:
-    break
-    }
-    
-    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-    
-    layer.transform = self.correctImageOrientation(transform);
-    
-    self.layerNeedUpdate = true
-    }
-    
-    },
-    completion:  nil
-    )
-    }
-    #endif
     
     public init(context contextIn:IMPContext, frame: NSRect=CGRect(x: 0, y: 0, width: 100, height: 100)) {
         super.init(frame: frame)
@@ -222,7 +101,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    private var originalBounds:CGRect?
+    internal var originalBounds:CGRect?
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
@@ -242,14 +121,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         let library:MTLLibrary!  = self.context.device.newDefaultLibrary()
         
-        //
-        // Функция которую мы будем использовать в качестве функции фильтра из библиотеки шейдеров.
-        //
         let function:MTLFunction! = library.newFunctionWithName(IMPSTD_VIEW_KERNEL)
         
-        //
-        // Теперь создаем основной объект который будет ссылаться на исполняемый код нашего фильтра.
-        //
         pipeline = try! self.context.device.newComputePipelineStateWithFunction(function)
     }
     
@@ -278,7 +151,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if timer != nil {
                     timer.removeFromRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
                 }
-                timer = CADisplayLink(target: self, selector: "refresh")
+                timer = CADisplayLink(target: self, selector: #selector(IMPView.refresh))
             #else
                 timer = IMPDisplayLink.sharedInstance
                 timer?.addView(self)
@@ -294,7 +167,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     deinit{
-        timer?.removeView(self)
+        #if os(OSX)
+            timer?.removeView(self)
+        #endif
     }
     
     private let threadGroupCount = MTLSizeMake(8, 8, 1)
@@ -304,17 +179,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     public var screenSize:CGSize{
-    get {
-    let screen = self.window?.screen ?? UIScreen.mainScreen()
-    return screen.bounds.size
-    }
+        get {
+            let screen = self.window?.screen ?? UIScreen.mainScreen()
+            return screen.bounds.size
+        }
     }
     #endif
     
     public var scaleFactor:Float{
         get {
             #if os(iOS)
-                return  Float(UIScreen.mainScreen().scale) //Float(self.contentScaleFactor)
+                return  Float(UIScreen.mainScreen().scale)
             #else
                 let screen = self.window?.screen ?? NSScreen.mainScreen()
                 let scaleFactor = screen?.backingScaleFactor ?? 1.0
@@ -322,6 +197,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             #endif
         }
     }
+    
+    public var viewReadyHandler:(()->Void)?
+    private var isFirstFrame = true
     
     internal func refresh() {
         
@@ -331,7 +209,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             autoreleasepool({ () -> () in
                 
-                if let actualImageTexture = self.texture {
+                if let actualImageTexture = self.filter?.destination?.texture {
                     
                     if threadGroups == nil {
                         threadGroups = MTLSizeMake(
@@ -339,38 +217,39 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
                     }
                     
-                    
-                    dispatch_sync(dispatch_get_main_queue(), { () -> Void in
+                    if let drawable = self.metalLayer.nextDrawable(){
                         
-                        if let drawable = self.metalLayer.nextDrawable(){
+                        self.context.execute { (commandBuffer) -> Void in
                             
-                            self.context.execute { (commandBuffer) -> Void in
-                                self.context.wait()
-                                
-                                commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
-                                    self.context.resume()
-                                })
-                                
-                                let encoder = commandBuffer.computeCommandEncoder()
-                                
-                                encoder.setComputePipelineState(self.pipeline!)
-                                
-                                encoder.setTexture(actualImageTexture, atIndex: 0)
-                                
-                                encoder.setTexture(drawable.texture, atIndex: 1)
-                                
-                                encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-                                
-                                encoder.endEncoding()
-                                
-                                commandBuffer.presentDrawable(drawable)
-                                
+                            self.context.wait()
+                            
+                            commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
+                                self.context.resume()
+                            })
+                            
+                            let encoder = commandBuffer.computeCommandEncoder()
+                            
+                            encoder.setComputePipelineState(self.pipeline!)
+                            
+                            encoder.setTexture(actualImageTexture, atIndex: 0)
+                            
+                            encoder.setTexture(drawable.texture, atIndex: 1)
+                            
+                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+                            
+                            encoder.endEncoding()
+                            
+                            commandBuffer.presentDrawable(drawable)
+                            
+                            if self.isFirstFrame && self.viewReadyHandler !=  nil {
+                                self.isFirstFrame = false
+                                self.viewReadyHandler!()
                             }
                         }
-                        else{
-                            self.context.resume()
-                        }
-                    })
+                    }
+                    else{
+                        self.context.resume()
+                    }
                 }
             })
         }
@@ -378,7 +257,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     public func display() {
-    self.refresh()
+        self.refresh()
     }
     #else
     override public func display() {
@@ -390,79 +269,67 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     
-    func updateLayer(){
-    if let l = metalLayer {
-    var adjustedSize = bounds.size
-    
-    if let t = texture{
-    
-    l.drawableSize = t.size
-    
-    var size:CGFloat!
-    if UIDeviceOrientationIsLandscape(self.orientation)  {
-    size = t.width < t.height ? originalBounds?.width : originalBounds?.height
-    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
-    }
-    else{
-    size = t.width > t.height ? originalBounds?.width : originalBounds?.height
-    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
-    }
-    }
-    
-    var origin = CGPointZero
-    if adjustedSize.height < bounds.height {
-    origin.y = ( bounds.height - adjustedSize.height ) / 2
-    }
-    if adjustedSize.width < bounds.width {
-    origin.x = ( bounds.width - adjustedSize.width ) / 2
-    }
-    
-    l.frame = CGRect(origin: origin, size: adjustedSize)
-    layerNeedUpdate = true
-    }
+    internal func updateLayer(){
+        if let l = metalLayer {
+            let adjustedSize = bounds.size
+            
+            if let t = filter?.destination?.texture{
+                l.drawableSize = t.size
+            }
+            
+            var origin = CGPointZero
+            if adjustedSize.height < bounds.height {
+                origin.y = ( bounds.height - adjustedSize.height ) / 2
+            }
+            if adjustedSize.width < bounds.width {
+                origin.x = ( bounds.width - adjustedSize.width ) / 2
+            }
+            
+            l.frame = CGRect(origin: origin, size: adjustedSize)
+            layerNeedUpdate = true
+        }
     }
     
     override public func layoutSubviews() {
-    super.layoutSubviews()
-    updateLayer()
-    layerNeedUpdate = true
+        super.layoutSubviews()
+        updateLayerHandler()
     }
     
     #else
     
     override public func updateLayer(){
-        if let l = metalLayer {
-            if let t = texture{
-                l.drawableSize = t.size
-            }
-            l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
-        }
-        layerNeedUpdate = true
+    if let l = metalLayer {
+    if let t = filter?.destination?.texture{
+    l.drawableSize = t.size
+    }
+    l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+    layerNeedUpdate = true
+    }
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
-        
-        let sourceDragMask = sender.draggingSourceOperationMask()
-        let pboard = sender.draggingPasteboard()
-        
-        if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
-            if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
-                return NSDragOperation.Generic
-            }
-        }
-        
-        return NSDragOperation.None
+    
+    let sourceDragMask = sender.draggingSourceOperationMask()
+    let pboard = sender.draggingPasteboard()
+    
+    if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
+    if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
+    return NSDragOperation.Generic
+    }
+    }
+    
+    return NSDragOperation.None
     }
     
     public var dragOperation:IMPDragOperationHandler?
     
     public override func performDragOperation(sender: NSDraggingInfo) -> Bool {
-        if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
-            if let o = dragOperation {
-                return o(files: files as! [String])
-            }
-        }
-        return false
+    if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
+    if let o = dragOperation {
+    return o(files: files as! [String])
+    }
+    }
+    return false
     }
     
     #endif

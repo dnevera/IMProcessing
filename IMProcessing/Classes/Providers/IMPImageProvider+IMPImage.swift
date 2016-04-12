@@ -9,7 +9,7 @@
 import Foundation
 import Metal
 
-extension IMPImageProvider{
+public extension IMPImageProvider{
     
     public convenience init(context: IMPContext, image: IMPImage, maxSize: Float = 0) {
         self.init(context: context)

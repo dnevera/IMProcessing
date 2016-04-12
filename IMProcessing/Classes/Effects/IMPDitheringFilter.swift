@@ -92,9 +92,9 @@ public class IMPRandomDitheringFilter:IMPDitheringFilter{
     override public var ditheringLut:[[UInt8]] {
         get {
             var data = [[UInt8]](count: 8, repeatedValue: [UInt8](count: 8, repeatedValue: 0))
-            for var i=0; i<data.count; i++ {
+            for i in 0 ..< data.count {
                 SecRandomCopyBytes(kSecRandomDefault, data[i].count, UnsafeMutablePointer<UInt8>(data[i]))
-                for var j=0; j<data[i].count; j++ {
+                for j in 0 ..< data[i].count {
                     data[i][j] = data[i][j]/4
                 }
             }

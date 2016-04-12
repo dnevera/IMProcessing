@@ -16,12 +16,11 @@
 
 #if os(iOS)
     
-    
     class IMPScrollView: UIScrollView {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            let doubleTap = UITapGestureRecognizer(target: self, action: "zoom:")
+            let doubleTap = UITapGestureRecognizer(target: self, action: #selector(IMPScrollView.zoom(_:)))
             doubleTap.numberOfTapsRequired = 2
             self.addGestureRecognizer(doubleTap)
         }
@@ -30,7 +29,7 @@
             fatalError("init(coder:) has not been implemented")
         }
         
-        func zoomRectForgid(scale:CGFloat, center:CGPoint) -> CGRect {
+        func zoomRectForScale(scale:CGFloat, center:CGPoint) -> CGRect {
             
             var zoomRect = frame
             
@@ -78,30 +77,138 @@
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
+                filter?.addNewSourceObserver(source: { (source) in
+                    self.scrollView.zoomScale = 1
+                    //self.setOrientation(self.orientation, animate: false)
+                })
             }
         }
         
-        public var source:IMPImageProvider?{
+//        public var source:IMPImageProvider?{
+//            get{
+//                return imageView.source
+//            }
+//            set{
+//                imageView?.source = newValue
+//                scrollView.zoomScale = 1
+//                setOrientation(orientation, animate: false)
+//            }
+//        }
+
+        
+        func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
+            
+            var angle:CGFloat = 0
+            
+            if let orientation = filter?.source?.orientation{
+                
+                switch orientation {
+                    
+                case .Left, .LeftMirrored:
+                    angle = Float(90.0).radians.cgloat
+                    
+                case .Right, .RightMirrored:
+                    angle = Float(-90.0).radians.cgloat
+                    
+                case .Down, .DownMirrored:
+                    angle = Float(180.0).radians.cgloat
+                    
+                default: break
+                    
+                }
+            }
+            
+            return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+        }
+        
+        private var currentDeviceOrientation = UIDeviceOrientation.Portrait
+        
+        public var orientation:UIDeviceOrientation{
             get{
-                return imageView.source
+                return currentDeviceOrientation
             }
             set{
-                imageView?.source = newValue
-                scrollView.zoomScale = 1
-            }
-        }
-        
-        public var orientation:UIDeviceOrientation {
-            get{
-                return imageView.orientation
-            }
-            set {
-                imageView.orientation = newValue
+                setOrientation(orientation, animate: false)
             }
         }
         
         public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-            imageView.setOrientation(orientation, animate: animate)
+            currentDeviceOrientation = orientation
+            let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+            
+            UIView.animateWithDuration(
+                duration,
+                delay: 0,
+                usingSpringWithDamping: 1.0,
+                initialSpringVelocity: 0,
+                options: .CurveEaseIn,
+                animations: { () -> Void in
+                    
+                    if let layer = self.imageView.metalLayer {
+                        
+                        var transform = CATransform3DIdentity
+                        
+                        transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                        
+                        var angle:CGFloat = 0
+                        
+                        switch (orientation) {
+                            
+                        case .LandscapeLeft:
+                            angle = Float(-90.0).radians.cgloat
+                            
+                        case .LandscapeRight:
+                            angle = Float(90.0).radians.cgloat
+                            
+                        case .PortraitUpsideDown:
+                            angle = Float(180.0).radians.cgloat
+                            
+                        default:
+                            break
+                        }
+                        
+                        transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                        
+                        layer.transform = self.correctImageOrientation(transform);
+                        
+                        self.updateLayer()
+                    }
+                    
+                },
+                completion:  nil
+            )
+        }
+        
+        internal func updateLayer(){
+            if let l = imageView.metalLayer {
+                var adjustedSize = bounds.size
+                
+                if let t = filter?.destination?.texture {
+                    
+                    l.drawableSize = t.size
+                    
+                    var size:CGFloat!
+                    if UIDeviceOrientationIsLandscape(self.orientation)  {
+                        size = t.width < t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
+                    }
+                    else{
+                        size = t.width > t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
+                    }
+                }
+                
+                var origin = CGPointZero
+                if adjustedSize.height < bounds.height {
+                    origin.y = ( bounds.height - adjustedSize.height ) / 2
+                }
+                if adjustedSize.width < bounds.width {
+                    origin.x = ( bounds.width - adjustedSize.width ) / 2
+                }
+                
+                l.frame = CGRect(origin: origin, size: adjustedSize)
+                imageView.layerNeedUpdate = true                
+            }
         }
         
         private func configure(){
@@ -120,6 +227,7 @@
             self.addSubview(scrollView)
             
             imageView = IMPView(context: self.context, frame: self.bounds)
+            imageView.updateLayerHandler = updateLayer
             imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             imageView.backgroundColor = IMPColor.clearColor()
             
@@ -200,20 +308,20 @@
         }
         
         /// Image source
-        public var source:IMPImageProvider?{
-            get{
-                return imageView.source
-            }
-            set{
-                if let texture = newValue?.texture{
-                    imageView.frame = CGRect(x: 0, y: 0,
-                        width:  Int(texture.width.float/imageView.scaleFactor),
-                        height: Int(texture.height.float/imageView.scaleFactor))
-                }
-                imageView?.source = newValue
-                imageView.filter?.dirty = true
-            }
-        }
+//        public var source:IMPImageProvider?{
+//            get{
+//                return imageView.source
+//            }
+//            set{
+//                if let texture = newValue?.texture{
+//                    imageView.frame = CGRect(x: 0, y: 0,
+//                        width:  Int(texture.width.float/imageView.scaleFactor),
+//                        height: Int(texture.height.float/imageView.scaleFactor))
+//                }
+//                imageView?.source = newValue
+//                imageView.filter?.dirty = true
+//            }
+//        }
         
         ///  Magnify image to fit rectangle
         ///

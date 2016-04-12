@@ -177,7 +177,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
     ///  when any changes occur with the filter, or dirty property is set. 
     ///  Usually you don't need call the method except cases you sure you have to launch new computation.
     ///
-    public override func apply() {
+    public override func apply() -> IMPImageProvider {
         
         if let texture = source?.texture{
             
@@ -193,7 +193,8 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
             for o in analizerUpdateHandlers{
                 o(histogram: histogram)
             }
-            
         }
+        
+        return source!
     }
 }

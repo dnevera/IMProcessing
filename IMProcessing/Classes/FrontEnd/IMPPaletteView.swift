@@ -51,13 +51,13 @@ public class IMPPaletteView: IMPView {
             self.view = view
         }
         
-        override public func apply() {
+        override public func apply() -> IMPImageProvider {
             if let v = view{
                 var size = MTLSize(cgsize: v.bounds.size)*(v.scaleFactor,v.scaleFactor,1)
                 size.depth = 1
                 solver.destinationSize = size
             }
-            super.apply()
+            return super.apply()
         }
     }
     
