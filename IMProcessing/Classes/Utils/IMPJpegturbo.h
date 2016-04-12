@@ -11,6 +11,13 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
+typedef enum {
+    JPEG_TURBO_RGBA,
+    JPEG_TURBO_ARGB,
+    JPEG_TURBO_BGRA,
+    JPEG_TURBO_ABGR
+}IMPJpegColorSpace;
+
 typedef BOOL (^writeInitBlock)( void * _Null_unspecified cinfo,  void *_Null_unspecified*_Null_unspecified userData);
 typedef void (^writeFinishBlock)(void  *_Null_unspecified cinfo, void   *_Null_unspecified userData);
 
@@ -30,6 +37,12 @@ typedef void (^writeFinishBlock)(void  *_Null_unspecified cinfo, void   *_Null_u
               toJpegFile:(nonnull NSString *)filePath
              compression:(CGFloat)quality
                    error:(NSError *_Null_unspecified __autoreleasing *_Null_unspecified)error;
+
++ (BOOL) writePixelBuffer:(nonnull CVPixelBufferRef)pixelBuffer
+               toJpegFile:(nonnull NSString *)path
+              compression:(CGFloat)compressionQ
+          inputColorSpace:(IMPJpegColorSpace)colorSpace
+                    error:(NSError *_Null_unspecified __autoreleasing *_Null_unspecified)error;
 @end
 
 #endif

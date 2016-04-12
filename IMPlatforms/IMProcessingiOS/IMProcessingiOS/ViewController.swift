@@ -14,6 +14,13 @@ let TEST_CAMERA = true
 let BLUR_FILTER = false
 
 
+extension String {
+    static func uniqueString() -> String {
+        let uuidObj = CFUUIDCreate(nil)
+        return CFUUIDCreateString(nil, uuidObj) as String
+    }
+}
+
 class IMPTestFilter: IMPFilter {
     
     var rangeSolver = IMPHistogramRangeSolver()
@@ -49,6 +56,32 @@ class IMPTestFilter: IMPFilter {
 
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
+    
+    let documentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+    lazy var defaultImagesDirectory:String = {
+        let d = "images"
+        self.createFolder(d)
+        return d
+    }()
+    var uniqueImageFile:String {
+        return String(format: "%@/%@/%@.jpeg", documentsDirectory,defaultImagesDirectory,String.uniqueString())
+    }
+    
+    func createFolder(defaultFolder:String) {
+        
+        let documentsDirectory = self.documentsDirectory;
+        let cacheDirectory = (documentsDirectory as NSString).stringByAppendingPathComponent(defaultFolder) as String
+        
+        if (NSFileManager.defaultManager().fileExistsAtPath(cacheDirectory) == false) {
+            do {
+                try NSFileManager.defaultManager().createDirectoryAtPath(cacheDirectory, withIntermediateDirectories:true, attributes:nil)
+            }
+            catch let error as NSError {
+                NSLog("\(error)")
+            }
+        }
+    }
+    
     
     var cameraManager:IMPCameraManager!
     var containerView:UIView!
@@ -100,6 +133,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             cameraManager = IMPCameraManager(containerView: containerView)
             
             cameraManager.liveView.filter = filter
+            
+            cameraManager.compression = IMPCameraManager.Compression(isHardware: true, quality: 1)
             
             NSLog(" Camera staring ... ")
             
@@ -276,7 +311,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func capturePhoto(sender:UIButton){
-        print("... capture... ")
+        NSLog("... capture... ")
+        cameraManager.capturePhoto(file: uniqueImageFile) { (camera, finished, file, metadata, error) in
+            NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) meta = \(metadata) error = \(error)")
+        }
     }
     
     func stopCamera(sender:UIButton){

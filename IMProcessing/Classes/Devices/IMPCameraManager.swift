@@ -18,10 +18,12 @@
     public class IMPCameraManager: NSObject, IMPContextProvider, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         public typealias AccessHandler = ((Bool) -> Void)
-        public typealias liveViewEventBlockType    = ((camera:IMPCameraManager)->Void)
-        public typealias cameraEventBlockType      = ((camera:IMPCameraManager, ready:Bool)->Void)
-        public typealias cameraCompleteBlockType   = ((camera:IMPCameraManager)->Void)
-        public typealias videoEventBlockType       = ((camera:IMPCameraManager, running:Bool)->Void)
+        public typealias liveViewEventBlockType     = ((camera:IMPCameraManager)->Void)
+        public typealias cameraEventBlockType       = ((camera:IMPCameraManager, ready:Bool)->Void)
+        public typealias cameraCompleteBlockType    = ((camera:IMPCameraManager)->Void)
+        public typealias videoEventBlockType        = ((camera:IMPCameraManager, running:Bool)->Void)
+        
+        public typealias capturingCompleteBlockType = ((camera:IMPCameraManager, finished:Bool, file:String, metadata:NSDictionary?, error:NSError?)->Void)
         
         //
         // Public API
@@ -29,8 +31,16 @@
         
         ///  @brief Still image compression settings
         public struct Compression {
-            let isHardware:Bool
-            let quality:Float
+            public let isHardware:Bool
+            public let quality:Float
+            public init() {
+                isHardware = true
+                quality = 1
+            }
+            public init(isHardware:Bool, quality:Float){
+                self.isHardware = isHardware
+                self.quality = quality
+            }
         }
         
         /// Test camera session state
@@ -144,7 +154,7 @@
         }
         
         /// Make compression of still images with hardware compression layer instead of turbojpeg lib
-        public var compression = IMPCameraManager.Compression(isHardware: false, quality: 1){
+        public var compression = IMPCameraManager.Compression(isHardware: true, quality: 1){
             didSet{
                 updateStillImageSettings()
             }
@@ -186,34 +196,6 @@
             if let complete = complete {
                 autofocusCompleteQueue.append(completeFunction(complete: complete))
                 currentCamera.addObserver(self, forKeyPath: "adjustingFocus", options: .New, context: &IMPCameraManager.focusPointOfInterestContext)
-            }
-        }
-        
-        //
-        // Capturing video frames and update live-view to apply IMP-filter.
-        //
-        public func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
-            
-            if isVideoPaused {
-                return
-            }
-            
-            if connection == currentConnection {
-                
-                if !isVideoStarted || isVideoSuspended{
-                    isVideoStarted = true
-                    isVideoSuspended = false
-                    videoObserversHandle()
-                }
-                
-                if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                    if liveView.filter?.source == nil {
-                        liveView.filter?.source = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
-                    }
-                    else {
-                        liveView.filter?.source?.update(pixelBuffer: pixelBuffer)
-                    }
-                }
             }
         }
         
@@ -441,14 +423,21 @@
                             s.addOutput(liveViewOutput)
                         }
                         
-                        s.commitConfiguration()
-                        
                         //
                         // Full size Image
                         //
                         stillImageOutput = AVCaptureStillImageOutput()
-                        updateStillImageSettings()
+                        
+                        if s.canAddOutput(stillImageOutput) {
+                            s.addOutput(stillImageOutput)
+                        }
+                        
+                        s.canSetSessionPreset(AVCaptureSessionPresetPhoto)
+                        
+                        s.commitConfiguration()
 
+                        updateStillImageSettings()
+                        
                         updateConnection()
                         
                         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.runningNotification(_:)), name: AVCaptureSessionDidStartRunningNotification, object: session)
@@ -505,8 +494,8 @@
             }
         }
         
+        var capturingPhotoInProgress = false
         var session:AVCaptureSession!
-        
         var videoInput:AVCaptureDeviceInput!
         
         lazy var cameraPosition:AVCaptureDevicePosition = {
@@ -548,6 +537,146 @@
             return CGPointMake(newLocaltion.y / frameSize.height, 1 - (newLocaltion.x / frameSize.width));
         }
 
+        static func connection(mediaType:String, connections:NSArray) -> AVCaptureConnection? {
+            
+            var videoConnection:AVCaptureConnection? = nil
+            
+            for connection in connections  {
+                for port in connection.inputPorts {
+                    if  port.mediaType.isEqual(mediaType) {
+                        videoConnection = connection as? AVCaptureConnection
+                        break;
+                    }
+                }
+                if videoConnection != nil {
+                    break;
+                }
+            }
+            
+            return videoConnection;
+        }
+    }
+    
+    // MARK: - Capturing API
+    public extension IMPCameraManager {
+        //
+        // Capturing video frames and update live-view to apply IMP-filter.
+        //
+        public func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+            
+            if capturingPhotoInProgress {
+                return
+            }
+            
+            if isVideoPaused {
+                return
+            }
+            
+            if connection == currentConnection {
+                
+                if !isVideoStarted || isVideoSuspended{
+                    isVideoStarted = true
+                    isVideoSuspended = false
+                    videoObserversHandle()
+                }
+                
+                if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                    if liveView.filter?.source == nil {
+                        liveView.filter?.source = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
+                    }
+                    else {
+                        liveView.filter?.source?.update(pixelBuffer: pixelBuffer)
+                    }
+                }
+            }
+        }
+        
+        ///  Capture image to file
+        ///
+        ///  - parameter file:     file path
+        ///  - parameter complete: completition block
+        public func capturePhoto(file file:String, complete:capturingCompleteBlockType?=nil){
+            
+            if !isReady{
+                complete?(camera: self, finished: false, file: file, metadata: nil, error: nil)
+                return
+            }
+            if stillImageOutput.capturingStillImage {
+                complete?(camera: self, finished: false, file: file, metadata: nil, error: nil)
+                return
+            }
+            
+            if let complete = complete {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+                    
+                    if let connection = IMPCameraManager.connection(AVMediaTypeVideo, connections: self.stillImageOutput.connections) {
+                        
+                        self.capturingPhotoInProgress = true
+                        
+                        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection, completionHandler: { (sampleBuffer, error) in
+                            
+                            if error != nil {
+                                self.capturingPhotoInProgress = false
+                                complete(camera: self, finished: false, file: file, metadata: nil, error: error)
+                            }
+                            else{
+                                
+                                if let sampleBuffer = sampleBuffer {
+                                    
+                                    let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
+                                    
+                                    var meta = attachments as NSDictionary?
+                                    
+                                    if let d = meta {
+                                        let newMeta = d.mutableCopy() as! NSMutableDictionary
+                                        
+                                        var imageOrientation  = UIImageOrientation.Right
+                                        
+                                        switch (UIDevice.currentDevice().orientation) {
+                                        case .LandscapeLeft:
+                                            imageOrientation = self.cameraPosition == .Front ? .Down : .Up
+                                        case .LandscapeRight:
+                                            imageOrientation = self.cameraPosition == .Front ? .Up : .Down
+                                        case .PortraitUpsideDown:
+                                            imageOrientation = .Left
+                                        default: break
+                                        }
+                                        
+                                        newMeta[IMProcessing.meta.versionKey]          = IMProcessing.meta.version
+                                        newMeta[IMProcessing.meta.imageOrientationKey] = imageOrientation.rawValue
+                                        newMeta[IMProcessing.meta.imageSourceExposureMode] = self.currentCamera.exposureMode.rawValue
+                                        newMeta[IMProcessing.meta.imageSourceFocusMode] = self.currentCamera.focusMode.rawValue
+                                        
+                                        meta = newMeta
+                                    }
+                                    
+                                    do {
+                                        if self.compression.isHardware {
+                                            let imageDataJpeg = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
+                                            try imageDataJpeg.writeToFile(file, options: .AtomicWrite)
+                                            complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
+                                        }
+                                        else{
+                                            if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                                                try IMPJpegturbo.writePixelBuffer(pixelBuffer, toJpegFile: file, compression: self.compression.quality.cgloat, inputColorSpace:JPEG_TURBO_BGRA)
+                                                complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
+                                            }
+                                            else {
+                                                complete(camera: self, finished: false, file: file, metadata: meta, error: nil)
+                                            }
+                                        }
+                                    }
+                                    catch let error as NSError{
+                                        complete(camera: self, finished: false, file: file, metadata: meta, error: error)
+                                    }
+                                }
+                                self.capturingPhotoInProgress = false
+                            }
+                        })
+                    }
+                }
+            }
+        }
     }
     
 #endif

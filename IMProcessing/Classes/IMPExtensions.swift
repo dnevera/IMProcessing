@@ -29,9 +29,20 @@ import Metal
 public typealias IMPSize  = CGSize
 
 public enum IMProcessing{
+    
+    public struct meta {
+        
+        static let version                  = 1.0
+        static let versionKey               = "IMProcessingVersion"
+        static let imageOrientationKey      = "Orientation"
+        static let imageSourceExposureMode  = "SourceExposureMode"
+        static let imageSourceFocusMode     = "SourceFocusMode"
+    }
+    
     public struct names {
         static let prefix = "com.improcessing."
     }
+    
     public struct colors {
         #if os(iOS)
         static let pixelFormat = MTLPixelFormat.RGBA8Unorm

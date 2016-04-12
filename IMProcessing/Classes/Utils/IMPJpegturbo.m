@@ -12,6 +12,7 @@
 #import <stdio.h>
 #import <jpeglib.h>
 #import <setjmp.h>
+
 @import Security;
 
 struct DPJpegErrorMgr {
@@ -121,11 +122,11 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
     if ((infile = fopen(filename, "rb")) == NULL) {
         if (error) {
             *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.read"
-                                                  code: ENOENT
-                                              userInfo: @{
-                                                          NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", ""),filePath],
-                                                          NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", ""),
-                                                          }];
+                                                 code: ENOENT
+                                             userInfo: @{
+                                                         NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be open", ""),filePath],
+                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File not found", ""),
+                                                         }];
         }
         return textureIn;
     }
@@ -339,7 +340,7 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
         
         [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
-
+        
 #endif
         void       *image_buffer  = malloc(row_stride);
         
@@ -444,5 +445,108 @@ static GLOBAL(void) jpeg_mem_dest_dp(j_compress_ptr cinfo, NSData* data)
      ];
 }
 
++ (BOOL) writePixelBuffer:(CVPixelBufferRef)pixelBuffer
+               toJpegFile:(NSString *)path
+              compression:(CGFloat)compressionQ
+          inputColorSpace:(IMPJpegColorSpace)colorSpace
+                    error:(NSError *__autoreleasing *)error
+{
+    
+    int quality = round(compressionQ*100.0f); quality=quality<=0?10:quality>100?100:quality;
+    
+    const char *filename = [path cStringUsingEncoding:NSUTF8StringEncoding];
+    
+    int q = (int)round(quality * 100.0f); q=(q<=0?10:q>=100?100:q);
+    
+    
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    
+    FILE * outfile;               /* target file */
+    JSAMPROW row_pointer[1];      /* pointer to JSAMPLE row[s] */
+    int row_stride;               /* physical row width in image buffer */
+    
+    /* Step 1: allocate and initialize JPEG compression object */
+    
+    cinfo.err = jpeg_std_error(&jerr);
+    jpeg_create_compress(&cinfo);
+    
+    
+    /* Step 2: specify data destination (eg, a file) */
+    if ((outfile = fopen(filename, "wb")) == NULL) {
+        if (error) {
+            *error = [[NSError alloc ] initWithDomain:@"com.improcessing.jpeg.write"
+                                                 code: ENOENT
+                                             userInfo: @{
+                                                         NSLocalizedDescriptionKey:  [NSString stringWithFormat:NSLocalizedString(@"Image file %@ can't be created", nil),filename],
+                                                         NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"File can't be created", nil),
+                                                         }];
+        }
+        return NO;
+    }
+    jpeg_stdio_dest(&cinfo, outfile);
+    
+    
+    /* Step 3: set parameters for compression */
+    
+    cinfo.image_width  = (int)CVPixelBufferGetWidth(pixelBuffer);      /* image width and height, in pixels */
+    cinfo.image_height = (int)CVPixelBufferGetHeight(pixelBuffer);
+    cinfo.input_components = 4;           /* # of color components per pixel */
+    cinfo.in_color_space = JCS_EXT_RGBA;    /* colorspace of input image */
+    
+    switch (colorSpace) {
+        case JPEG_TURBO_ABGR:
+            cinfo.in_color_space = JCS_EXT_ABGR;
+            break;
+            
+        case JPEG_TURBO_ARGB:
+            cinfo.in_color_space = JCS_EXT_ARGB;
+            break;
+            
+        case JPEG_TURBO_BGRA:
+            cinfo.in_color_space = JCS_EXT_BGRA;
+            break;
+            
+        case JPEG_TURBO_RGBA:
+        default:
+            break;
+    }
+    
+    jpeg_set_defaults(&cinfo);
+    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+    
+    
+    /* Step 4: Start compressor */
+    
+    jpeg_start_compress(&cinfo, TRUE);
+    
+    
+    /* Step 5: while (scan lines remain to be written) */
+    /*           jpeg_write_scanlines(...); */
+    
+    row_stride = (int)cinfo.image_width  * cinfo.input_components; /* JSAMPLEs per row in image_buffer */
+    
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    void       *image_buffer  = CVPixelBufferGetBaseAddress(pixelBuffer);
+    
+    while (cinfo.next_scanline < cinfo.image_height) {
+        row_pointer[0] = & image_buffer[cinfo.next_scanline * row_stride];
+        (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+    }
+    
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    
+    /* Step 6: Finish compression */
+    
+    jpeg_finish_compress(&cinfo);
+    /* After finish_compress, we can close the output file. */
+    fclose(outfile);
+    
+    
+    /* Step 7: release JPEG compression object */
+    jpeg_destroy_compress(&cinfo);
+    
+    return YES;
+}
 
 @end
