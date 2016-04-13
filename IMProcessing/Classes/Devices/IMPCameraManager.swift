@@ -163,22 +163,18 @@
         }
         
         /// Get front camera capture device reference
-        public var frontCamera = IMPCameraManager.camera(.Front)
+        public let frontCamera = IMPCameraManager.camera(.Front)
         
         /// Get back camera caprure reference
-        public var backCamera  = IMPCameraManager.camera(.Back)
+        public let backCamera  = IMPCameraManager.camera(.Back)
         
-        /// Get current camera
-        public var currentCamera:AVCaptureDevice!{
-            return _currentCamera
-        }
         
         ///  Auto Exposure at a point of interest.
         ///
         ///  - parameter point:    POI
         ///  - parameter complete: complete operations
-        public func exposure(atPoint point:CGPoint, complete:cameraCompleteBlockType?=nil){
-            controlCamera(atPoint: point, action: { (poi) in
+        public func exposure(atPoint point:CGPoint=CGPoint(x: 0.5,y: 0.5), complete:cameraCompleteBlockType?=nil){
+            controlCameraExposure(atPoint: point, action: { (poi) in
                 self.currentCamera.exposurePointOfInterest = poi
                 self.currentCamera.exposureMode = .AutoExpose
                 }, complete: complete)
@@ -188,9 +184,9 @@
         ///
         ///  - parameter point:    POI
         ///  - parameter complete: complete focusing block
-        public func focus(atPoint point:CGPoint, complete:cameraCompleteBlockType?=nil)  {
+        public func focus(atPoint point:CGPoint=CGPoint(x: 0.5,y: 0.5), complete:cameraCompleteBlockType?=nil)  {
             
-            controlCamera(atPoint: point, action: { (poi) in
+            controlCameraFocus(atPoint: point, action: { (poi) in
                 self.currentCamera.focusPointOfInterest = poi
                 self.currentCamera.focusMode = .AutoFocus
                 }, complete: nil)
@@ -198,6 +194,59 @@
             if let complete = complete {
                 autofocusCompleteQueue.append(completeFunction(complete: complete))
                 currentCamera.addObserver(self, forKeyPath: "adjustingFocus", options: .New, context: &IMPCameraManager.focusPointOfInterestContext)
+            }
+        }
+        
+        /// Get/Set current focus mode
+        public var focusMode:AVCaptureFocusMode {
+            set {
+                if currentCamera.isFocusModeSupported(newValue) {
+                    var currentPOI = currentCamera.focusPointOfInterest
+                    if newValue == .ContinuousAutoFocus {
+                        currentPOI = CGPoint(x: 0.5,y: 0.5)
+                    }
+                    controlCamera(atPoint: currentPOI,
+                                  supported: currentCamera.focusPointOfInterestSupported,
+                                  action: { (poi) in
+                                    self.currentCamera.focusMode = newValue
+                                    self.currentCamera.focusPointOfInterest = poi
+                        })
+                }
+            }
+            get {
+                return currentCamera.focusMode
+            }
+        }
+        
+        public var smoothFocusEnabled:Bool {
+            set {
+                controlCamera(supported: currentCamera.smoothAutoFocusSupported, action: { (poi) in
+                    self.currentCamera.smoothAutoFocusEnabled = newValue
+                })
+            }
+            get {
+                return currentCamera.smoothAutoFocusSupported && currentCamera.smoothAutoFocusEnabled
+            }
+        }
+        
+        /// Get/Set current exposure mode
+        public var exposureMode:AVCaptureExposureMode {
+            set {
+                if currentCamera.isExposureModeSupported(newValue){
+                    var currentPOI = currentCamera.focusPointOfInterest
+                    if newValue == .ContinuousAutoExposure {
+                        currentPOI = CGPoint(x: 0.5,y: 0.5)
+                    }
+                    controlCamera(atPoint: currentPOI,
+                                  supported: self.currentCamera.exposurePointOfInterestSupported,
+                                  action: { (poi) in
+                                    self.currentCamera.exposureMode = newValue
+                                    self.currentCamera.exposurePointOfInterest = poi
+                    })
+                }
+            }
+            get {
+                return currentCamera.exposureMode
             }
         }
         
@@ -226,7 +275,23 @@
         // Internal utils and vars
         //
         
-        /// Live view
+        // Get current camera
+        var currentCamera:AVCaptureDevice!{
+            return _currentCamera
+        }
+
+        var _currentCamera:AVCaptureDevice! {
+            willSet{
+                if (_currentCamera != nil) {
+                    self.removeCameraObservers()
+                }
+            }
+            didSet{
+                self.addCameraObservers()
+            }
+        }
+
+        // Live view
         private lazy var _liveView:IMPView = {
             let view  = IMPView(context: self.context)
             view.backgroundColor = IMPColor.clearColor()
@@ -282,27 +347,30 @@
             });
         }
         
-        var _currentCamera:AVCaptureDevice! {
-            willSet{
-                if (_currentCamera != nil) {
-                    self.removeCameraObservers()
-                }
-            }
-            didSet{
-                self.addCameraObservers()
-            }
+        func controlCameraFocus(atPoint point:CGPoint, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+            controlCamera(atPoint: point,
+                          supported: self.currentCamera.focusPointOfInterestSupported
+                            && self.currentCamera.isFocusModeSupported(.AutoFocus),
+                          action: action,
+                          complete: complete)
         }
-        
-        func controlCamera(atPoint point:CGPoint, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
-            dispatch_async(sessionQueue){
-                if self.currentCamera == nil {
-                    return
-                }
-                
-                if self.currentCamera.focusPointOfInterestSupported
-                    &&
-                    self.currentCamera.isFocusModeSupported(.AutoFocus)
-                {
+
+        func controlCameraExposure(atPoint point:CGPoint, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+            controlCamera(atPoint: point,
+                          supported: self.currentCamera.exposurePointOfInterestSupported
+                            && self.currentCamera.isExposureModeSupported(.AutoExpose),
+                          action: action,
+                          complete: complete)
+        }
+
+        func controlCamera(atPoint point:CGPoint=CGPoint(x: 0.5,y: 0.5), supported: Bool, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+            if self.currentCamera == nil {
+                return
+            }
+            
+            if supported
+            {
+                dispatch_async(sessionQueue){
                     let poi = self.pointOfInterestForLocation(point)
                     
                     do {
@@ -322,6 +390,7 @@
                 }
             }
         }
+
         
         //
         // Observe camera properties...

@@ -92,9 +92,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     var filter:IMPFilter?
     
-    let pauseButton = UIButton(type: .System)
-    let toggleCamera = UIButton(type:.System)
-    let stopButton = UIButton(type: .System)
+    let resetButton  = UIButton(type: .System)
+    let pauseButton  = UIButton(type: .System)
+    let toggleCamera = UIButton(type: .System)
+    let stopButton   = UIButton(type: .System)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -138,11 +139,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             NSLog(" Camera staring ... ")
             
+            //
+            //
+            //
             cameraManager.start { (granted) -> Void in
                 
+                //
+                // Check applic permissions for the app
+                //
                 if !granted {
+                    
                     dispatch_async(dispatch_get_main_queue(), {
-                        
+                    
+                        //
+                        // In case app does not have any perms to access device camera launch System Settings
+                        //
                         let alert = UIAlertController(
                             title:   "Camera is not granted",
                             message: "This application does not have permission to use camera. Please update your privacy settings.",
@@ -181,12 +192,27 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 NSLog(" Live view ready! ")
             })
             
+            //
+            // Focus POI
+            //
             let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusHandler(_:)))
             focusTap.numberOfTapsRequired = 1
+            focusTap.delaysTouchesBegan = true
             cameraManager.liveView.addGestureRecognizer(focusTap)
             
+            //
+            // Focus POI panning
+            //
+            let focusPan = UILongPressGestureRecognizer(target: self, action: #selector(focusPanHandler(_:)))
+            focusPan.minimumPressDuration = 0.1
+            cameraManager.liveView.addGestureRecognizer(focusPan)
+            
+            //
+            // Exposure POI
+            //
             let exposureDoubleTap = UITapGestureRecognizer(target: self, action: #selector(exposureHandler(_:)))
             exposureDoubleTap.numberOfTapsRequired = 2
+            exposureDoubleTap.delaysTouchesBegan = false
             cameraManager.liveView.addGestureRecognizer(exposureDoubleTap)
             
         }
@@ -230,6 +256,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             toggleCamera.snp_makeConstraints(closure: { (make) in
                 make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
                 make.right.equalTo(view).offset(-10)
+            })
+            
+            resetButton.setTitle("Reset", forState: .Normal)
+            resetButton.addTarget(self, action: #selector(self.resetHandler(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(resetButton)
+            resetButton.snp_makeConstraints(closure: { (make) in
+                make.centerY.equalTo(triggerButton.snp_centerY).offset(0)
+                make.right.equalTo(toggleCamera.snp_left).offset(-10)
             })
             
         }
@@ -276,9 +310,49 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    
+    func resetHandler(sender:UIButton)  {
+        cameraManager.focus { (camera) in
+            NSLog("... focus has reseted at default POI")
+        }
+        cameraManager.exposure { (camera) in
+            NSLog("... exposure has reseted at default POI")
+        }
+    }
+    
+    func focusPanHandler(gesture: UITapGestureRecognizer) {
+        let point = gesture.locationInView(self.cameraManager.liveView)
+
+        switch gesture.state {
+        case .Began:
+            
+            cameraManager.focus(atPoint: point)
+            cameraManager.exposure(atPoint: point)
+            
+        case .Changed:
+            
+            cameraManager.smoothFocusEnabled = true
+            cameraManager.focus(atPoint: point)
+            cameraManager.exposure(atPoint: point)
+            
+        case .Ended:
+            
+            cameraManager.focusMode = .AutoFocus
+            cameraManager.focus(atPoint: point, complete: { (camera) in
+                self.cameraManager.smoothFocusEnabled = false
+                NSLog("... panning focus at \(point) done!")
+            })
+            cameraManager.exposure(atPoint: point)
+            
+        default:
+            break
+        }
+    }
+
+
     func focusHandler(gesture: UITapGestureRecognizer) {
+        let point = gesture.locationInView(self.cameraManager.liveView)
         if gesture.state == .Ended {
-            let point = gesture.locationInView(self.cameraManager.liveView)
             
             NSLog("... auto focus at \(point) start ... ")
             cameraManager.focus(atPoint: point, complete: { (camera) in
