@@ -177,7 +177,7 @@
             controlCameraExposure(atPoint: point, action: { (poi) in
                 self.currentCamera.exposurePointOfInterest = poi
                 self.currentCamera.exposureMode = .AutoExpose
-                }, complete: complete)            
+                }, complete: complete)
         }
         
         ///  Auto Focus at a point of interest
@@ -231,7 +231,7 @@
         }
         
         /// Get exposure compensation range in f-stops
-        public lazy var exposureCompensationRange:(Float,Float) = {
+        public lazy var exposureCompensationRange:(min:Float,max:Float) = {
             return (self.currentCamera.minExposureTargetBias,self.currentCamera.maxExposureTargetBias)
         }()
         

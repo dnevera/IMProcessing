@@ -382,7 +382,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             else{
                 
                 if TEST_CAMERA {
-                    self.cameraManager.exposureCompensation = (sender.value - 0.5) * 8
+                    let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
+                    self.cameraManager.exposureCompensation = (sender.value - 0.5) * range/2
                 }
                 else {
                     self.test.contrast.adjustment.blending.opacity = sender.value
