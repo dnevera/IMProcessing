@@ -177,7 +177,7 @@
             controlCameraExposure(atPoint: point, action: { (poi) in
                 self.currentCamera.exposurePointOfInterest = poi
                 self.currentCamera.exposureMode = .AutoExpose
-                }, complete: complete)
+                }, complete: complete)            
         }
         
         ///  Auto Focus at a point of interest
@@ -218,6 +218,7 @@
             }
         }
         
+        /// Set focusing smooth mode
         public var smoothFocusEnabled:Bool {
             set {
                 controlCamera(supported: currentCamera.smoothAutoFocusSupported, action: { (poi) in
@@ -226,6 +227,34 @@
             }
             get {
                 return currentCamera.smoothAutoFocusSupported && currentCamera.smoothAutoFocusEnabled
+            }
+        }
+        
+        /// Get exposure compensation range in f-stops
+        public lazy var exposureCompensationRange:(Float,Float) = {
+            return (self.currentCamera.minExposureTargetBias,self.currentCamera.maxExposureTargetBias)
+        }()
+        
+        /// Set exposure compensation in f-stops
+        public var exposureCompensation:Float {
+            set{
+                if self.currentCamera == nil {
+                    return
+                }
+                dispatch_async(sessionQueue){
+                    do {
+                        try self.currentCamera.lockForConfiguration()
+                        self.currentCamera.setExposureTargetBias(newValue, completionHandler:nil)
+                        self.currentCamera.unlockForConfiguration()
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+            
+            get {
+                return currentCamera.exposureTargetBias
             }
         }
         

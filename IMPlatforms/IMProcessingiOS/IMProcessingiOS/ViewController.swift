@@ -45,6 +45,7 @@ class IMPTestFilter: IMPFilter {
         }
         
         contrast = IMPContrastFilter(context: context)
+        contrast.adjustment.blending.opacity = 0.0
         
         contrast.addSourceObserver { (source) -> Void in
             self.histogram.source = source
@@ -96,7 +97,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     let pauseButton  = UIButton(type: .System)
     let toggleCamera = UIButton(type: .System)
     let stopButton   = UIButton(type: .System)
-    
+    let slider = UISlider()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -283,8 +285,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         
         
-        let slider = UISlider()
-        slider.value = 0
+        slider.value = TEST_CAMERA ? 0.5 : 0.0
         slider.addTarget(self, action: #selector(ViewController.changeValue(_:)), forControlEvents: .ValueChanged)
         view.addSubview(slider)
         
@@ -318,6 +319,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         cameraManager.exposure { (camera) in
             NSLog("... exposure has reseted at default POI")
         }
+        slider.value = 0.5
+        cameraManager.exposureCompensation = 0.0
     }
     
     func focusPanHandler(gesture: UITapGestureRecognizer) {
@@ -337,7 +340,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
         case .Ended:
             
-            cameraManager.focusMode = .AutoFocus
             cameraManager.focus(atPoint: point, complete: { (camera) in
                 self.cameraManager.smoothFocusEnabled = false
                 NSLog("... panning focus at \(point) done!")
@@ -378,8 +380,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 self.blur.radius = (128 * sender.value).int
             }
             else{
-                //self.hsv.adjustment.greens.hue = (sender.value - 0.5) * 2
-                self.test.contrast.adjustment.blending.opacity = sender.value
+                
+                if TEST_CAMERA {
+                    self.cameraManager.exposureCompensation = (sender.value - 0.5) * 8
+                }
+                else {
+                    self.test.contrast.adjustment.blending.opacity = sender.value
+                }
             }
         }
     }
