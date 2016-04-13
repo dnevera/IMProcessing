@@ -85,7 +85,9 @@
                     self.context = context
                 }
                 
-                liveView.frame = containerView.frame
+                liveView.frame = CGRect(x: 0, y: 0,
+                                        width: containerView.bounds.size.width,
+                                        height: containerView.bounds.size.height)
                 containerView.addSubview(liveView)
                 
                 dispatch_sync(sessionQueue, { () -> Void in
