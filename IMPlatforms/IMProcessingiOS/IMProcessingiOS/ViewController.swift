@@ -174,6 +174,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                         self.presentViewController(alert, animated: true, completion: nil)
                     })
                 }
+                else{
+                    NSLog("... focusMode = \(self.cameraManager.focusMode.rawValue) exposureMode = \(self.cameraManager.exposureMode.rawValue)")
+                }
             }
             
             cameraManager.addCameraObserver({ (camera, ready) in
@@ -313,14 +316,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     
     func resetHandler(sender:UIButton)  {
-        cameraManager.focus { (camera) in
+        cameraManager.resetFocus { (camera) in
             NSLog("... focus has reseted at default POI")
         }
-        cameraManager.exposure { (camera) in
-            NSLog("... exposure has reseted at default POI")
+        cameraManager.resetExposure { (camera) in
+            NSLog("... exposure has reseted at default POI --> compensation = \(self.cameraManager.exposureCompensation)")
+            dispatch_async(dispatch_get_main_queue(), {
+                let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
+                self.slider.value = self.cameraManager.exposureCompensation / (range/2) + 0.5
+            })
         }
-        slider.value = 0.5
-        cameraManager.exposureCompensation = 0.0
     }
     
     func focusPanHandler(gesture: UITapGestureRecognizer) {
@@ -329,47 +334,46 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch gesture.state {
         case .Began:
             
-            cameraManager.focus(atPoint: point)
-            cameraManager.exposure(atPoint: point)
+            cameraManager.autoFocus(atPoint: point)
+            cameraManager.autoExposure(atPoint: point)
             
         case .Changed:
             
             cameraManager.smoothFocusEnabled = true
-            cameraManager.focus(atPoint: point)
-            cameraManager.exposure(atPoint: point)
+            cameraManager.autoFocus(atPoint: point)
+            cameraManager.autoExposure(atPoint: point)
             
         case .Ended:
             
-            cameraManager.focus(atPoint: point, complete: { (camera) in
+            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
                 self.cameraManager.smoothFocusEnabled = false
                 NSLog("... panning focus at \(point) done!")
             })
-            cameraManager.exposure(atPoint: point)
+            cameraManager.autoExposure(atPoint: point)
             
         default:
             break
         }
     }
 
-
     func focusHandler(gesture: UITapGestureRecognizer) {
-        let point = gesture.locationInView(self.cameraManager.liveView)
+        let point = gesture.locationInView(cameraManager.liveView)
         if gesture.state == .Ended {
             
-            NSLog("... auto focus at \(point) start ... ")
-            cameraManager.focus(atPoint: point, complete: { (camera) in
-                NSLog("... auto focus at \(point) done!")
+            NSLog("... auto focus at \(point) start ... mode = \(cameraManager.focusMode.rawValue)")
+            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
+                NSLog("... auto focus at \(point) done! mode = \(camera.focusMode.rawValue)")
             })
         }
     }
 
     func exposureHandler(gesture: UITapGestureRecognizer) {
         if gesture.state == .Ended {
-            let point = gesture.locationInView(self.cameraManager.liveView)
+            let point = gesture.locationInView(cameraManager.liveView)
             
             NSLog("... auto exposure at \(point) start ...")
-            cameraManager.exposure(atPoint: point, complete: { (camera) in
-                NSLog("... auto exposure at \(point) done!")
+            cameraManager.autoExposure(atPoint: point, complete: { (camera) in
+                NSLog("... auto exposure at \(point) done! mode = \(camera.exposureMode.rawValue)")
             })
         }
     }
