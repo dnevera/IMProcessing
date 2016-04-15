@@ -93,6 +93,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     var filter:IMPFilter?
     
+    let flashButton  = UIButton(type: .System)
     let resetButton  = UIButton(type: .System)
     let pauseButton  = UIButton(type: .System)
     let toggleCamera = UIButton(type: .System)
@@ -219,7 +220,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             exposureDoubleTap.numberOfTapsRequired = 2
             exposureDoubleTap.delaysTouchesBegan = false
             cameraManager.liveView.addGestureRecognizer(exposureDoubleTap)
+
             
+            let zoomDoubleTap = UITapGestureRecognizer(target: self, action: #selector(zoomHandler(_:)))
+            zoomDoubleTap.numberOfTapsRequired = 2
+            zoomDoubleTap.numberOfTouchesRequired = 2
+            cameraManager.liveView.addGestureRecognizer(zoomDoubleTap)
+
         }
 
         let triggerButton = UIButton(type: .System)
@@ -234,6 +241,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 make.top.equalTo(containerView.snp_bottom).offset(10)
                 make.centerX.equalTo(view).offset(0)
             })
+            
+
+            flashButton.setTitle("Flash Off", forState: .Normal)
+            flashButton.addTarget(self, action: #selector(self.flashToggle(_:)), forControlEvents: .TouchUpInside)
+            view.addSubview(flashButton)
+            
+            flashButton.snp_makeConstraints(closure: { (make) in
+                make.top.equalTo(containerView.snp_bottom).offset(20)
+                make.left.equalTo(view).offset(10)
+            })            
+
             
             stopButton.setTitle("Stop", forState: .Normal)
             stopButton.addTarget(self, action: #selector(self.stopCamera(_:)), forControlEvents: .TouchUpInside)
@@ -378,6 +396,24 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 
+    var zoomed = false
+    var inZooming = false
+    func zoomHandler(gesture:UITapGestureRecognizer)  {
+        if gesture.state == .Ended {
+            if inZooming {
+                return
+            }
+            
+            inZooming = true
+            NSLog("... zoom \(zoomed ? "in" : "out" ) ...")
+            cameraManager.setZoom(factor: zoomed ? 1 : 4.532 , animate: true, complete: { (camera, factor) in
+                self.inZooming = false
+                NSLog("... zoommed \(self.zoomed ? "in" : "out" ) ...")
+                self.zoomed = !self.zoomed
+            })
+        }
+    }
+    
     func changeValue(sender:UISlider){
         dispatch_async(filter!.context.dispatchQueue) { () -> Void in
             if BLUR_FILTER {
@@ -400,6 +436,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         NSLog("... capture... ")
         cameraManager.capturePhoto(file: uniqueImageFile) { (camera, finished, file, metadata, error) in
             NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) meta = \(metadata) error = \(error)")
+        }
+    }
+
+    var currentFlash:Int = 0
+    func flashToggle(sender:UIButton){
+        currentFlash += 1
+        if currentFlash > 2 {
+            currentFlash = 0
+        }
+        cameraManager.flashMode = [.Off,.On,.Auto][currentFlash]
+        let name = ["Off", "On", "Auto"][currentFlash]
+        dispatch_async(dispatch_get_main_queue()) { 
+            sender.setTitle(String(format: "Flash %@", name), forState: .Normal)
         }
     }
     
@@ -428,8 +477,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func toggeleCamera(sender:UIButton){
-        let toggled = cameraManager.toggleCamera()
-        print("... toggle camera ... \(toggled)")
+        
+        dispatch_async(dispatch_get_main_queue()) { 
+            
+            let blurredView = UIVisualEffectView(effect: UIBlurEffect(style:.Dark))
+            blurredView.frame = self.containerView.bounds
+            self.containerView.addSubview(blurredView)
+            blurredView.alpha = 0.0
+            
+            UIView.animateWithDuration(0.5, animations: {
+                blurredView.alpha = 1.0
+            })
+            
+            self.cameraManager.toggleCamera { (camera, toggled) in
+                dispatch_async(dispatch_get_main_queue()) {
+                    UIView.animateWithDuration(0.5, animations: {
+                            blurredView.alpha = 0.0
+                        }, completion: { (finished) in
+                            blurredView.removeFromSuperview()
+                    })
+                }
+            }
+        }
     }
     
     func openAlbum(sender:UIButton){

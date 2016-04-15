@@ -22,7 +22,8 @@
         public typealias cameraEventBlockType       = ((camera:IMPCameraManager, ready:Bool)->Void)
         public typealias cameraCompleteBlockType    = ((camera:IMPCameraManager)->Void)
         public typealias videoEventBlockType        = ((camera:IMPCameraManager, running:Bool)->Void)
-        
+        public typealias zomingCompleteBlockType    = ((camera:IMPCameraManager, factor:Float)->Void)
+
         public typealias capturingCompleteBlockType = ((camera:IMPCameraManager, finished:Bool, file:String, metadata:NSDictionary?, error:NSError?)->Void)
         
         //
@@ -149,10 +150,17 @@
             }
         }
         
-        public func toggleCamera() -> Bool {
-            let position = cameraPosition
-            rotateCamera()
-            return position == cameraPosition
+        ///  Toggling between cameras
+        ///
+        ///  - parameter complete: complete operations after togglinig
+        public func toggleCamera(complete:((camera:IMPCameraManager, toggled:Bool)->Void)?=nil) {
+            dispatch_async(sessionQueue){
+                let position = self.cameraPosition
+                self.rotateCamera()                
+                if let complete = complete {
+                    complete(camera: self, toggled: position == self.cameraPosition)
+                }
+            }
         }
         
         /// Make compression of still images with hardware compression layer instead of turbojpeg lib
@@ -329,6 +337,73 @@
             liveViewReadyHandlers.append(observer)
         }
         
+        /// Test camera flash
+        public var hasFlash:Bool {
+            return currentCamera.hasFlash
+        }
+        
+        /// Change flash mode. It can be .Off, .On, .Auto
+        public var flashMode:AVCaptureFlashMode {
+            set{
+                if hasFlash && newValue != currentCamera.flashMode &&
+                currentCamera.isFlashModeSupported(newValue)
+                {
+                    do{
+                        try currentCamera.lockForConfiguration()
+                        currentCamera.flashMode = newValue
+                        currentCamera.unlockForConfiguration()
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+            get{
+                return currentCamera.flashMode
+            }
+        }
+        
+        public lazy var maximumZoomFctor:Float = {
+            return self.currentCamera.activeFormat.videoMaxZoomFactor.float
+        }()
+        
+        
+        public func setZoom(factor factor:Float, animate:Bool=true, complete:zomingCompleteBlockType?=nil) {
+            if factor >= 1.0 && factor <= maximumZoomFctor {
+                dispatch_async(sessionQueue){
+                    do{
+                        try self.currentCamera.lockForConfiguration()
+                        
+                        self.zomingCompleteQueue.append(completeZomingFunction(complete: complete, factor: factor))
+                        
+                        if animate {
+                            self.currentCamera.rampToVideoZoomFactor(factor.cgloat, withRate: 30)
+                        }
+                        else{
+                            self.currentCamera.videoZoomFactor = factor.cgloat
+                        }
+                        self.currentCamera.unlockForConfiguration()
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+        }
+        
+        public func cancelZoom(){
+            dispatch_async(sessionQueue){
+                do{
+                    try self.currentCamera.lockForConfiguration()
+                    self.currentCamera.cancelVideoZoomRamp()
+                    self.currentCamera.unlockForConfiguration()
+                }
+                catch let error as NSError {
+                    NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                }
+            }
+        }
+        
         //
         // Internal utils and vars
         //
@@ -464,25 +539,51 @@
             }
         }
         
+        class completeZomingFunction {
+            var block:zomingCompleteBlockType? = nil
+            var factor:Float = 0
+            init(complete:zomingCompleteBlockType?, factor:Float){
+                self.block = complete
+                self.factor = factor
+            }
+        }
+        
         var autofocusCompleteQueue = [completeAutoFocusFunction]()
+        var zomingCompleteQueue = [completeZomingFunction]()
 
         func addCameraObservers() {
             currentCamera.addObserver(self, forKeyPath: "focusPointOfInterest", options: .New, context: nil)
+            currentCamera.addObserver(self, forKeyPath: "videoZoomFactor", options: .New, context: nil)
         }
         
         func removeCameraObservers() {
             currentCamera.removeObserver(self, forKeyPath: "focusPointOfInterest", context: nil)
+            currentCamera.removeObserver(self, forKeyPath: "videoZoomFactor", context: nil)
         }
 
         override public func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
             
-            if  context == &IMPCameraManager.focusPointOfInterestContext {
-                
-                if let new = change?["new"] as? Int {
-                    if new == 0 {
-                        currentCamera.removeObserver(self, forKeyPath: "adjustingFocus", context: context)
-                        if let complete = autofocusCompleteQueue.popLast()?.block {
-                            complete(camera:self)
+            if keyPath == "adjustingFocus"{
+                if  context == &IMPCameraManager.focusPointOfInterestContext {
+                    
+                    if let new = change?["new"] as? Int {
+                        if new == 0 {
+                            currentCamera.removeObserver(self, forKeyPath: "adjustingFocus", context: context)
+                            if let complete = autofocusCompleteQueue.popLast()?.block {
+                                complete(camera:self)
+                            }
+                        }
+                    }
+                }
+            }
+            else if keyPath == "videoZoomFactor" {
+                if let new = change?["new"] as? Float {
+                    if let complete = zomingCompleteQueue.last {
+                        if let block = complete.block {
+                            if complete.factor == new {
+                                zomingCompleteQueue.removeAll()
+                                block(camera: self, factor: complete.factor)
+                            }
                         }
                     }
                 }
