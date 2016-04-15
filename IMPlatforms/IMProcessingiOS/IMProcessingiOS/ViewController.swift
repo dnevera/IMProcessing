@@ -493,19 +493,23 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         dispatch_async(dispatch_get_main_queue()) { 
             
-            let blurredView = UIVisualEffectView(effect: UIBlurEffect(style:.Dark))
+            let blurredView = UIVisualEffectView(effect: UIBlurEffect(style:.Light))
             blurredView.frame = self.containerView.bounds
             self.containerView.addSubview(blurredView)
             blurredView.alpha = 0.0
             
-            UIView.animateWithDuration(0.5, animations: {
+            UIView.animateWithDuration(0.3, animations: {
                 blurredView.alpha = 1.0
+                self.cameraManager.liveView.alpha = 0.8
+                self.containerView.backgroundColor = UIColor.whiteColor()
             })
             
             self.cameraManager.toggleCamera { (camera, toggled) in
                 dispatch_async(dispatch_get_main_queue()) {
-                    UIView.animateWithDuration(0.5, animations: {
+                    UIView.animateWithDuration(0.3, animations: {
                             blurredView.alpha = 0.0
+                            self.cameraManager.liveView.alpha = 1.0
+                            self.containerView.backgroundColor = UIColor.clearColor()
                         }, completion: { (finished) in
                             blurredView.removeFromSuperview()
                     })
