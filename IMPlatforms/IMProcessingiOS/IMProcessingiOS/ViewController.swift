@@ -434,8 +434,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func capturePhoto(sender:UIButton){
         NSLog("... capture... ")
-        cameraManager.capturePhoto(file: uniqueImageFile) { (camera, finished, file, metadata, error) in
-            NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) meta = \(metadata) error = \(error)")
+        //
+        // Capturing to file
+        //
+        // cameraManager.capturePhoto(file: uniqueImageFile) { (camera, finished, file, metadata, error) in
+            
+        //
+        // Capturing to Camera Roll
+        //
+        cameraManager.capturePhoto { (camera, finished, file, metadata, error) in
+            if let file = file {
+                NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) meta = \(metadata) error = \(error)")
+            }
+            else {
+                NSLog("... captured : finished = \(finished) meta = \(metadata) error = \(error)")
+            }
         }
     }
 

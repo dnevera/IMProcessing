@@ -24,7 +24,7 @@
         public typealias videoEventBlockType        = ((camera:IMPCameraManager, running:Bool)->Void)
         public typealias zomingCompleteBlockType    = ((camera:IMPCameraManager, factor:Float)->Void)
 
-        public typealias capturingCompleteBlockType = ((camera:IMPCameraManager, finished:Bool, file:String, metadata:NSDictionary?, error:NSError?)->Void)
+        public typealias capturingCompleteBlockType = ((camera:IMPCameraManager, finished:Bool, file:String?, metadata:NSDictionary?, error:NSError?)->Void)
         
         //
         // Public API
@@ -824,9 +824,9 @@
         
         ///  Capture image to file
         ///
-        ///  - parameter file:     file path
+        ///  - parameter file:     file path. Path can be nil, in this case photo captures to Camera Roll
         ///  - parameter complete: completition block
-        public func capturePhoto(file file:String, complete:capturingCompleteBlockType?=nil){
+        public func capturePhoto(file file:String?=nil, complete:capturingCompleteBlockType?=nil){
             
             if !isReady{
                 complete?(camera: self, finished: false, file: file, metadata: nil, error: nil)
@@ -884,16 +884,35 @@
                                     do {
                                         if self.compression.isHardware {
                                             let imageDataJpeg = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
-                                            try imageDataJpeg.writeToFile(file, options: .AtomicWrite)
-                                            complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
-                                        }
-                                        else{
-                                            if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                                                try IMPJpegturbo.writePixelBuffer(pixelBuffer, toJpegFile: file, compression: self.compression.quality.cgloat, inputColorSpace:JPEG_TURBO_BGRA)
+                                            if let file = file {
+                                                try imageDataJpeg.writeToFile(file, options: .AtomicWrite)
                                                 complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
                                             }
                                             else {
-                                                complete(camera: self, finished: false, file: file, metadata: meta, error: nil)
+                                                if let image = UIImage(data: imageDataJpeg) {
+                                                    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                                                    complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
+                                                }
+                                            }
+                                        }
+                                        else{
+                                            if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                                                if let file = file {
+                                                    try IMPJpegturbo.writePixelBuffer(pixelBuffer, toJpegFile: file, compression: self.compression.quality.cgloat, inputColorSpace:JPEG_TURBO_BGRA)
+                                                    complete(camera: self, finished: true, file: file, metadata: meta, error: nil)
+                                                }
+                                                else {
+                                                    complete(camera: self, finished: true, file: nil, metadata: meta, error: nil)
+                                                }
+                                            }
+                                            else {
+                                                let error = NSError(domain: IMProcessing.names.prefix+"camera.roll",
+                                                    code: 0,
+                                                    userInfo: [
+                                                        NSLocalizedDescriptionKey: String(format: NSLocalizedString("Hardware saving to camer roll is only supported", comment:"")),
+                                                        NSLocalizedFailureReasonErrorKey: String(format: NSLocalizedString("Saving to Camera Roll error", comment:""))
+                                                    ])
+                                                complete(camera: self, finished: false, file: file, metadata: meta, error: error)
                                             }
                                         }
                                     }
