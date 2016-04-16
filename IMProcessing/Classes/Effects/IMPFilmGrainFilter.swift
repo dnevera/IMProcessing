@@ -11,11 +11,11 @@ import Metal
 
 public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
     
-    public static let defaultAdjustment = IMPFilmGrainAdjustment(
-        isColored: true,
-        size:  1,
-        amount: IMPFilmGrainColor(total: 1, color: 0.3, luma: 1.0),
-        blending: IMPBlending(mode: NORMAL, opacity: 1))
+//    public static let defaultAdjustment = IMPFilmGrainAdjustment(
+//        isColored: true,
+//        size:  1,
+//        amount: IMPFilmGrainColor(total: 1, color: 0.3, luma: 1.0),
+//        blending: IMPBlending(mode: NORMAL, opacity: 1))
     
     public var adjustment:IMPFilmGrainAdjustment!{
         didSet{
@@ -44,7 +44,11 @@ public class IMPFilmGrainFilter:IMPFilter,IMPAdjustmentProtocol{
         kernel = IMPFunction(context: self.context, name: "kernel_filmGrain")
         self.addFunction(kernel)
         defer{
-            self.adjustment = IMPFilmGrainFilter.defaultAdjustment
+            adjustment = IMPFilmGrainAdjustment(
+                isColored: true,
+                size:  1,
+                amount: IMPFilmGrainColor(total: 1, color: 0.3, luma: 1.0),
+                blending: IMPBlending(mode: NORMAL, opacity: 1))
         }
     }
     

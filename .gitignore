@@ -1,5 +1,6 @@
 # Xcode
 #
+bbbuild/
 build/
 *.pbxuser
 !default.pbxuser

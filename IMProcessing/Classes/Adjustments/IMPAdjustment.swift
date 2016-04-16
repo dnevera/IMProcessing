@@ -17,7 +17,7 @@ public protocol IMPAdjustmentProtocol{
 }
 
 public extension IMPAdjustmentProtocol{
-    func updateBuffer(inout buffer:MTLBuffer?, context:IMPContext, adjustment:UnsafePointer<Void>, size:Int){
+    public func updateBuffer(inout buffer:MTLBuffer?, context:IMPContext, adjustment:UnsafePointer<Void>, size:Int){
         buffer = buffer ?? context.device.newBufferWithLength(size, options: .CPUCacheModeDefaultCache)
         if let b = buffer {
             memcpy(b.contents(), adjustment, b.length)
