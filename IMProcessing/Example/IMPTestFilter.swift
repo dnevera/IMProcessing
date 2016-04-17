@@ -79,8 +79,8 @@ class IMPTestFilter:IMPFilter {
         }
         
         addDestinationObserver { (destination) -> Void in
-            histogramView.source = destination
-            histogramCDFView.source = destination
+            histogramView.filter?.source = destination
+            histogramCDFView.filter?.source = destination
         }
     }
     

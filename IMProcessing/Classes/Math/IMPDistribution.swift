@@ -71,7 +71,8 @@ public extension Float {
         let mean      = Float(size/2)
         var sum:Float = 0.0
         
-        for var x = 0; x < size; x += 1 {
+        //for var x = 0; x < size; x += 1 {
+        for x in 0..<size {
             kernel[x] = sqrt( exp( -0.5 * (pow((x.float-mean)/sigma, 2.0) + pow((mean)/sigma,2.0)) )
                 / (M_2_PI.float * sigma * sigma) )
             sum += kernel[x]

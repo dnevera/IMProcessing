@@ -10,6 +10,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
+#import <CoreVideo/CoreVideo.h>
 
 typedef enum {
     JPEG_TURBO_RGBA,

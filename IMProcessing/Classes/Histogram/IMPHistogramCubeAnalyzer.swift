@@ -38,6 +38,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         didSet{
             scaleUniformBuffer = scaleUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(Float), options: .CPUCacheModeDefaultCache)
             memcpy(scaleUniformBuffer.contents(), &downScaleFactor, scaleUniformBuffer.length)
+            dirty = true
         }
     }
     
@@ -50,7 +51,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         didSet{
             clippingBuffer = clippingBuffer ?? context.device.newBufferWithLength(sizeof(IMPHistogramCubeClipping), options: .CPUCacheModeDefaultCache)
             memcpy(clippingBuffer.contents(), &clipping, clippingBuffer.length)
-            
+            dirty = true
         }
     }
     
@@ -69,6 +70,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         didSet{
             regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPCropRegion), options: .CPUCacheModeDefaultCache)
             memcpy(regionUniformBuffer.contents(), &region, regionUniformBuffer.length)
+            dirty = true
         }
     }
     internal var regionUniformBuffer:MTLBuffer!

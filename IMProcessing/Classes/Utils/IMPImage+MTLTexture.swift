@@ -154,7 +154,7 @@ public extension IMPImage{
             
             var rawData   = [UInt8](count: width*height*components, repeatedValue: 0)
             if texture.pixelFormat == .RGBA16Unorm {
-                for var i=0; i < rawData.count; i++ {
+                for i in 0 ..< rawData.count {
                     var pixel = UInt16()
                     let address =  UnsafePointer<UInt16>(imageBuffer.contents())+i
                     memcpy(&pixel, address, sizeof(UInt16))

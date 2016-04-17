@@ -87,7 +87,7 @@ public extension CollectionType where Generator.Element == Float {
         
         S [start] = B
         
-        var j=0
+        //var j=0
         
         // Slopes here are a weighted average of the slopes
         // to each of the adjcent control points.
@@ -136,8 +136,8 @@ public extension CollectionType where Generator.Element == Float {
                 
             }
             
-            for j = end - 2; j >= start; j -= 1 {
             //for j = end - 2; j >= start; j -= 1 {
+            for j in (end - 2).stride(through: start, by: -1){
                 G [j] = G [j] - F [j] * G [j+1]
             }
             

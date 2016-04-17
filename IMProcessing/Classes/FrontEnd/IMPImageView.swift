@@ -304,6 +304,13 @@
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
+                filter?.addNewSourceObserver(source: { (source) in
+                    if let texture = source.texture{
+                        self.imageView.frame = CGRect(x: 0, y: 0,
+                            width:  Int(texture.width.float/self.imageView.scaleFactor),
+                            height: Int(texture.height.float/self.imageView.scaleFactor))
+                    }
+                })
             }
         }
         
@@ -408,7 +415,7 @@
             
             NSNotificationCenter.defaultCenter().addObserver(
                 self,
-                selector: "magnifyChanged:",
+                selector: #selector(IMPImageView.magnifyChanged(_:)),
                 name: NSScrollViewWillStartLiveMagnifyNotification,
                 object: nil)
             
@@ -514,7 +521,7 @@
                 self.animator().alphaValue = 1.0
                 
                 }, completionHandler: nil)
-            NSObject.cancelPreviousPerformRequestsWithTarget(self, selector: "fadeOut", object: nil)
+            NSObject.cancelPreviousPerformRequestsWithTarget(self, selector: #selector(IMPScroller.fadeOut), object: nil)
         }
         
         override func mouseMoved(theEvent:NSEvent){

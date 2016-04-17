@@ -110,7 +110,9 @@ extension CollectionType where Generator.Element == Float {
     var gaussianInputs:[Float]{
         get{
             var oneSideInputs = [Float]()
-            for var i = (count/2) as! Int; i >= 0; i -= 1 {
+            //for var i = (count/2) as! Int; i >= 0; i -= 1 {
+            for i in (count/2 as! Int).stride(through: 0, by: -1) {
+  
                 if i == count as! Int/2  {
                     oneSideInputs.append(self[i as! Self.Index] * 0.5)
                 }
@@ -121,6 +123,7 @@ extension CollectionType where Generator.Element == Float {
             return oneSideInputs
         }
     }
+    
     var gaussianWeights:[Float]{
         get{
             var weights = [Float]()
@@ -134,6 +137,7 @@ extension CollectionType where Generator.Element == Float {
             return weights
         }
     }
+    
     func gaussianOffsets(weights:[Float]) -> [Float]{
         var offsets = [Float]()
         let numSamples = self.count as! Int/2

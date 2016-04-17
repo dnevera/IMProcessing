@@ -17,7 +17,7 @@ class IMPTestFilter:IMPFilter {
     var awbFilter:IMPAutoWBFilter!
     var hsvFilter:IMPHSVFilter!
         
-    required init(context: IMPContext, histogramView:IMPView, paletteView:IMPView?) {
+    required init(context: IMPContext, histogramView:IMPView) {
         
         super.init(context: context)
                 
@@ -42,8 +42,7 @@ class IMPTestFilter:IMPFilter {
         }
         
         addDestinationObserver { (destination) -> Void in
-            histogramView.source = destination
-            paletteView?.source = destination
+            histogramView.filter?.source = destination
         }
     }
     

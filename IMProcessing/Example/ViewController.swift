@@ -152,14 +152,14 @@ class ViewController: NSViewController {
         
         NSNotificationCenter.defaultCenter().addObserver(
             self,
-            selector: "magnifyChanged:",
+            selector: #selector(ViewController.magnifyChanged(_:)),
             name: NSScrollViewWillStartLiveMagnifyNotification,
             object: nil)
         
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
                 do{
-                    self.imageView.source = try IMPImageProvider(context: self.imageView.context, file: file)
+                    self.imageView.filter?.source = try IMPImageProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
                         self.zoomOne()
                     })

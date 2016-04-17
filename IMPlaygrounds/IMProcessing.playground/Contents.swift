@@ -33,3 +33,6 @@ func get_mem_size() -> Int64 {
 let cpu  = get_cpu_freq()
 let cpumodel = get_mem_size()
 
+for i in 20.stride(through: 30, by: 1) {
+    i
+}

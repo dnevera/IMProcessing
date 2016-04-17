@@ -22,7 +22,6 @@ class ViewController: NSViewController {
     @IBOutlet weak var maxRangeLabel: NSTextField!
     @IBOutlet weak var valueSlider1: NSSlider!
     @IBOutlet weak var textValueLabel: NSTextField!
-    @IBOutlet weak var histogramCDFContainerView: NSView!
     @IBOutlet weak var histogramContainerView: NSView!
     @IBOutlet weak var scrollView: NSScrollView!
     
@@ -33,8 +32,6 @@ class ViewController: NSViewController {
     
     var imageView: IMPView!
     var histogramView: IMPHistogramView!
-    //var histogramCDFView: IMPHistogramView!
-    var paletteView: IMPPaletteView!
     
     var q = dispatch_queue_create("ViewController", DISPATCH_QUEUE_CONCURRENT)
     
@@ -52,7 +49,6 @@ class ViewController: NSViewController {
     @IBAction func changeValue1(sender: NSSlider) {
         let value = sender.floatValue/100
         asyncChanges { () -> Void in
-            //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             self.textValueLabel.stringValue = String(format: "%2.5f", value);
             self.mainFilter.hsvFilter?.overlap = value*4
         }
@@ -95,26 +91,11 @@ class ViewController: NSViewController {
         histogramView = IMPHistogramView(frame: histogramContainerView.bounds)
         histogramView.histogramLayer.solver.layer.backgroundColor = IMPPrefs.colors.background
         
-        //histogramCDFView = IMPHistogramView(frame: histogramContainerView.bounds)
-        //histogramCDFView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
-        //histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
-
-        paletteView = IMPPaletteView(frame: histogramContainerView.bounds)
-        
-//        paletteView.palette.solver.paletteHandler = { (cube,count) in
-//            return cube.dominantColors(count: count)
-//        }
-        
-        //paletteView.histogram.solver.layer.backgroundColor = IMPPrefs.colors.background
-        //paletteView.histogram.solver.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
-
         histogramContainerView.addSubview(histogramView)
-        histogramCDFContainerView.addSubview(paletteView)
         
         imageView = IMPView(frame: scrollView.bounds)
         
-        mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: paletteView)
-        //mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView, paletteView: nil)
+        mainFilter = IMPTestFilter(context: self.context, histogramView: histogramView)
         imageView.filter = mainFilter
         
         mainFilter.sourceAnalyzer.addUpdateObserver { (histogram) -> Void in
@@ -140,14 +121,14 @@ class ViewController: NSViewController {
         
         NSNotificationCenter.defaultCenter().addObserver(
             self,
-            selector: "magnifyChanged:",
+            selector: #selector(ViewController.magnifyChanged(_:)),
             name: NSScrollViewWillStartLiveMagnifyNotification,
             object: nil)
         
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
                 do{
-                    self.imageView.source = try IMPImageProvider(context: self.imageView.context, file: file)
+                    self.imageView.filter?.source = try IMPImageProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
                         self.zoomOne()
                     })
@@ -158,13 +139,6 @@ class ViewController: NSViewController {
                         alert.runModal()
                     })
                 }
-//                if let image = IMPImage(contentsOfFile: file){
-//                    self.imageView.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
-//                    self.imageView.source = IMPImageProvider(context: self.imageView.context, image: image)
-//                    self.asyncChanges({ () -> Void in
-//                        self.zoom100()
-//                    })
-//                }
             }
             else if type == .LUT {
                 do {

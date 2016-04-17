@@ -298,38 +298,38 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     #else
     
     override public func updateLayer(){
-    if let l = metalLayer {
-    if let t = filter?.destination?.texture{
-    l.drawableSize = t.size
-    }
-    l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
-    layerNeedUpdate = true
-    }
+        if let l = metalLayer {
+            if let t = filter?.destination?.texture{
+                l.drawableSize = t.size
+            }
+            l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+            layerNeedUpdate = true
+        }
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
-    
-    let sourceDragMask = sender.draggingSourceOperationMask()
-    let pboard = sender.draggingPasteboard()
-    
-    if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
-    if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
-    return NSDragOperation.Generic
-    }
-    }
-    
-    return NSDragOperation.None
+        
+        let sourceDragMask = sender.draggingSourceOperationMask()
+        let pboard = sender.draggingPasteboard()
+        
+        if pboard.availableTypeFromArray([NSFilenamesPboardType]) == NSFilenamesPboardType {
+            if sourceDragMask.rawValue & NSDragOperation.Generic.rawValue != 0 {
+                return NSDragOperation.Generic
+            }
+        }
+        
+        return NSDragOperation.None
     }
     
     public var dragOperation:IMPDragOperationHandler?
     
     public override func performDragOperation(sender: NSDraggingInfo) -> Bool {
-    if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
-    if let o = dragOperation {
-    return o(files: files as! [String])
-    }
-    }
-    return false
+        if let files  = sender.draggingPasteboard().propertyListForType(NSFilenamesPboardType) {
+            if let o = dragOperation {
+                return o(files: files as! [String])
+            }
+        }
+        return false
     }
     
     #endif
@@ -349,7 +349,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             let myImp = imp_implementationWithBlock( unsafeBitCast( block, AnyObject.self ) )
             let callback = unsafeBitCast( myImp, CVDisplayLinkOutputCallback.self )
             
-            CVDisplayLinkSetOutputCallback( displayLink, callback, UnsafeMutablePointer<Void>() )
+            CVDisplayLinkSetOutputCallback( displayLink, callback, nil)
         }
         
         
