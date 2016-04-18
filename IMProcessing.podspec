@@ -18,7 +18,8 @@ Pod::Spec.new do |s|
   s.vendored_libraries  = 'vendor/libjpeg-turbo/lib/libturbojpeg.a'
 
   s.frameworks   = 'Metal'
-  s.xcconfig     =   { 'OTHER_LDFLAGS' => '/opt/libjpeg-turbo/lib/libturbojpeg.a', 'MTL_HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing', 'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing'}
+  #s.xcconfig     =   { 'OTHER_LDFLAGS' => '/opt/libjpeg-turbo/lib/libturbojpeg.a', 'MTL_HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing', 'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing'}
+  s.xcconfig     =   { 'MTL_HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing', 'HEADER_SEARCH_PATHS' => '$(PODS_ROOT)/Headers/Private/IMProcessing'}
 
   s.requires_arc = true
 
