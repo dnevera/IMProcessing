@@ -7,8 +7,8 @@ platform :ios, '8.3'
 use_frameworks!
 
 pod 'SnapKit'
-#pod 'IMProcessing', :path => '../../'
-pod 'IMProcessing', :git => 'https://bitbucket.org/degrader/improcessing.git', :branch => 'develop'
+pod 'IMProcessing', :path => '../../'
+#pod 'IMProcessing', :git => 'https://bitbucket.org/degrader/improcessing.git', :branch => 'develop'
 
 target 'IMProcessingiOS' do
 end
