@@ -415,7 +415,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func changeValue(sender:UISlider){
-        dispatch_async(filter!.context.dispatchQueue) { () -> Void in
+        dispatch_async(cameraManager.context.dispatchQueue) { () -> Void in
             if BLUR_FILTER {
                 self.blur.radius = (128 * sender.value).int
             }

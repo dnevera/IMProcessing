@@ -110,7 +110,6 @@ extension CollectionType where Generator.Element == Float {
     var gaussianInputs:[Float]{
         get{
             var oneSideInputs = [Float]()
-            //for var i = (count/2) as! Int; i >= 0; i -= 1 {
             for i in (count/2 as! Int).stride(through: 0, by: -1) {
   
                 if i == count as! Int/2  {

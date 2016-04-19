@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10116"/>
         <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
         <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
     </dependencies>
@@ -587,32 +587,6 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8IY-iL-6bR" customClass="IMPScrollView" customModule="IMProcessing" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="0.0" width="972" height="739"/>
-                                <clipView key="contentView" id="DYk-Db-VEI">
-                                    <rect key="frame" x="1" y="1" width="970" height="737"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <subviews>
-                                        <view translatesAutoresizingMaskIntoConstraints="NO" id="qrm-Od-Yhx">
-                                            <rect key="frame" x="0.0" y="0.0" width="400" height="143"/>
-                                        </view>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="qrm-Od-Yhx" firstAttribute="leading" secondItem="DYk-Db-VEI" secondAttribute="leading" id="1YX-vl-vvo"/>
-                                        <constraint firstAttribute="trailing" secondItem="qrm-Od-Yhx" secondAttribute="trailing" constant="570" id="Y6n-TW-Zvf"/>
-                                        <constraint firstItem="qrm-Od-Yhx" firstAttribute="top" secondItem="DYk-Db-VEI" secondAttribute="top" constant="594" id="fyQ-yj-GPk"/>
-                                        <constraint firstAttribute="bottom" secondItem="qrm-Od-Yhx" secondAttribute="bottom" id="ul5-p3-w97"/>
-                                    </constraints>
-                                </clipView>
-                                <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="Nmq-yN-Fia">
-                                    <rect key="frame" x="1" y="722" width="970" height="16"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                                <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="35z-k3-Jns">
-                                    <rect key="frame" x="955" y="1" width="16" height="737"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                            </scrollView>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MsJ-Qj-iJ3">
                                 <rect key="frame" x="976" y="109" width="282" height="20"/>
                                 <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="100" tickMarkPosition="above" sliderType="linear" id="hvB-7z-H6O"/>
@@ -666,6 +640,32 @@
                                     <action selector="changeValue5:" target="XfG-lQ-9wD" id="zgj-Eb-Qdg"/>
                                 </connections>
                             </slider>
+                            <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8IY-iL-6bR" customClass="IMPScrollView" customModule="IMProcessing" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="0.0" width="972" height="739"/>
+                                <clipView key="contentView" id="DYk-Db-VEI">
+                                    <rect key="frame" x="1" y="1" width="955" height="722"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <view translatesAutoresizingMaskIntoConstraints="NO" id="qrm-Od-Yhx">
+                                            <rect key="frame" x="0.0" y="0.0" width="385" height="128"/>
+                                        </view>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="qrm-Od-Yhx" firstAttribute="leading" secondItem="DYk-Db-VEI" secondAttribute="leading" id="1YX-vl-vvo"/>
+                                        <constraint firstAttribute="trailing" secondItem="qrm-Od-Yhx" secondAttribute="trailing" constant="570" id="Y6n-TW-Zvf"/>
+                                        <constraint firstItem="qrm-Od-Yhx" firstAttribute="top" secondItem="DYk-Db-VEI" secondAttribute="top" constant="594" id="fyQ-yj-GPk"/>
+                                        <constraint firstAttribute="bottom" secondItem="qrm-Od-Yhx" secondAttribute="bottom" id="ul5-p3-w97"/>
+                                    </constraints>
+                                </clipView>
+                                <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="Nmq-yN-Fia">
+                                    <rect key="frame" x="1" y="723" width="955" height="15"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                                <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="35z-k3-Jns">
+                                    <rect key="frame" x="956" y="1" width="15" height="722"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                            </scrollView>
                         </subviews>
                         <constraints>
                             <constraint firstItem="LLx-ka-QiE" firstAttribute="trailing" secondItem="yDW-ZX-XPS" secondAttribute="trailing" id="0oG-kL-Wg4"/>

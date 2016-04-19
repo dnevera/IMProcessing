@@ -20,7 +20,6 @@ class IMPTestFilter:IMPFilter {
     
     var curveFilter:IMPCurvesFilter!
     
-    //var blur:IMPIIRGaussianBlurFilter!
     var blur:IMPGaussianBlurFilter!
     
     var downSample:IMPMaxSizeFilter!
@@ -46,10 +45,8 @@ class IMPTestFilter:IMPFilter {
         ]
         
         noise = IMPFilmGrainFilter(context: context)
-        //dither = IMPBayerDitheringFilter(context: context)
         dither = IMPBayerDitheringFilter(context: context)
         
-        //blur = IMPIIRGaussianBlurFilter(context: context)
         blur = IMPGaussianBlurFilter(context: context)
 
         downSample = IMPMaxSizeFilter(context: self.context)

@@ -42,7 +42,6 @@ class ViewController: NSViewController {
             //
             // немного того, но... :)
             //
-            //dispatch_after(0, dispatch_get_main_queue()) { () -> Void in
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 block()
             }
@@ -52,9 +51,7 @@ class ViewController: NSViewController {
     @IBAction func changeValue1(sender: NSSlider) {
         let value = sender.floatValue/100
         asyncChanges { () -> Void in
-            //self.histogramCDFView.histogram.solver.histogramType = (type:.CDF,power:value)
             self.textValueLabel.stringValue = String(format: "%2.5f", value);
-            //self.mainFilter.hsvFilter?.overlap = value*4
             self.mainFilter.noise.adjustment.size = value
         }
     }
@@ -90,18 +87,6 @@ class ViewController: NSViewController {
             
             self.mainFilter.noise.adjustment.amount.total = (sender.floatValue/100)
             self.mainFilter.noise.adjustment.amount.color = 1
-            
-            //self.mainFilter.dither.adjustment.blending.opacity = sender.floatValue/100
-            
-//            self.mainFilter.hsvFilter?.adjustment.yellows.hue = (sender.floatValue/100 - 0.5) * 2
-//            self.mainFilter.curveFilter.adjustment.blending.opacity = sender.floatValue/100
-//            self.mainFilter.curveFilter.splines.compositeControls = [
-//                float2(0,0),
-//                float2(50,18),
-//                float2(128,128*sender.floatValue/100),
-//                float2(238,245),
-//                float2(255,255)
-//            ]
         }
     }
     

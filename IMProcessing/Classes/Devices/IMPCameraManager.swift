@@ -793,7 +793,7 @@
         //
         // Capturing video frames and update live-view to apply IMP-filter.
         //
-        public func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+        public func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {            
             
             if capturingPhotoInProgress {
                 return
