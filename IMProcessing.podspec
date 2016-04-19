@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => 'https://bitbucket.org/degrader/improcessing.git', :tag => '0.3.4'}
 
   s.osx.deployment_target = "10.11"
-  s.ios.deployment_target = "8.3"
+  s.ios.deployment_target = "8.0"
   
   s.source_files        = 'IMProcessing/Classes/**/*.{h,swift,m}', 'IMProcessing/Classes/*.{swift}', 'vendor/libjpeg-turbo/include/*'
   s.public_header_files = 'IMProcessing/Classes/**/*.h','IMProcessing/Classes/Shaders/*.h'
