@@ -148,20 +148,20 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             #endif
             
             #if os(iOS)
-                if timer != nil {
-                    timer.removeFromRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+                if self.timer != nil {
+                    self.timer.removeFromRunLoop(NSRunLoop.currentRunLoop(), forMode: NSRunLoopCommonModes)
                 }
-                timer = CADisplayLink(target: self, selector: #selector(IMPView.refresh))
+                self.timer = CADisplayLink(target: self, selector: #selector(self.refresh))
             #else
-                timer = IMPDisplayLink.sharedInstance
-                timer?.addView(self)
+                self.timer = IMPDisplayLink.sharedInstance
+                self.timer?.addView(self)
             #endif
-            timer?.paused = self.isPaused
+            self.timer?.paused = self.isPaused
             
             #if os(iOS)
-                timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode:NSDefaultRunLoopMode)
+                self.timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode:NSRunLoopCommonModes)
             #endif
-            
+
             layerNeedUpdate = true
         }
     }
@@ -202,7 +202,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     private var isFirstFrame = true
     
     internal func refresh() {
-            
+                
         if layerNeedUpdate {
             
             layerNeedUpdate = false
