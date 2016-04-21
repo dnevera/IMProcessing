@@ -643,11 +643,11 @@
                             <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8IY-iL-6bR" customClass="IMPScrollView" customModule="IMProcessing" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="972" height="739"/>
                                 <clipView key="contentView" id="DYk-Db-VEI">
-                                    <rect key="frame" x="1" y="1" width="955" height="722"/>
+                                    <rect key="frame" x="1" y="1" width="970" height="737"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <view translatesAutoresizingMaskIntoConstraints="NO" id="qrm-Od-Yhx">
-                                            <rect key="frame" x="0.0" y="0.0" width="385" height="128"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="400" height="143"/>
                                         </view>
                                     </subviews>
                                     <constraints>
@@ -658,11 +658,11 @@
                                     </constraints>
                                 </clipView>
                                 <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="Nmq-yN-Fia">
-                                    <rect key="frame" x="1" y="723" width="955" height="15"/>
+                                    <rect key="frame" x="1" y="722" width="970" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="35z-k3-Jns">
-                                    <rect key="frame" x="956" y="1" width="15" height="722"/>
+                                    <rect key="frame" x="955" y="1" width="16" height="737"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		310284141C392A4200042B4C /* IMPJpegturbo.m in Sources */ = {isa = PBXBuildFile; fileRef = 310284131C392A4200042B4C /* IMPJpegturbo.m */; };
 		31058D811CC4E6E40066ED64 /* libturbojpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 31058D801CC4E6E40066ED64 /* libturbojpeg.a */; };
+		31058DA61CC7C53C0066ED64 /* IMPGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA51CC7C53C0066ED64 /* IMPGraphics.swift */; };
 		3112BCBC1C281CEB00825078 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBB1C281CEB00825078 /* Assets.xcassets */; };
 		3112BCBF1C281CEB00825078 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3112BCBD1C281CEB00825078 /* Main.storyboard */; };
 		3112BCF41C281D9F00825078 /* IMPAdjustment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112BCC81C281D9F00825078 /* IMPAdjustment.swift */; };
@@ -72,6 +73,7 @@
 		310284121C392A4200042B4C /* IMPJpegturbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPJpegturbo.h; sourceTree = "<group>"; };
 		310284131C392A4200042B4C /* IMPJpegturbo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMPJpegturbo.m; sourceTree = "<group>"; };
 		31058D801CC4E6E40066ED64 /* libturbojpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libturbojpeg.a; path = "vendor/libjpeg-turbo/lib/libturbojpeg.a"; sourceTree = "<group>"; };
+		31058DA51CC7C53C0066ED64 /* IMPGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPGraphics.swift; sourceTree = "<group>"; };
 		3112BCB21C281CEB00825078 /* IMProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3112BCBB1C281CEB00825078 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3112BCBE1C281CEB00825078 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -348,6 +350,7 @@
 				316226BC1C89F0CF00C2370A /* IMPVideoCache.swift */,
 				3112BCD51C281D9F00825078 /* IMPFilter.swift */,
 				3112BCD61C281D9F00825078 /* IMPFunction.swift */,
+				31058DA51CC7C53C0066ED64 /* IMPGraphics.swift */,
 				3112BCD81C281D9F00825078 /* IMPImageProvider.swift */,
 				3112BCDA1C281D9F00825078 /* IMPTexturePovider.swift */,
 			);
@@ -577,6 +580,7 @@
 				3112BD161C2821F200825078 /* IMPView.swift in Sources */,
 				3112BD0C1C281D9F00825078 /* IMPImage+MTLTexture.swift in Sources */,
 				3198DE681C899CDD005845FD /* IMPCameraManager.swift in Sources */,
+				31058DA61CC7C53C0066ED64 /* IMPGraphics.swift in Sources */,
 				31265AA91C34DB66005B8B00 /* IMPPaletteView.swift in Sources */,
 				31819C1B1C288C1E0037DA99 /* IMPColorWeightsAnalyzer.swift in Sources */,
 				3112BCFF1C281D9F00825078 /* IMPFilter.swift in Sources */,

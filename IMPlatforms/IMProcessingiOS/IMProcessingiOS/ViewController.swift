@@ -176,7 +176,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                     })
                 }
                 else{
-                    NSLog("... focusMode = \(self.cameraManager.focusMode.rawValue) exposureMode = \(self.cameraManager.exposureMode.rawValue)")
+                    NSLog("... focusMode = \(self.cameraManager.focus) exposureMode = \(self.cameraManager.exposureMode.rawValue)")
                 }
             }
             
@@ -334,9 +334,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     
     func resetHandler(sender:UIButton)  {
-        cameraManager.resetFocus { (camera) in
-            NSLog("... focus has reseted at default POI")
-        }
+        
+        cameraManager.focus = .Reset
+        
         cameraManager.resetExposure { (camera) in
             NSLog("... exposure has reseted at default POI --> compensation = \(self.cameraManager.exposureCompensation)")
             dispatch_async(dispatch_get_main_queue(), {
@@ -352,21 +352,33 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch gesture.state {
         case .Began:
             
-            cameraManager.autoFocus(atPoint: point)
+            cameraManager.focus = .Auto(atPoint: point,
+                                        begin: { (camera, point) in
+                                            NSLog("... pan start auto focus at \(point) start  mode = \(camera.focus)")
+                },
+                                        complete: { (camera, point) in
+                                            NSLog("... pan start auto focus at \(point)  done! mode = \(camera.focus)")
+                }
+            )
             cameraManager.autoExposure(atPoint: point)
             
         case .Changed:
             
-            cameraManager.smoothFocusEnabled = true
-            cameraManager.autoFocus(atPoint: point)
+            cameraManager.focus = .ContinuousAuto(atPoint: point, begin: nil, complete: nil)
             cameraManager.autoExposure(atPoint: point)
             
         case .Ended:
             
-            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
-                self.cameraManager.smoothFocusEnabled = false
-                NSLog("... panning focus at \(point) done!")
-            })
+            cameraManager.focus =
+                .ContinuousAuto(atPoint: point,
+                                begin: { (camera, point) in
+                                    NSLog("... pan end auto focus at \(point) start  mode = \(camera.focus)")
+                    },
+                                complete: { (camera, point) in
+                                    NSLog("... pan end auto focus at \(point)  done! mode = \(camera.focus)")
+                    }
+            )
+
             cameraManager.autoExposure(atPoint: point)
             
         default:
@@ -378,10 +390,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let point = gesture.locationInView(cameraManager.liveView)
         if gesture.state == .Ended {
             
-            NSLog("... auto focus at \(point) start ... mode = \(cameraManager.focusMode.rawValue)")
-            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
-                NSLog("... auto focus at \(point) done! mode = \(camera.focusMode.rawValue)")
-            })
+            cameraManager.focus =
+                .ContinuousAuto(atPoint: point,
+                                begin: { (camera, point) in
+                                    NSLog("... continues auto focus at \(point) start  mode = \(camera.focus)")
+                                },
+                                complete: { (camera, point) in
+                                    NSLog("... continues auto focus at \(point)  done! mode = \(camera.focus)")
+                                }
+            )
+
+//            cameraManager.focus =
+//                .Auto(atPoint: point,
+//                      begin: { (camera, point) in
+//                        NSLog("... auto focus at \(point) start  mode = \(camera.focus)")
+//                      },
+//                      complete: { (camera, point) in
+//                        NSLog("... auto focus at \(point)  done! mode = \(camera.focus)")
+//            })
+            
+//            cameraManager.focus = .Locked(complete: { (camera, point) in
+//                NSLog("... locked focus at \(point)  done! mode = \(camera.focus)")
+//            })
         }
     }
 

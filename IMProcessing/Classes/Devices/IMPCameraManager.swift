@@ -17,12 +17,69 @@
     /// Camera manager
     public class IMPCameraManager: NSObject, IMPContextProvider, AVCaptureVideoDataOutputSampleBufferDelegate {
         
+        public typealias FocusPointBlockType = ((camera:IMPCameraManager, point:CGPoint)->Void)
+        
+        ///  Focus settings
+        ///
+        ///  - Auto:           Auto focus mode at POI with beginning and completition blocks
+        ///  - ContinuousAuto: Continuous Auto focus mode with beginning and completition blocks
+        ///  - Locked:         Locked Focus mode
+        ///  - Reset:          Reset foucus to center POI
+        public enum Focus {
+            
+            case Auto(atPoint:CGPoint,begin:FocusPointBlockType?,complete:FocusPointBlockType?)
+            case ContinuousAuto(atPoint:CGPoint,begin:FocusPointBlockType?,complete:FocusPointBlockType?)
+            case Locked(complete:FocusPointBlockType?)
+            case Reset
+
+            /// Device focus mode
+            public var mode: AVCaptureFocusMode {
+                switch self {
+                case .Auto(_,_,_): return .AutoFocus
+                case .ContinuousAuto(_,_,_): return .ContinuousAutoFocus
+                case .Locked(_): return .Locked
+                case .Reset: return .ContinuousAutoFocus
+                }
+            }
+            
+            // POI of focusing
+            var poi: CGPoint? {
+                switch self {
+                case .Auto(let focusPoint,_,_): return focusPoint
+                case .ContinuousAuto(let focusPoint,_,_): return focusPoint
+                case .Locked(_): return nil
+                case .Reset: return CGPoint(x: 0.5,y: 0.5)
+                }
+            }
+
+            // Begining block calls when lens start to change its position
+            var begin: FocusPointBlockType? {
+                switch self {
+                case .Auto(_, let beginBlock, _): return beginBlock
+                case .ContinuousAuto(_, let beginBlock, _): return beginBlock
+                case .Locked(_): return nil
+                case .Reset: return nil
+                }
+            }
+
+            // Completetion block calls when focus has adjusted
+            var complete: FocusPointBlockType? {
+                switch self {
+                case .Auto(_,_, let completeBlock): return completeBlock
+                case .ContinuousAuto(_,_, let completeBlock): return completeBlock
+                case .Locked(let completeBlock): return completeBlock
+                case .Reset: return nil
+                }
+            }
+        }
+        
+        
         public typealias AccessHandler = ((Bool) -> Void)
-        public typealias liveViewEventBlockType     = ((camera:IMPCameraManager)->Void)
-        public typealias cameraEventBlockType       = ((camera:IMPCameraManager, ready:Bool)->Void)
-        public typealias cameraCompleteBlockType    = ((camera:IMPCameraManager)->Void)
-        public typealias videoEventBlockType        = ((camera:IMPCameraManager, running:Bool)->Void)
-        public typealias zomingCompleteBlockType    = ((camera:IMPCameraManager, factor:Float)->Void)
+        public typealias LiveViewEventBlockType     = ((camera:IMPCameraManager)->Void)
+        public typealias CameraEventBlockType       = ((camera:IMPCameraManager, ready:Bool)->Void)
+        public typealias CameraCompleteBlockType    = ((camera:IMPCameraManager)->Void)
+        public typealias VideoEventBlockType        = ((camera:IMPCameraManager, running:Bool)->Void)
+        public typealias ZomingCompleteBlockType    = ((camera:IMPCameraManager, factor:Float)->Void)
 
         public typealias capturingCompleteBlockType = ((camera:IMPCameraManager, finished:Bool, file:String?, metadata:NSDictionary?, error:NSError?)->Void)
         
@@ -176,47 +233,52 @@
         /// Get back camera caprure reference
         public let backCamera  = IMPCameraManager.camera(.Back)
         
+        lazy var currentFocus:Focus = {
+            switch self.currentCamera.focusMode {
+            case .Locked:
+                return .Locked(complete: nil)
+            case .AutoFocus:
+                return .Auto(atPoint: CGPoint(x: 0.5,y: 0.5),begin: nil,complete: nil)
+            case .ContinuousAutoFocus:
+                return .ContinuousAuto(atPoint: CGPoint(x: 0.5,y: 0.5),begin: nil,complete: nil)
+            }
+        }()
+        
+        /// Get/Set current focus settings
+        public var focus:Focus {
+            set {
+                currentFocus = newValue
+                controlCameraFocus(atPoint: currentFocus.poi,
+                                   action: { (poi) in
+                                    if newValue.mode != .Locked {
+                                        self.currentCamera.focusPointOfInterest = poi
+                                    }
+                                    self.currentCamera.focusMode = self.currentFocus.mode
+                    }, complete: nil)
+            }
+            get {
+                return currentFocus
+            }
+        }
+        
+        /// Get the camera focus point of interest (POI)
+        public var focusPOI:CGPoint {
+            return currentCamera.focusPointOfInterest
+        }
+        
         ///  Auto Exposure at a point of interest.
         ///
         ///  - parameter point:    POI
         ///  - parameter complete: complete operations
-        public func autoExposure(atPoint point:CGPoint?=nil, complete:cameraCompleteBlockType?=nil){
+        public func autoExposure(atPoint point:CGPoint?=nil, complete:CameraCompleteBlockType?=nil){
             controlCameraExposure(atPoint: point, action: { (poi) in
                 self.currentCamera.exposurePointOfInterest = poi
                 self.currentCamera.exposureMode = .AutoExpose
                 }, complete: complete)
         }
         
-        ///  Auto Focus at a point of interest
-        ///
-        ///  - parameter point:    POI
-        ///  - parameter complete: complete focusing block
-        public func autoFocus(atPoint point:CGPoint?=nil, complete:cameraCompleteBlockType?=nil)  {
-            
-            controlCameraFocus(atPoint: point,
-                               action: { (poi) in
-                                self.currentCamera.focusPointOfInterest = poi
-                                self.currentCamera.focusMode = .AutoFocus
-                }, complete: nil)
-            
-            if let complete = complete {
-                autofocusCompleteQueue.append(completeAutoFocusFunction(complete: complete))
-                currentCamera.addObserver(self, forKeyPath: "adjustingFocus", options: .New, context: &IMPCameraManager.focusPointOfInterestContext)
-            }
-        }
-        
-        ///  Reset auto focus to default POI
-        ///
-        ///  - parameter complete: complete operations
-        public func resetFocus(complete:cameraCompleteBlockType?=nil){
-            controlCameraFocus(atPoint: nil,
-                               action: { (poi) in
-                                self.currentCamera.focusPointOfInterest = poi
-                                self.currentCamera.focusMode = .ContinuousAutoFocus
-                }, complete: complete)
-        }
-        
-        public func resetExposure(complete:cameraCompleteBlockType?=nil){            
+
+        public func resetExposure(complete:CameraCompleteBlockType?=nil){
             dispatch_async(sessionQueue){
                 do {
                     try self.currentCamera.lockForConfiguration()
@@ -233,28 +295,7 @@
             }
         }
         
-        /// Get/Set current focus mode
-        public var focusMode:AVCaptureFocusMode {
-            set {
-                controlCamera(atPoint: nil,
-                              supported: currentCamera.isFocusModeSupported(newValue),
-                              action:
-                    { (poi) in
-                        if  newValue == .ContinuousAutoFocus
-                            &&
-                            self.currentCamera.focusPointOfInterestSupported
-                        {
-                            self.currentCamera.focusPointOfInterest = poi
-                        }
-                        self.currentCamera.focusMode = newValue
-                    }
-                )
-            }
-            get {
-                return currentCamera.focusMode
-            }
-        }
-        
+
         /// Set focusing smooth mode
         public var smoothFocusEnabled:Bool {
             set {
@@ -319,21 +360,21 @@
         ///  Add new observer calls when camera device change session state on ready to capture and vice versa.
         ///
         ///  - parameter observer: camera event block
-        public func addCameraObserver(observer:cameraEventBlockType){
+        public func addCameraObserver(observer:CameraEventBlockType){
             cameraEventHandlers.append(observer)
         }
         
         ///  Add new observer calls when video capturing change video streanming state.
         ///
         ///  - parameter observer: camera event block
-        public func addVideoObserver(observer:videoEventBlockType){
+        public func addVideoObserver(observer:VideoEventBlockType){
             videoEventHandlers.append(observer)
         }
         
         ///  Add new observer calls when the first frame from video stream presents in live viewport after camera starting.
         ///
         ///  - parameter observer: camera event block
-        public func addLiveViewReadyObserver(observer:liveViewEventBlockType){
+        public func addLiveViewReadyObserver(observer:LiveViewEventBlockType){
             liveViewReadyHandlers.append(observer)
         }
         
@@ -368,13 +409,13 @@
         }()
         
         
-        public func setZoom(factor factor:Float, animate:Bool=true, complete:zomingCompleteBlockType?=nil) {
+        public func setZoom(factor factor:Float, animate:Bool=true, complete:ZomingCompleteBlockType?=nil) {
             if factor >= 1.0 && factor <= maximumZoomFctor {
                 dispatch_async(sessionQueue){
                     do{
                         try self.currentCamera.lockForConfiguration()
                         
-                        self.zomingCompleteQueue.append(completeZomingFunction(complete: complete, factor: factor))
+                        self.zomingCompleteQueue.append(CompleteZomingFunction(complete: complete, factor: factor))
                         
                         if animate {
                             self.currentCamera.rampToVideoZoomFactor(factor.cgloat, withRate: 30)
@@ -402,6 +443,10 @@
                     NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
                 }
             }
+        }
+        
+        deinit{
+            removeCameraObservers()
         }
         
         //
@@ -447,9 +492,9 @@
         }
         var isVideoSuspended      = false
         
-        var cameraEventHandlers = [cameraEventBlockType]()
-        var videoEventHandlers  = [videoEventBlockType]()
-        var liveViewReadyHandlers = [liveViewEventBlockType]()
+        var cameraEventHandlers = [CameraEventBlockType]()
+        var videoEventHandlers  = [VideoEventBlockType]()
+        var liveViewReadyHandlers = [LiveViewEventBlockType]()
         
         func cameraObserversHandle() {
             for o in cameraEventHandlers {
@@ -480,7 +525,7 @@
             });
         }
         
-        func controlCameraFocus(atPoint point:CGPoint?, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+        func controlCameraFocus(atPoint point:CGPoint?, action:((poi:CGPoint)->Void), complete:CameraCompleteBlockType?=nil) {
             controlCamera(atPoint: point,
                           supported: self.currentCamera.focusPointOfInterestSupported
                             && self.currentCamera.isFocusModeSupported(.AutoFocus),
@@ -488,7 +533,7 @@
                           complete: complete)
         }
 
-        func controlCameraExposure(atPoint point:CGPoint?, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+        func controlCameraExposure(atPoint point:CGPoint?, action:((poi:CGPoint)->Void), complete:CameraCompleteBlockType?=nil) {
             controlCamera(atPoint: point,
                           supported: self.currentCamera.exposurePointOfInterestSupported
                             && self.currentCamera.isExposureModeSupported(.AutoExpose),
@@ -496,7 +541,7 @@
                           complete: complete)
         }
 
-        func controlCamera(atPoint point:CGPoint?=nil, supported: Bool, action:((poi:CGPoint)->Void), complete:cameraCompleteBlockType?=nil) {
+        func controlCamera(atPoint point:CGPoint?=nil, supported: Bool, action:((poi:CGPoint)->Void), complete:CameraCompleteBlockType?=nil) {
             if self.currentCamera == nil {
                 return
             }
@@ -530,48 +575,39 @@
         // Observe camera properties...
         //
         
-        static var focusPointOfInterestContext = "focusPointOfInterestContext"
-        
-        class completeAutoFocusFunction {
-            var block:cameraCompleteBlockType? = nil
-            init(complete:cameraCompleteBlockType){
-                self.block = complete
-            }
-        }
-        
-        class completeZomingFunction {
-            var block:zomingCompleteBlockType? = nil
+        class CompleteZomingFunction {
+            var block:ZomingCompleteBlockType? = nil
             var factor:Float = 0
-            init(complete:zomingCompleteBlockType?, factor:Float){
+            init(complete:ZomingCompleteBlockType?, factor:Float){
                 self.block = complete
                 self.factor = factor
             }
         }
         
-        var autofocusCompleteQueue = [completeAutoFocusFunction]()
-        var zomingCompleteQueue = [completeZomingFunction]()
+        var zomingCompleteQueue = [CompleteZomingFunction]()
 
         func addCameraObservers() {
-            currentCamera.addObserver(self, forKeyPath: "focusPointOfInterest", options: .New, context: nil)
             currentCamera.addObserver(self, forKeyPath: "videoZoomFactor", options: .New, context: nil)
+            currentCamera.addObserver(self, forKeyPath: "adjustingFocus", options: .New, context: nil)
         }
         
         func removeCameraObservers() {
-            currentCamera.removeObserver(self, forKeyPath: "focusPointOfInterest", context: nil)
             currentCamera.removeObserver(self, forKeyPath: "videoZoomFactor", context: nil)
+            currentCamera.removeObserver(self, forKeyPath: "adjustingFocus", context: nil)
         }
 
         override public func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
             
             if keyPath == "adjustingFocus"{
-                if  context == &IMPCameraManager.focusPointOfInterestContext {
-                    
-                    if let new = change?["new"] as? Int {
-                        if new == 0 {
-                            currentCamera.removeObserver(self, forKeyPath: "adjustingFocus", context: context)
-                            if let complete = autofocusCompleteQueue.popLast()?.block {
-                                complete(camera:self)
-                            }
+                if let new = change?["new"] as? Int {
+                    if new == 1 {
+                        if let begin = currentFocus.begin{
+                            begin(camera: self, point: self.currentCamera.focusPointOfInterest)
+                        }
+                    }
+                    else if new == 0 {
+                        if let complete = currentFocus.complete{
+                            complete(camera: self, point: self.currentCamera.focusPointOfInterest)
                         }
                     }
                 }

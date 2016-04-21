@@ -34,6 +34,7 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
+    var tranformer: IMPRender!
     
     override func viewDidLoad() {
         
@@ -55,6 +56,10 @@ class ViewController: NSViewController {
         
         
         filter = IMPFilter(context: context)
+        
+        tranformer = IMPRender(context: context)
+        
+        filter.addFilter(tranformer)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter

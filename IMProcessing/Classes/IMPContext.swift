@@ -68,7 +68,7 @@ public class IMPContext {
     public let commandQueue:MTLCommandQueue?
     
     /// Default library associated with current context
-    public let defaultLibrary:MTLLibrary?
+    public let defaultLibrary:MTLLibrary
     
     /// How context execution is processed
     public let isLasy:Bool
