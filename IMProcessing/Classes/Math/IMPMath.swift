@@ -28,7 +28,7 @@ public extension Double{
             self = Double(newValue)
         }
     }
-    public var cgloat:CGFloat{
+    public var cgfloat:CGFloat{
         get{
             return CGFloat(self)
         }
@@ -56,7 +56,7 @@ public extension Float{
             self = Float(newValue)
         }
     }
-    public var cgloat:CGFloat{
+    public var cgfloat:CGFloat{
         get{
             return CGFloat(self)
         }
@@ -97,7 +97,7 @@ public extension Int {
             self = Int(newValue)
         }
     }
-    public var cgloat:CGFloat{
+    public var cgfloat:CGFloat{
         get{
             return CGFloat(self)
         }

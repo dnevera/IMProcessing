@@ -8,6 +8,7 @@
 
 import UIKit
 import IMProcessing
+import CoreMedia
 import SnapKit
 
 let TEST_CAMERA = true
@@ -176,7 +177,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                     })
                 }
                 else{
-                    NSLog("... focusMode = \(self.cameraManager.focusMode.rawValue) exposureMode = \(self.cameraManager.exposureMode.rawValue)")
+                    NSLog("... focusMode = \(self.cameraManager.focus) exposureMode = \(self.cameraManager.exposure)")
                 }
             }
             
@@ -334,16 +335,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     
     func resetHandler(sender:UIButton)  {
-        cameraManager.resetFocus { (camera) in
-            NSLog("... focus has reseted at default POI")
-        }
-        cameraManager.resetExposure { (camera) in
-            NSLog("... exposure has reseted at default POI --> compensation = \(self.cameraManager.exposureCompensation)")
-            dispatch_async(dispatch_get_main_queue(), {
-                let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
-                self.slider.value = self.cameraManager.exposureCompensation / (range/2) + 0.5
-            })
-        }
+        
+        cameraManager.focus = .Reset(complete: { (camera, point) in
+            NSLog("... reset focus at \(point) mode = \(camera.focus)")
+        })
+        cameraManager.exposure = .Reset(complete: { (camera, point) in
+            NSLog("... reset exposure at \(point) mode = \(camera.focus)")
+        })
+        
     }
     
     func focusPanHandler(gesture: UITapGestureRecognizer) {
@@ -352,22 +351,48 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch gesture.state {
         case .Began:
             
-            cameraManager.autoFocus(atPoint: point)
-            cameraManager.autoExposure(atPoint: point)
+            cameraManager.focus = .Auto(atPoint: point,
+                                        begin: { (camera, point) in
+                                            NSLog("... pan start auto focus at \(point) start  mode = \(camera.focus)")
+                },
+                                        complete: { (camera, point) in
+                                            NSLog("... pan start auto focus at \(point)  done! mode = \(camera.focus)")
+                }
+            )
+            
+            cameraManager.exposure = .Auto(
+                atPoint: point,
+                begin: { (camera, point) in
+                    NSLog("... pan start auto exposure at \(point) start ... duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+                }, complete: { (camera, point) in
+                    NSLog("... pan auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+            })
             
         case .Changed:
             
-            cameraManager.smoothFocusEnabled = true
-            cameraManager.autoFocus(atPoint: point)
-            cameraManager.autoExposure(atPoint: point)
+            cameraManager.focus = .ContinuousAuto(atPoint: point, begin: nil, complete: nil)
+            cameraManager.exposure = .ContinuousAuto(atPoint: point, begin: nil, complete: nil)
             
         case .Ended:
             
-            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
-                self.cameraManager.smoothFocusEnabled = false
-                NSLog("... panning focus at \(point) done!")
+            cameraManager.focus =
+                .ContinuousAuto(atPoint: point,
+                                begin: { (camera, point) in
+                                    NSLog("... pan end auto focus at \(point) start  mode = \(camera.focus)")
+                    },
+                                complete: { (camera, point) in
+                                    NSLog("... pan end auto focus at \(point)  done! mode = \(camera.focus)")
+                    }
+            )
+            
+            cameraManager.exposure = .ContinuousAuto(
+                atPoint: point,
+                begin: { (camera, point) in
+                    NSLog("... pan end auto exposure at \(point) start ... duration = \(camera.exposureDuration)")
+                },
+                complete: { (camera, point) in
+                    NSLog("... pan end auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration)")
             })
-            cameraManager.autoExposure(atPoint: point)
             
         default:
             break
@@ -375,24 +400,74 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func focusHandler(gesture: UITapGestureRecognizer) {
-        let point = gesture.locationInView(cameraManager.liveView)
+        
         if gesture.state == .Ended {
+
+            let point = gesture.locationInView(cameraManager.liveView)
+
+            cameraManager.focus =
+                .ContinuousAuto(atPoint: point,
+                                begin: { (camera, point) in
+                                    NSLog("... continues auto focus at \(point) start  mode = \(camera.focus)")
+                                },
+                                complete: { (camera, point) in
+                                    NSLog("... continues auto focus at \(point)  done! mode = \(camera.focus)")
+                                }
+            )
+
+//            cameraManager.focus =
+//                .Auto(atPoint: point,
+//                      begin: { (camera, point) in
+//                        NSLog("... auto focus at \(point) start  mode = \(camera.focus)")
+//                      },
+//                      complete: { (camera, point) in
+//                        NSLog("... auto focus at \(point)  done! mode = \(camera.focus)")
+//            })
             
-            NSLog("... auto focus at \(point) start ... mode = \(cameraManager.focusMode.rawValue)")
-            cameraManager.autoFocus(atPoint: point, complete: { (camera) in
-                NSLog("... auto focus at \(point) done! mode = \(camera.focusMode.rawValue)")
-            })
+//            cameraManager.focus = .Locked(complete: { (camera, point) in
+//                NSLog("... locked focus at \(point)  done! mode = \(camera.focus)")
+//            })
         }
     }
 
     func exposureHandler(gesture: UITapGestureRecognizer) {
         if gesture.state == .Ended {
-            let point = gesture.locationInView(cameraManager.liveView)
             
-            NSLog("... auto exposure at \(point) start ...")
-            cameraManager.autoExposure(atPoint: point, complete: { (camera) in
-                NSLog("... auto exposure at \(point) done! mode = \(camera.exposureMode.rawValue)")
+//            let point = gesture.locationInView(cameraManager.liveView)
+            
+//            cameraManager.exposure = .ContinuousAuto(
+//                atPoint: point,
+//                begin: { (camera, point) in
+//                    NSLog("... continuous auto exposure at \(point) start ... duration = \(camera.exposureDuration)")
+//                },
+//                complete: { (camera, point) in
+//                    NSLog("... continuous auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration)")
+//            })
+            
+//            cameraManager.exposure = .Auto(
+//                atPoint: point,
+//                begin: { (camera, point) in
+//                    NSLog("... auto exposure at \(point) start ... duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//                }, complete: { (camera, point) in
+//                    NSLog("... auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//            })
+            
+
+//
+//            cameraManager.exposure = .Locked(complete: { (camera, point) in
+//                NSLog("... locked exposure at \(point)  done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//            })
+            
+            
+            cameraManager.exposure = .Custom(
+                duration: CMTime(duration: (1,60)),
+                iso:      64,
+                begin: { (camera, point) in
+                    NSLog("... custom exposure at \(point) start ... duration = \(camera.exposureDuration.seconds) ios = \(camera.exposureISO)")
+                }, complete: { (camera, point) in
+                   NSLog("... custom exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration.seconds) ios = \(camera.exposureISO)")
             })
+            
         }
     }
 
@@ -406,7 +481,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             inZooming = true
             NSLog("... zoom \(zoomed ? "in" : "out" ) ...")
-            cameraManager.setZoom(factor: zoomed ? 1 : 4.532 , animate: true, complete: { (camera, factor) in
+            cameraManager.setZoom(factor: zoomed ? 1 : cameraManager.maximumZoomFactor/2 , animate: true, complete: { (camera, factor) in
                 self.inZooming = false
                 NSLog("... zoommed \(self.zoomed ? "in" : "out" ) ...")
                 self.zoomed = !self.zoomed

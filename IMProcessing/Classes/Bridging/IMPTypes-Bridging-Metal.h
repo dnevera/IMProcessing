@@ -11,6 +11,38 @@
 
 #include "IMPConstants-Bridging-Metal.h"
 
+
+typedef struct {
+    float2 position;
+    float2 texcoord;
+} IMPVertexIn;
+
+#ifndef __METAL_VERSION__
+
+typedef struct {
+    float4 position;
+    float2 texcoord;
+} IMPVertexOut;
+
+#else
+
+typedef struct {
+    float4 position [[position]];
+    float2 texcoord;
+} IMPVertexOut;
+
+#endif
+
+typedef struct {
+    float         transform[9];
+    float4x4      transition;
+} IMPTransform;
+
+typedef struct {
+    float4x4  matrix;
+} IMPOrthoMatrix;
+
+
 struct IMPCropRegion {
     float top;
     float right;
@@ -33,7 +65,7 @@ typedef struct{
 } IMPAdjustment;
 
 typedef struct{
-    metal_float4   dominantColor;
+    float4   dominantColor;
     IMPBlending    blending;
 } IMPWBAdjustment;
 
@@ -49,8 +81,8 @@ typedef struct{
 
 
 typedef struct{
-    metal_float4   minimum;
-    metal_float4   maximum;
+    float4   minimum;
+    float4   maximum;
     IMPBlending    blending;
 } IMPContrastAdjustment;
 

@@ -32,14 +32,14 @@ typedef struct {
 
 ///  @brief Histogram visualization color options
 typedef struct {
-    metal_float4 color;
+    float4 color;
     float        width;
 }IMPHistogramLayerComponent;
 
 ///  @brief Histogram layer presentation
 struct IMPHistogramLayer {
     IMPHistogramLayerComponent  components[kIMP_HistogramMaxChannels];
-    metal_float4                backgroundColor;
+    float4                backgroundColor;
     bool                        backgroundSource;
 };
 
@@ -92,17 +92,17 @@ typedef struct {
 
 ///  @brief Clip shadows/highlights during statistic computaion
 typedef struct {
-    metal_float3 shadows;
-    metal_float3 highlights;
+    float3 shadows;
+    float3 highlights;
 }IMPHistogramCubeClipping;
 
 typedef struct{
-    metal_float4 color;
+    float4 color;
 }IMPPaletteBuffer;
 
 typedef struct{
-    metal_float4     backgroundColor;
-    bool             backgroundSource;
+    float4     backgroundColor;
+    bool       backgroundSource;
 }IMPPaletteLayerBuffer;
 
 
