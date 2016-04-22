@@ -105,13 +105,13 @@
                 switch orientation {
                     
                 case .Left, .LeftMirrored:
-                    angle = Float(90.0).radians.cgloat
+                    angle = Float(90.0).radians.cgfloat
                     
                 case .Right, .RightMirrored:
-                    angle = Float(-90.0).radians.cgloat
+                    angle = Float(-90.0).radians.cgfloat
                     
                 case .Down, .DownMirrored:
-                    angle = Float(180.0).radians.cgloat
+                    angle = Float(180.0).radians.cgfloat
                     
                 default: break
                     
@@ -155,13 +155,13 @@
                         switch (orientation) {
                             
                         case .LandscapeLeft:
-                            angle = Float(-90.0).radians.cgloat
+                            angle = Float(-90.0).radians.cgfloat
                             
                         case .LandscapeRight:
-                            angle = Float(90.0).radians.cgloat
+                            angle = Float(90.0).radians.cgfloat
                             
                         case .PortraitUpsideDown:
-                            angle = Float(180.0).radians.cgloat
+                            angle = Float(180.0).radians.cgfloat
                             
                         default:
                             break

@@ -30,14 +30,14 @@ public extension IMPImageProvider{
     }
     
     public func updateFromJpeg(file file:String, maxSize: Float = 0) throws {
-        texture = try IMPJpegturbo.updateMTLTexture(texture, withPixelFormat: IMProcessing.colors.pixelFormat, withDevice: context.device, fromFile: file, maxSize: maxSize.cgloat)
+        texture = try IMPJpegturbo.updateMTLTexture(texture, withPixelFormat: IMProcessing.colors.pixelFormat, withDevice: context.device, fromFile: file, maxSize: maxSize.cgfloat)
         completeUpdate()
     }
     
     public func writeToJpeg(path:String, compression compressionQ:Float) throws {
         if let t = texture {
             var error:NSError?
-            IMPJpegturbo.writeMTLTexture(t, toJpegFile: path, compression: compressionQ.cgloat, error: &error)
+            IMPJpegturbo.writeMTLTexture(t, toJpegFile: path, compression: compressionQ.cgfloat, error: &error)
             if error != nil {
                 throw error!
             }

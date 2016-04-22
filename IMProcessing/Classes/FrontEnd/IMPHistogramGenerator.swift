@@ -19,9 +19,9 @@ public class IMPHistogramGenerator: IMPFilter{
     public var size:IMPSize!{
         didSet{
             if
-                texture?.width.cgloat != size.width
+                texture?.width.cgfloat != size.width
                 ||
-                texture?.height.cgloat != size.height
+                texture?.height.cgfloat != size.height
             {
                 let desc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(.RGBA8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
                 texture = context.device.newTextureWithDescriptor(desc)

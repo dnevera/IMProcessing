@@ -8,6 +8,7 @@
 
 import UIKit
 import IMProcessing
+import CoreMedia
 import SnapKit
 
 let TEST_CAMERA = true
@@ -176,7 +177,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                     })
                 }
                 else{
-                    NSLog("... focusMode = \(self.cameraManager.focus) exposureMode = \(self.cameraManager.exposureMode.rawValue)")
+                    NSLog("... focusMode = \(self.cameraManager.focus) exposureMode = \(self.cameraManager.exposure)")
                 }
             }
             
@@ -335,15 +336,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func resetHandler(sender:UIButton)  {
         
-        cameraManager.focus = .Reset
+        cameraManager.focus = .Reset(complete: { (camera, point) in
+            NSLog("... reset focus at \(point) mode = \(camera.focus)")
+        })
+        cameraManager.exposure = .Reset(complete: { (camera, point) in
+            NSLog("... reset exposure at \(point) mode = \(camera.focus)")
+        })
         
-        cameraManager.resetExposure { (camera) in
-            NSLog("... exposure has reseted at default POI --> compensation = \(self.cameraManager.exposureCompensation)")
-            dispatch_async(dispatch_get_main_queue(), {
-                let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
-                self.slider.value = self.cameraManager.exposureCompensation / (range/2) + 0.5
-            })
-        }
     }
     
     func focusPanHandler(gesture: UITapGestureRecognizer) {
@@ -360,12 +359,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                                             NSLog("... pan start auto focus at \(point)  done! mode = \(camera.focus)")
                 }
             )
-            cameraManager.autoExposure(atPoint: point)
+            
+            cameraManager.exposure = .Auto(
+                atPoint: point,
+                begin: { (camera, point) in
+                    NSLog("... pan start auto exposure at \(point) start ... duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+                }, complete: { (camera, point) in
+                    NSLog("... pan auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+            })
             
         case .Changed:
             
             cameraManager.focus = .ContinuousAuto(atPoint: point, begin: nil, complete: nil)
-            cameraManager.autoExposure(atPoint: point)
+            cameraManager.exposure = .ContinuousAuto(atPoint: point, begin: nil, complete: nil)
             
         case .Ended:
             
@@ -378,8 +384,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                                     NSLog("... pan end auto focus at \(point)  done! mode = \(camera.focus)")
                     }
             )
-
-            cameraManager.autoExposure(atPoint: point)
+            
+            cameraManager.exposure = .ContinuousAuto(
+                atPoint: point,
+                begin: { (camera, point) in
+                    NSLog("... pan end auto exposure at \(point) start ... duration = \(camera.exposureDuration)")
+                },
+                complete: { (camera, point) in
+                    NSLog("... pan end auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration)")
+            })
             
         default:
             break
@@ -387,9 +400,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func focusHandler(gesture: UITapGestureRecognizer) {
-        let point = gesture.locationInView(cameraManager.liveView)
+        
         if gesture.state == .Ended {
-            
+
+            let point = gesture.locationInView(cameraManager.liveView)
+
             cameraManager.focus =
                 .ContinuousAuto(atPoint: point,
                                 begin: { (camera, point) in
@@ -417,12 +432,42 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     func exposureHandler(gesture: UITapGestureRecognizer) {
         if gesture.state == .Ended {
-            let point = gesture.locationInView(cameraManager.liveView)
             
-            NSLog("... auto exposure at \(point) start ...")
-            cameraManager.autoExposure(atPoint: point, complete: { (camera) in
-                NSLog("... auto exposure at \(point) done! mode = \(camera.exposureMode.rawValue)")
+//            let point = gesture.locationInView(cameraManager.liveView)
+            
+//            cameraManager.exposure = .ContinuousAuto(
+//                atPoint: point,
+//                begin: { (camera, point) in
+//                    NSLog("... continuous auto exposure at \(point) start ... duration = \(camera.exposureDuration)")
+//                },
+//                complete: { (camera, point) in
+//                    NSLog("... continuous auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration)")
+//            })
+            
+//            cameraManager.exposure = .Auto(
+//                atPoint: point,
+//                begin: { (camera, point) in
+//                    NSLog("... auto exposure at \(point) start ... duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//                }, complete: { (camera, point) in
+//                    NSLog("... auto exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//            })
+            
+
+//
+//            cameraManager.exposure = .Locked(complete: { (camera, point) in
+//                NSLog("... locked exposure at \(point)  done! mode = \(camera.exposure) duration = \(camera.exposureDuration) ios = \(camera.exposureISO)")
+//            })
+            
+            
+            cameraManager.exposure = .Custom(
+                duration: CMTime(duration: (1,60)),
+                iso:      64,
+                begin: { (camera, point) in
+                    NSLog("... custom exposure at \(point) start ... duration = \(camera.exposureDuration.seconds) ios = \(camera.exposureISO)")
+                }, complete: { (camera, point) in
+                   NSLog("... custom exposure at \(point) done! mode = \(camera.exposure) duration = \(camera.exposureDuration.seconds) ios = \(camera.exposureISO)")
             })
+            
         }
     }
 
