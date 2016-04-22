@@ -481,7 +481,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             inZooming = true
             NSLog("... zoom \(zoomed ? "in" : "out" ) ...")
-            cameraManager.setZoom(factor: zoomed ? 1 : 4.532 , animate: true, complete: { (camera, factor) in
+            cameraManager.setZoom(factor: zoomed ? 1 : cameraManager.maximumZoomFactor/2 , animate: true, complete: { (camera, factor) in
                 self.inZooming = false
                 NSLog("... zoommed \(self.zoomed ? "in" : "out" ) ...")
                 self.zoomed = !self.zoomed

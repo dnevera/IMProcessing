@@ -16,10 +16,12 @@
     
     public extension CMTime {
   
+        /// Get exposure duration
         public var duration:(value:Int, scale:Int) {
             return (Int(self.value),Int(self.timescale))
         }
         
+        /// Create new exposure duration
         public init(duration: (value:Int, scale:Int)){
             self = CMTimeMake(Int64(duration.value), Int32(duration.scale))
         }
@@ -429,18 +431,22 @@
             return currentCamera.exposurePointOfInterest
         }
 
+        /// Get the camera exposure duration range limit
         public lazy var exposureDurationRange:(min:CMTime,max:CMTime) = {
             return (self.currentCamera.activeFormat.minExposureDuration,self.currentCamera.activeFormat.maxExposureDuration)
         }()
 
+        /// Get curent exposure duration
         public var exposureDuration:CMTime{
             return self.currentCamera.exposureDuration
         }
 
+        /// Get the camera ISO range limit
         public lazy var exposureISORange:(min:Float,max:Float) = {
             return (self.currentCamera.activeFormat.minISO, self.currentCamera.activeFormat.maxISO)
         }()
         
+        /// Get current ISO speed value
         public var exposureISO:Float{
             return self.currentCamera.ISO
         }
@@ -533,13 +539,19 @@
             }
         }
         
-        public lazy var maximumZoomFctor:Float = {
+        /// Get maximum video zoom factor presentation
+        public lazy var maximumZoomFactor:Float = {
             return self.currentCamera.activeFormat.videoMaxZoomFactor.float
         }()
         
         
+        ///  Set current zoom presentation of video
+        ///
+        ///  - parameter factor:   zoom factor
+        ///  - parameter animate:  animate or not zomming proccess before presentation
+        ///  - parameter complete: complete block
         public func setZoom(factor factor:Float, animate:Bool=true, complete:ZomingCompleteBlockType?=nil) {
-            if factor >= 1.0 && factor <= maximumZoomFctor {
+            if factor >= 1.0 && factor <= maximumZoomFactor {
                 dispatch_async(sessionQueue){
                     do{
                         try self.currentCamera.lockForConfiguration()
@@ -561,6 +573,7 @@
             }
         }
         
+        /// Cancel zooming
         public func cancelZoom(){
             dispatch_async(sessionQueue){
                 do{
