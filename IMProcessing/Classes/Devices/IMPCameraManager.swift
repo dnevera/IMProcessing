@@ -268,7 +268,7 @@
             })
         }
         
-        ///  Stop camera manager captuirin video frames
+        ///  Stop camera manager capturing video frames
         public func stop() {
             if session.running {
                 dispatch_async(sessionQueue, { () -> Void in
