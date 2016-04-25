@@ -424,14 +424,14 @@ class ViewController: NSViewController {
    
     func projectionx(sender:NSSlider){
         asyncChanges { () -> Void in
-            self.tranformer.transform.ratio(x: (sender.floatValue-50)/100 , y: (self.projectionYSlider.floatValue-50)/100)
+            self.tranformer.transform.perspective(x: (sender.floatValue-50)/100 , y: (self.projectionYSlider.floatValue-50)/100)
             self.tranformer.dirty = true
         }
     }
 
     func projectiony(sender:NSSlider){
         asyncChanges { () -> Void in
-            self.tranformer.transform.ratio(x: (self.projectionXSlider.floatValue-50)/100 , y: (sender.floatValue-50)/100 )
+            self.tranformer.transform.perspective(x: (self.projectionXSlider.floatValue-50)/100 , y: (sender.floatValue-50)/100 )
             self.tranformer.dirty = true
         }
     }

@@ -54,7 +54,33 @@ public extension matrix_float3x3 {
 }
 
 public extension matrix_float4x4 {
-    public mutating func ratio(x x:Float, y:Float) {
+    
+    public mutating func ratio(ratio:Float){
+        let bottom:Float = -1.0
+        let top:Float    = 1.0
+        let left:Float   = (-1.0 * ratio)
+        let right:Float  = (1.0 * ratio)
+        
+        let near:Float = -1.0
+        let far:Float = 1.0
+        let r_l:Float = right - left
+        let t_b:Float = top - bottom
+        let f_n:Float = far - near
+        let tx:Float = -(right + left) / (right - left)
+        let ty:Float = -(top + bottom) / (top - bottom)
+        let tz:Float = -(far + near) / (far - near)
+        
+        let scale:Float = 2.0
+        
+        self = float4x4(rows:[
+            float4( scale / t_b, 0,           0,           tx),
+            float4( 0,           scale / r_l, 0,           ty),
+            float4( 0,           0,           scale / f_n, tz),
+            float4( 0,           0,           0,            1),
+            ]).cmatrix
+    }
+    
+    public mutating func perspective(x x:Float, y:Float) {
         self = float4x4(rows:[
             float4(1, 0, 0, x),
             float4(0, 1, 0, y),
@@ -98,8 +124,12 @@ public class IMPTransform {
         encoder.rotation.rotate(radians: radians, x: 0, y: 0, z: 1)
     }
 
-    public func ratio(x x:Float, y:Float){
-        encoder.projection.ratio(x: x, y: y)
+    public func perspective(x x:Float, y:Float){
+        encoder.projection.perspective(x: x, y: y)
+    }
+
+    public func ratio(ratio:Float){
+        encoder.projection.ratio(ratio)
     }
 
     public func scale(scale:Float){
