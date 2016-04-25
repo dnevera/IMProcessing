@@ -190,7 +190,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         return doApply()
     }
     
-    public func main(provider provider:IMPImageProvider) -> IMPImageProvider {
+    public func main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider {
         
         if functionList.count > 0 {
             
@@ -198,7 +198,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                 
                 autoreleasepool({ () -> () in
                     
-                    var inputTexture:MTLTexture! = self.source!.texture
+                    var inputTexture:MTLTexture! = source.texture
                     
                     var reverseIndex = self.functionList.count
                     
@@ -240,7 +240,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                                 
                                 if texture.width != inputTexture.width || texture.height != inputTexture.height
                                     ||
-                                    inputTexture === self.source?.texture
+                                    inputTexture === source.texture
                                 {
                                     let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                                         (self.source?.texture!.pixelFormat)!,
@@ -270,7 +270,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         else {
             self.context.execute { (commandBuffer) -> Void in
                 autoreleasepool({ () -> () in
-                    let inputTexture:MTLTexture! = self.source!.texture
+                    let inputTexture:MTLTexture! = source.texture
                     let width  = inputTexture.width
                     let height = inputTexture.height
                     
@@ -291,9 +291,11 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         
         if filterList.count > 0 {
             
-            guard var newSource = provider ?? source else {
-                return provider
-            }
+            //guard var newSource = provider ?? source else {
+            //    return provider
+            //}
+            
+            var newSource = provider
             
             for filter in filterList {
                 
@@ -346,27 +348,33 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     func doApply() -> IMPImageProvider {
         
-        if self.source?.texture == nil {
+//        if self.source?.texture == nil {
+//            dirty = false
+//            return _destination
+//        }
+        
+        if let source = self.source{
+            if dirty {
+                
+                if functionList.count == 0 && filterList.count == 0 {
+                    //
+                    // copy source to destination
+                    //
+                    passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
+                    
+                    addFunction(passThroughKernel!)
+                }
+                
+                executeSourceObservers(source)
+                
+                executeDestinationObservers(main(source:  source, destination: _destination))
+                
+                dirty = false
+            }
+        }
+        else {
             dirty = false
             return _destination
-        }
-        
-        if dirty {
-            
-            if functionList.count == 0 && filterList.count == 0 {
-                //
-                // copy source to destination
-                //
-                passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
-                
-                addFunction(passThroughKernel!)
-            }
-            
-            executeSourceObservers(source)
-            
-            executeDestinationObservers(main(provider: _destination))
-            
-            dirty = false
         }
         
         return _destination

@@ -305,6 +305,8 @@ class ViewController: NSViewController {
     
     func changeHorizont(sender:NSSlider){
         asyncChanges { () -> Void in
+            self.tranformer.transform.rotation(radians: (sender.floatValue-50)/100 * M_PI.float * 2)
+            self.tranformer.dirty = true
         }
     }
     

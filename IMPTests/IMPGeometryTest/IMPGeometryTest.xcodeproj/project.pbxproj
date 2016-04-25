@@ -16,6 +16,7 @@
 		31058DA21CC63C1F0066ED64 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA01CC63C1F0066ED64 /* IMPDocument.swift */; };
 		31058DA31CC63C1F0066ED64 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA11CC63C1F0066ED64 /* IMPMenuHandler.swift */; };
 		31058DA81CC7C5A30066ED64 /* IMPRender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA71CC7C5A30066ED64 /* IMPRender.swift */; };
+		31FCBDCA1CCB7850005723A3 /* IMPTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FCBDC91CCB7850005723A3 /* IMPTransform.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		31058DA01CC63C1F0066ED64 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPDocument.swift; sourceTree = "<group>"; };
 		31058DA11CC63C1F0066ED64 /* IMPMenuHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPMenuHandler.swift; sourceTree = "<group>"; };
 		31058DA71CC7C5A30066ED64 /* IMPRender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPRender.swift; path = Classe/IMPRender.swift; sourceTree = "<group>"; };
+		31FCBDC91CCB7850005723A3 /* IMPTransform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPTransform.swift; path = Classes/IMPTransform.swift; sourceTree = "<group>"; };
 		5FC3E098C240503EBD06B978 /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFECCDF5E6C810C6C86755D8 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -92,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				31058DA71CC7C5A30066ED64 /* IMPRender.swift */,
+				31FCBDC91CCB7850005723A3 /* IMPTransform.swift */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -236,6 +239,7 @@
 			files = (
 				31058DA31CC63C1F0066ED64 /* IMPMenuHandler.swift in Sources */,
 				31058D911CC639AC0066ED64 /* ViewController.swift in Sources */,
+				31FCBDCA1CCB7850005723A3 /* IMPTransform.swift in Sources */,
 				31058DA21CC63C1F0066ED64 /* IMPDocument.swift in Sources */,
 				31058D9F1CC63BFF0066ED64 /* IMPMain_metal.metal in Sources */,
 				31058DA81CC7C5A30066ED64 /* IMPRender.swift in Sources */,
