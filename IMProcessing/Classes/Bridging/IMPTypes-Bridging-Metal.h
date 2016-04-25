@@ -37,21 +37,18 @@ extern "C" {
 #endif
     
     typedef struct {
-        float3x3      transform;
+        float3        scale;
+        float3x3      rotation;
         float4x4      transition;
-    } IMPTransformIn;
+        float4x4      projection;
+    } IMPTransformBuffer;
     
     typedef struct {
-        float4x4  matrix;
-    } IMPOrthoMatrix;
-    
-    
-    struct IMPCropRegion {
         float top;
         float right;
         float left;
         float bottom;
-    };
+    } IMPCropRegion;
     
     typedef enum : uint {
         LUMINOSITY = 0,

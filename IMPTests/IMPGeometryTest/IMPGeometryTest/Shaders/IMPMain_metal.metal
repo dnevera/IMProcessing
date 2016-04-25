@@ -16,28 +16,19 @@ using namespace metal;
  *
  */
 vertex IMPVertexOut vertex_passthrough(
-                                    device IMPVertexIn*    verticies   [[ buffer(0) ]],
-                                    device IMPTransformIn& transform   [[ buffer(1) ]],
-                                    device IMPOrthoMatrix& orthoMatrix [[ buffer(2) ]],
-                                    unsigned int        vid         [[ vertex_id ]]
+                                    device IMPVertexIn*        verticies   [[ buffer(0) ]],
+                                    device IMPTransformBuffer& transform   [[ buffer(1) ]],
+                                    device float4x4&           orthoMatrix [[ buffer(2) ]],
+                                    unsigned int               vid         [[ vertex_id ]]
                                     ) {
-    IMPVertexOut out;
-    
-//    float3x3         m = transform.transform;
-    
-    float3x3 tranformMatrix = transform.transform;
-//    float3x3(
-//                                       float3( m[0], m[1], m[2]),
-//                                       float3( m[3], m[4], m[5]),
-//                                       float3( m[6], m[7], m[8])
-//                                       );
     
     device IMPVertexIn& v = verticies[vid];
     
-    float3 position = tranformMatrix * float3(float2(v.position) , 0.0);
+    float3 position = transform.rotation * float3(float2(v.position) , 0.0) * transform.scale ;
+
+    IMPVertexOut out;
     
-    out.position = (float4(position, 1.0) * orthoMatrix.matrix) * transform.transition;
-    //out.position = (float4(position, 1.0) ) * transform.transition;
+    out.position = (float4(position, 1.0) * orthoMatrix) * transform.projection * transform.transition ;
     
     out.texcoord = float2(v.texcoord);
     
@@ -48,7 +39,7 @@ vertex IMPVertexOut vertex_passthrough(
  * View rendering vertex
  */
 vertex IMPVertexOut vertex_passview(
-                                 device IMPVertexIn*    verticies [[ buffer(0) ]],
+                                 device IMPVertexIn* verticies [[ buffer(0) ]],
                                  unsigned int        vid       [[ vertex_id ]]
                                  ) {
     IMPVertexOut out;
@@ -69,12 +60,12 @@ vertex IMPVertexOut vertex_passview(
  *  Pass through fragment
  *
  */
-fragment half4 fragment_passthrough(
+fragment float4 fragment_passthrough(
                                     IMPVertexOut in [[ stage_in ]],
                                     texture2d<float, access::sample> texture [[ texture(0) ]]
                                     ) {
+    
     constexpr sampler s(address::clamp_to_edge, filter::linear, coord::normalized);
-    float3 rgb = texture.sample(s, in.texcoord).rgb;
-    return half4(half3(rgb), 1.0);
+    return texture.sample(s, in.texcoord);
 }
 

@@ -17,24 +17,19 @@ import simd
 import Metal
 
 
-public extension IMPTransformIn {
-    
-    public init(tranform _tr:  float3x3, transition _mv: float4x4) {
-        transform = _tr.cmatrix
-        transition = _mv.cmatrix
+public extension IMPTransformBuffer {
+    public init(scale _sc: float3, rotation _rt: float3x3, transition _tr: float4x4, projection _pr: float4x4){
+        scale = _sc
+        rotation = _rt.cmatrix
+        transition = _tr.cmatrix
+        projection = _pr.cmatrix
     }
 }
 
-public extension float3 {
-    
-}
-
 public extension matrix_float3x3 {
-    
-    
-    public mutating func rotation(radians radians:Float, x:Float, y:Float, z:Float) {
+    public mutating func rotate(radians radians:Float, x:Float, y:Float, z:Float) {
         
-        let v =  normalize(float3(x,y,z)) // GLKVector3Normalize(GLKVector3Make(x, y, z));
+        let v =  normalize(float3(x,y,z))
         let cos = cosf(radians)
         let cosp = 1.0 - cos
         let sin = sinf(radians)
@@ -56,12 +51,28 @@ public extension matrix_float3x3 {
         
         self = matrix_float3x3(columns: (m0,m1,m2))
     }
-    
+}
 
+public extension matrix_float4x4 {
+    public mutating func ratio(x x:Float, y:Float) {
+        self = float4x4(rows:[
+            float4(1, 0, 0, x),
+            float4(0, 1, 0, y),
+            float4(0, 0, 1, 0),
+            float4(0, 0, 0, 1)]).cmatrix
+    }
+    
+    public mutating func move(x x:Float, y: Float){
+        self = float4x4([
+            float4(1, 0, 0, x),
+            float4(0, 1, 0, y),
+            float4(0, 0, 1, 0),
+            float4(0, 0, 0, 1)]).cmatrix
+    }
 }
 
 public class IMPTransform {
-                
+    
     public var cropRegion = IMPCropRegion() {
         didSet{
             cropRect = CGRect(x: cropRegion.left.cgfloat, y: cropRegion.top.cgfloat, width: 1.0-(cropRegion.right+cropRegion.left).cgfloat, height: 1.0-(cropRegion.bottom+cropRegion.top).cgfloat)
@@ -84,11 +95,23 @@ public class IMPTransform {
     }
     
     public func rotation(radians radians:Float){
-        encoder.transform.rotation(radians: radians, x: 0, y: 0, z: 1)
+        encoder.rotation.rotate(radians: radians, x: 0, y: 0, z: 1)
+    }
+
+    public func ratio(x x:Float, y:Float){
+        encoder.projection.ratio(x: x, y: y)
+    }
+
+    public func scale(scale:Float){
+        encoder.scale = float3(scale)
     }
     
-    var encoder = IMPTransformIn(tranform: float3x3(diagonal: float3(1)), transition: float4x4(diagonal: float4(1)))
+    public func move(x x:Float, y:Float){
+        encoder.transition.move(x: x, y: y)
+    }
     
-    
-    
+    var encoder = IMPTransformBuffer(scale: float3(1),
+                                     rotation: float3x3(diagonal: float3(1)),
+                                     transition: float4x4(diagonal: float4(1)),
+                                     projection: float4x4(diagonal: float4(1)))
 }

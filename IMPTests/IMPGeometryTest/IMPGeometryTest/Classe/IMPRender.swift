@@ -138,7 +138,7 @@ public class IMPRender: IMPFilter {
                 float4( 0,           0,           scale / f_n, tz),
                 float4( 0,           0,           0,            1),
                 ])
-                        
+            
             return matrix;
         }
     }
@@ -155,7 +155,7 @@ public class IMPRender: IMPFilter {
     }
     
     lazy var _transformBuffer:MTLBuffer = {
-        return self.context.device.newBufferWithLength(sizeof(IMPTransformIn), options: .CPUCacheModeDefaultCache)
+        return self.context.device.newBufferWithLength(sizeof(IMPTransformBuffer), options: .CPUCacheModeDefaultCache)
     }()
     var transformBuffer:MTLBuffer{
         get{
