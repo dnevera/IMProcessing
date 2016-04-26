@@ -8,6 +8,7 @@
 
 import IMProcessing
 import simd
+import GLKit.GLKMath
 
 #if os(iOS)
     import UIKit
@@ -16,6 +17,17 @@ import simd
 #endif
 import Metal
 
+
+public extension IMPMatrixModel {
+    public init(transform tr:GLKMatrix4, projection pr:GLKMatrix4){
+        //transform = unsafeBitCast(tr,matrix_float4x4.self)
+        //projection = unsafeBitCast(pr,matrix_float4x4.self)
+        var t = tr.m
+        transform = matrix_float4x4()
+        memcpy(&transform, &t, sizeofValue(transform))
+        projection = unsafeBitCast(pr,matrix_float4x4.self)
+    }
+}
 
 public extension IMPTransformBuffer {
     public init(scale _sc: float3, rotation _rt: float3x3, transition _tr: float4x4, projection _pr: float4x4){
@@ -119,29 +131,57 @@ public class IMPTransform {
             )
         }
     }
+
+    var encoder = GLKMatrix4Identity
+    var projectionEncoder = GLKMatrix4Identity
     
-    public func rotation(radians radians:Float){
-        encoder.rotation.rotate(radians: radians, x: 0, y: 0, z: 1)
-    }
-
-    public func perspective(x x:Float, y:Float){
-        encoder.projection.perspective(x: x, y: y)
-    }
-
-    public func ratio(ratio:Float){
-        encoder.projection.ratio(ratio)
-    }
-
-    public func scale(scale:Float){
-        encoder.scale = float3(scale)
+    public func scale(x x:Float, y:Float, z:Float){
+        encoder = GLKMatrix4Scale(encoder, x, y, z)
     }
     
-    public func move(x x:Float, y:Float){
-        encoder.transition.move(x: x, y: y)
+    public func rotation(x x:Float, y:Float, z:Float){
+        encoder = GLKMatrix4Rotate(encoder, x, 1, 0, 0);
+        encoder = GLKMatrix4Rotate(encoder, y, 0, 1, 0);
+        encoder = GLKMatrix4Rotate(encoder, z, 0, 0, 1);
+        NSLog(" ### encoder = \(encoder.m)")
     }
     
-    var encoder = IMPTransformBuffer(scale: float3(1),
-                                     rotation: float3x3(diagonal: float3(1)),
-                                     transition: float4x4(diagonal: float4(1)),
-                                     projection: float4x4(diagonal: float4(1)))
+    public func move(x x:Float, y:Float, z:Float){
+        encoder = GLKMatrix4Translate(encoder, x, y, z)
+    }
+    
+    public func perspective(fov:Float, ratio:Float, near:Float, far:Float){
+        projectionEncoder = GLKMatrix4MakePerspective(fov, ratio, near, far)
+    }
+    
+    public var raw:IMPMatrixModel{
+        get{
+            return IMPMatrixModel(transform: encoder, projection: projectionEncoder)
+        }
+    }
+    
+//    public func rotation(radians radians:Float){
+//        encoder.rotation.rotate(radians: radians, x: 0, y: 0, z: 1)
+//    }
+//
+//    public func perspective(x x:Float, y:Float){
+//        encoder.projection.perspective(x: x, y: y)
+//    }
+//
+//    public func ratio(ratio:Float){
+//        encoder.projection.ratio(ratio)
+//    }
+//
+//    public func scale(scale:Float){
+//        encoder.scale = float3(scale)
+//    }
+//    
+//    public func move(x x:Float, y:Float){
+//        encoder.transition.move(x: x, y: y)
+//    }
+//    
+//    var encoder = IMPTransformBuffer(scale: float3(1),
+//                                     rotation: float3x3(diagonal: float3(1)),
+//                                     transition: float4x4(diagonal: float4(1)),
+//                                     projection: float4x4(diagonal: float4(1)))
 }

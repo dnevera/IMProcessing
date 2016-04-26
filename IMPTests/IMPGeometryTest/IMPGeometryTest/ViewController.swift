@@ -34,7 +34,7 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
-    var tranformer: IMPRender!
+    var tranformer: IMPPhotoPlate!
     
     override func viewDidLoad() {
         
@@ -54,10 +54,9 @@ class ViewController: NSViewController {
         
         configurePannel()
         
-        
         filter = IMPFilter(context: context)
         
-        tranformer = IMPRender(context: context)
+        tranformer = IMPPhotoPlate(context: context)
         
         filter.addFilter(tranformer)
         
@@ -169,6 +168,8 @@ class ViewController: NSViewController {
         sview.layer?.backgroundColor = IMPColor.clearColor().CGColor
         pannelScrollView.documentView = sview
         
+        configureControls()
+        
         pannelScrollView.snp_makeConstraints { (make) -> Void in
             make.width.equalTo(280)
             make.top.equalTo(pannelScrollView.superview!).offset(10)
@@ -177,18 +178,20 @@ class ViewController: NSViewController {
         }
         
         sview.snp_makeConstraints { (make) -> Void in
-            make.edges.equalTo(pannelScrollView).inset(NSEdgeInsetsMake(10, 10, 10, 10))
+            make.top.equalTo(sview.superview!).offset(0)
+            make.left.equalTo(sview.superview!).offset(0)
+            make.right.equalTo(sview.superview!).offset(0)
+            containerWidthConstraint = make.height.equalTo(currentHeigh).constraint
         }
-        
-        configureControls()
     }
     
     private func configureControls() -> NSView {
+
         
-        let horizontLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(horizontLabel)
-        horizontLabel.stringValue = "Rotate"
-        horizontLabel.snp_makeConstraints { (make) -> Void in
+        let rotationXLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationXLabel)
+        rotationXLabel.stringValue = "Rotate X"
+        rotationXLabel.snp_makeConstraints { (make) -> Void in
             make.top.equalTo(sview).offset(20)
             make.right.equalTo(sview).offset(-20)
             make.width.equalTo(100)
@@ -196,25 +199,78 @@ class ViewController: NSViewController {
         }
         allHeights+=40
 
-        rotationSlider = NSSlider(frame: view.bounds)
-        rotationSlider.minValue = 0
-        rotationSlider.maxValue = 100
-        rotationSlider.integerValue = 50
-        rotationSlider.action = #selector(ViewController.rotate(_:))
-        rotationSlider.continuous = true
-        sview.addSubview(rotationSlider)
-        rotationSlider.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(horizontLabel.snp_bottom).offset(5)
+        rotationXSlider = NSSlider(frame: view.bounds)
+        rotationXSlider.minValue = 0
+        rotationXSlider.maxValue = 100
+        rotationXSlider.integerValue = 50
+        rotationXSlider.action = #selector(ViewController.rotate(_:))
+        rotationXSlider.continuous = true
+        sview.addSubview(rotationXSlider)
+        rotationXSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationXLabel.snp_bottom).offset(5)
             make.right.equalTo(sview).offset(5)
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
 
+        let rotationYLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationYLabel)
+        rotationYLabel.stringValue = "Rotate Y"
+        rotationYLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationXSlider.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        rotationYSlider = NSSlider(frame: view.bounds)
+        rotationYSlider.minValue = 0
+        rotationYSlider.maxValue = 100
+        rotationYSlider.integerValue = 50
+        rotationYSlider.action = #selector(ViewController.rotate(_:))
+        rotationYSlider.continuous = true
+        sview.addSubview(rotationYSlider)
+        rotationYSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationYLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+
+        let rotationZLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationZLabel)
+        rotationZLabel.stringValue = "Rotate Z"
+        rotationZLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationYSlider.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        rotationZSlider = NSSlider(frame: view.bounds)
+        rotationZSlider.minValue = 0
+        rotationZSlider.maxValue = 100
+        rotationZSlider.integerValue = 50
+        rotationZSlider.action = #selector(ViewController.rotate(_:))
+        rotationZSlider.continuous = true
+        sview.addSubview(rotationZSlider)
+        rotationZSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationZLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+        
+        //
+        // Scale
+        //
         let verticalLabel  = IMPLabel(frame: view.bounds)
         sview.addSubview(verticalLabel)
         verticalLabel.stringValue = "Scale"
         verticalLabel.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(rotationSlider.snp_bottom).offset(20)
+            make.top.equalTo(rotationZSlider.snp_bottom).offset(20)
             make.right.equalTo(sview).offset(-20)
             make.width.equalTo(100)
             make.height.equalTo(20)
@@ -254,7 +310,7 @@ class ViewController: NSViewController {
         moveXSlider.minValue = 0
         moveXSlider.maxValue = 100
         moveXSlider.integerValue = 50
-        moveXSlider.action = #selector(ViewController.movex(_:))
+        moveXSlider.action = #selector(ViewController.move(_:))
         moveXSlider.continuous = true
         sview.addSubview(moveXSlider)
         moveXSlider.snp_makeConstraints { (make) -> Void in
@@ -282,7 +338,7 @@ class ViewController: NSViewController {
         moveYSlider.minValue = 0
         moveYSlider.maxValue = 100
         moveYSlider.integerValue = 50
-        moveYSlider.action = #selector(ViewController.movey(_:))
+        moveYSlider.action = #selector(ViewController.move(_:))
         moveYSlider.continuous = true
         sview.addSubview(moveYSlider)
         moveYSlider.snp_makeConstraints { (make) -> Void in
@@ -292,64 +348,7 @@ class ViewController: NSViewController {
         }
         allHeights+=40
  
-        //
-        // Projection X
-        //
-        let projectionXLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(projectionXLabel)
-        projectionXLabel.stringValue = "Projection X"
-        projectionXLabel.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(moveYSlider.snp_bottom).offset(20)
-            make.right.equalTo(sview).offset(-20)
-            make.width.equalTo(100)
-            make.height.equalTo(20)
-        }
-        allHeights+=40
-        
-        projectionXSlider = NSSlider(frame: view.bounds)
-        projectionXSlider.minValue = 0
-        projectionXSlider.maxValue = 100
-        projectionXSlider.integerValue = 50
-        projectionXSlider.action = #selector(ViewController.projectionx(_:))
-        projectionXSlider.continuous = true
-        sview.addSubview(projectionXSlider)
-        projectionXSlider.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(projectionXLabel.snp_bottom).offset(5)
-            make.right.equalTo(sview).offset(5)
-            make.left.equalTo(sview).offset(5)
-        }
-        allHeights+=40
-
-        //
-        // Projection Y
-        //
-        let projectionYLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(projectionYLabel)
-        projectionYLabel.stringValue = "Projection Y"
-        projectionYLabel.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(projectionXSlider.snp_bottom).offset(20)
-            make.right.equalTo(sview).offset(-20)
-            make.width.equalTo(100)
-            make.height.equalTo(20)
-        }
-        allHeights+=40
-        
-        projectionYSlider = NSSlider(frame: view.bounds)
-        projectionYSlider.minValue = 0
-        projectionYSlider.maxValue = 100
-        projectionYSlider.integerValue = 50
-        projectionYSlider.action = #selector(ViewController.projectiony(_:))
-        projectionYSlider.continuous = true
-        sview.addSubview(projectionYSlider)
-        projectionYSlider.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(projectionYLabel.snp_bottom).offset(5)
-            make.right.equalTo(sview).offset(5)
-            make.left.equalTo(sview).offset(5)
-        }
-        allHeights+=40
-        
-        
-
+      
         let reset = NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         reset.title = "Reset"
         reset.target = self
@@ -357,10 +356,9 @@ class ViewController: NSViewController {
         sview.addSubview(reset)
         
         reset.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(projectionYSlider.snp_bottom).offset(20)
-            make.center.equalTo(sview).offset(0)
+            make.top.equalTo(moveYSlider.snp_bottom).offset(20)
             make.width.equalTo(120)
-            make.height.equalTo(20)
+            make.left.equalTo(sview).offset(5)
         }
         allHeights += 20
         
@@ -387,74 +385,54 @@ class ViewController: NSViewController {
         return disable
     }
     
-    var rotationSlider:NSSlider!
+    var rotationXSlider:NSSlider!
+    var rotationYSlider:NSSlider!
+    var rotationZSlider:NSSlider!
     var scaleSlider:NSSlider!
     var moveXSlider:NSSlider!
     var moveYSlider:NSSlider!
-    var projectionXSlider:NSSlider!
-    var projectionYSlider:NSSlider!
     
     func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
-            self.tranformer.transform.rotation(radians: (sender.floatValue-50)/100 * M_PI.float * 2)
+            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float / 4
+            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float / 4
+            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float * 2
+            let a = float3(anglex,angley,anglez)
+            self.tranformer.rotate(a)
             self.tranformer.dirty = true
         }
     }
     
     func scale(sender:NSSlider){
         asyncChanges { () -> Void in
-            self.tranformer.transform.scale((sender.floatValue*2)/100)
+            let scale = (sender.floatValue*2)/100
+            NSLog(" ### scale = \(scale)")
+            self.tranformer.scale(float3(scale))
             self.tranformer.dirty = true
         }
     }
     
-    func movex(sender:NSSlider){
+    func move(sender:NSSlider){
         asyncChanges { () -> Void in
-            self.tranformer.transform.move(x:(sender.floatValue-50)/100,y:(self.moveYSlider.floatValue-50)/100)
+            let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
+            self.tranformer.move(transition)
             self.tranformer.dirty = true
         }
     }
     
-    func movey(sender:NSSlider){
-        asyncChanges { () -> Void in
-            self.tranformer.transform.move(x:(self.moveXSlider.floatValue-50)/100,y:(sender.floatValue-50)/100)
-            self.tranformer.dirty = true
-        }
-    }
-   
-    func projectionx(sender:NSSlider){
-        asyncChanges { () -> Void in
-            self.tranformer.transform.perspective(x: (sender.floatValue-50)/100 , y: (self.projectionYSlider.floatValue-50)/100)
-            self.tranformer.dirty = true
-        }
-    }
-
-    func projectiony(sender:NSSlider){
-        asyncChanges { () -> Void in
-            self.tranformer.transform.perspective(x: (self.projectionXSlider.floatValue-50)/100 , y: (sender.floatValue-50)/100 )
-            self.tranformer.dirty = true
-        }
-    }
-
-    func reset(sender:NSButton?){
+     func reset(sender:NSButton?){
         
-        rotationSlider.intValue = 50
-        rotate(rotationSlider)
+        rotationXSlider.intValue = 50
+        rotationYSlider.intValue = 50
+        rotationZSlider.intValue = 50
+        rotate(rotationXSlider)
         
         scaleSlider.intValue = 50
         scale(scaleSlider)
         
         moveXSlider.integerValue = 50
-        movex(moveXSlider)
-
         moveYSlider.integerValue = 50
-        movey(moveYSlider)
-        
-        projectionXSlider.integerValue = 50
-        projectionx(projectionXSlider)
-
-        projectionYSlider.integerValue = 50
-        projectiony(projectionYSlider)
+        move(moveXSlider)
     }
     
     func disable(sender:NSButton){
@@ -464,17 +442,19 @@ class ViewController: NSViewController {
         else {
             filter?.enabled = true
         }
-        filter.apply() 
+        filter.dirty = true
+    }
+  
+    var containerWidthConstraint:Constraint?
+    var currentHeigh : CGFloat {
+        get{
+            return allHeights < view.bounds.height ? view.bounds.height: allHeights + 20
+        }
     }
     
     override func viewDidLayout() {
-        let h = view.bounds.height < allHeights ? allHeights : view.bounds.height
-        sview.snp_remakeConstraints { (make) -> Void in
-            make.top.equalTo(pannelScrollView).offset(0)
-            make.left.equalTo(pannelScrollView).offset(0)
-            make.right.equalTo(pannelScrollView).offset(0)
-            make.height.equalTo(h)
-        }
+        super.viewDidLayout()
+        containerWidthConstraint?.updateOffset(currentHeigh)
     }
 }
 

@@ -15,7 +15,10 @@
 		31058D9F1CC63BFF0066ED64 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 31058D9E1CC63BFF0066ED64 /* IMPMain_metal.metal */; };
 		31058DA21CC63C1F0066ED64 /* IMPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA01CC63C1F0066ED64 /* IMPDocument.swift */; };
 		31058DA31CC63C1F0066ED64 /* IMPMenuHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA11CC63C1F0066ED64 /* IMPMenuHandler.swift */; };
-		31058DA81CC7C5A30066ED64 /* IMPRender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31058DA71CC7C5A30066ED64 /* IMPRender.swift */; };
+		3107279B1CCF917F008962BB /* Matrix4.m in Sources */ = {isa = PBXBuildFile; fileRef = 3107279A1CCF917F008962BB /* Matrix4.m */; };
+		313386DC1CCF5F2A0065E9A1 /* IMPPhotoPlate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313386DB1CCF5F2A0065E9A1 /* IMPPhotoPlate.swift */; };
+		313386E11CCF78B00065E9A1 /* IMPVertex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313386E01CCF78B00065E9A1 /* IMPVertex.swift */; };
+		313386E31CCF7A2C0065E9A1 /* IMPRenderNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313386E21CCF7A2C0065E9A1 /* IMPRenderNode.swift */; };
 		31FCBDCA1CCB7850005723A3 /* IMPTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FCBDC91CCB7850005723A3 /* IMPTransform.swift */; };
 /* End PBXBuildFile section */
 
@@ -30,7 +33,13 @@
 		31058D9E1CC63BFF0066ED64 /* IMPMain_metal.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = IMPMain_metal.metal; sourceTree = "<group>"; };
 		31058DA01CC63C1F0066ED64 /* IMPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPDocument.swift; sourceTree = "<group>"; };
 		31058DA11CC63C1F0066ED64 /* IMPMenuHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPMenuHandler.swift; sourceTree = "<group>"; };
-		31058DA71CC7C5A30066ED64 /* IMPRender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPRender.swift; path = Classe/IMPRender.swift; sourceTree = "<group>"; };
+		310727991CCF917F008962BB /* Matrix4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Matrix4.h; path = Classes/Matrix4.h; sourceTree = "<group>"; };
+		3107279A1CCF917F008962BB /* Matrix4.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Matrix4.m; path = Classes/Matrix4.m; sourceTree = "<group>"; };
+		313386D71CCF5EE20065E9A1 /* IMPGeometryTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMPGeometryTest-Bridging-Header.h"; sourceTree = "<group>"; };
+		313386DB1CCF5F2A0065E9A1 /* IMPPhotoPlate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPPhotoPlate.swift; path = Classes/IMPPhotoPlate.swift; sourceTree = "<group>"; };
+		313386DF1CCF5F9E0065E9A1 /* IMPGeometryTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = IMPGeometryTypes.h; path = Classes/IMPGeometryTypes.h; sourceTree = "<group>"; };
+		313386E01CCF78B00065E9A1 /* IMPVertex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPVertex.swift; path = Classes/IMPVertex.swift; sourceTree = "<group>"; };
+		313386E21CCF7A2C0065E9A1 /* IMPRenderNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPRenderNode.swift; path = Classes/IMPRenderNode.swift; sourceTree = "<group>"; };
 		31FCBDC91CCB7850005723A3 /* IMPTransform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPTransform.swift; path = Classes/IMPTransform.swift; sourceTree = "<group>"; };
 		5FC3E098C240503EBD06B978 /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFECCDF5E6C810C6C86755D8 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
@@ -93,8 +102,14 @@
 		31058DA41CC7C02F0066ED64 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				31058DA71CC7C5A30066ED64 /* IMPRender.swift */,
 				31FCBDC91CCB7850005723A3 /* IMPTransform.swift */,
+				313386DB1CCF5F2A0065E9A1 /* IMPPhotoPlate.swift */,
+				313386E01CCF78B00065E9A1 /* IMPVertex.swift */,
+				313386E21CCF7A2C0065E9A1 /* IMPRenderNode.swift */,
+				313386D71CCF5EE20065E9A1 /* IMPGeometryTest-Bridging-Header.h */,
+				313386DF1CCF5F9E0065E9A1 /* IMPGeometryTypes.h */,
+				310727991CCF917F008962BB /* Matrix4.h */,
+				3107279A1CCF917F008962BB /* Matrix4.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -237,13 +252,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				313386DC1CCF5F2A0065E9A1 /* IMPPhotoPlate.swift in Sources */,
 				31058DA31CC63C1F0066ED64 /* IMPMenuHandler.swift in Sources */,
 				31058D911CC639AC0066ED64 /* ViewController.swift in Sources */,
 				31FCBDCA1CCB7850005723A3 /* IMPTransform.swift in Sources */,
 				31058DA21CC63C1F0066ED64 /* IMPDocument.swift in Sources */,
 				31058D9F1CC63BFF0066ED64 /* IMPMain_metal.metal in Sources */,
-				31058DA81CC7C5A30066ED64 /* IMPRender.swift in Sources */,
+				313386E11CCF78B00065E9A1 /* IMPVertex.swift in Sources */,
 				31058D8F1CC639AC0066ED64 /* AppDelegate.swift in Sources */,
+				3107279B1CCF917F008962BB /* Matrix4.m in Sources */,
+				313386E31CCF7A2C0065E9A1 /* IMPRenderNode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -348,11 +366,14 @@
 			baseConfigurationReference = 086264B8E60D4CD6B75435A0 /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = IMPGeometryTest/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ImageMetalling.IMPGeometryTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IMPGeometryTest/IMPGeometryTest-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -361,11 +382,13 @@
 			baseConfigurationReference = CFECCDF5E6C810C6C86755D8 /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = IMPGeometryTest/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ImageMetalling.IMPGeometryTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IMPGeometryTest/IMPGeometryTest-Bridging-Header.h";
 			};
 			name = Release;
 		};
