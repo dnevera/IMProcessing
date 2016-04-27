@@ -66,9 +66,9 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
     }
     
     /// Crop region defines wich region of the image should be explored.
-    public var region:IMPCropRegion!{
+    public var region:IMPRegion!{
         didSet{
-            regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPCropRegion), options: .CPUCacheModeDefaultCache)
+            regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPRegion), options: .CPUCacheModeDefaultCache)
             memcpy(regionUniformBuffer.contents(), &region, regionUniformBuffer.length)
             dirty = true
         }
@@ -104,7 +104,7 @@ public class IMPHistogramCubeAnalyzer: IMPFilter {
         self.addFunction(kernel_impHistogramCounter);
         
         defer{
-            region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
+            region = IMPRegion(left: 0, right: 0, top: 0, bottom: 0)
             downScaleFactor = 1.0
             clipping = IMPHistogramCubeAnalyzer.defaultClipping
         }

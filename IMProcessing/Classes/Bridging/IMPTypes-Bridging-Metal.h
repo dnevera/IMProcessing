@@ -56,11 +56,11 @@ extern "C" {
     } IMPTransformBuffer;
     
     typedef struct {
-        float top;
-        float right;
         float left;
+        float right;
+        float top;
         float bottom;
-    } IMPCropRegion;
+    } IMPRegion;
     
     typedef enum : uint {
         LUMINOSITY = 0,

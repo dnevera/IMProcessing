@@ -35,7 +35,7 @@ public protocol IMPHistogramAnalyzerProtocol:NSObjectProtocol,IMPFilterProtocol 
     var hardware:IMPHistogramAnalizerHardware {get}
     var histogram:IMPHistogram {get set}
     var downScaleFactor:Float! {get set}
-    var region:IMPCropRegion!  {get set}
+    var region:IMPRegion!  {get set}
     
     func addSolver(solver:IMPHistogramSolver)
     func addUpdateObserver(observer:IMPAnalyzerUpdateHandler)
@@ -56,10 +56,11 @@ public protocol IMPHistogramSolver {
 public extension IMPHistogramAnalyzerProtocol {
     public func setCenterRegionInPercent(value:Float){
         let half = value/2.0
-        region = IMPCropRegion(top:    0.5 - half,
-                               right:  1.0 - (0.5+half),
-                               left:   0.5 - half,
-                               bottom: 1.0 - (0.5+half)
+        region = IMPRegion(
+            left:   0.5 - half,
+            right:  1.0 - (0.5+half),
+            top:    0.5 - half,
+            bottom: 1.0 - (0.5+half)
         )
     }
 }
@@ -129,10 +130,10 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     ///
     /// Регион внутри которого вычисляем гистограмму.
     ///
-    public var region:IMPCropRegion!{
+    public var region:IMPRegion!{
         didSet{
-            regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPCropRegion), options: .CPUCacheModeDefaultCache)
-            memcpy(regionUniformBuffer.contents(), &region, sizeof(IMPCropRegion))
+            regionUniformBuffer = regionUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(IMPRegion), options: .CPUCacheModeDefaultCache)
+            memcpy(regionUniformBuffer.contents(), &region, sizeof(IMPRegion))
         }
     }
     internal var regionUniformBuffer:MTLBuffer!
@@ -185,7 +186,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
         }
         
         defer{
-            region = IMPCropRegion(top: 0, right: 0, left: 0, bottom: 0)
+            region = IMPRegion(left: 0, right: 0, top: 0, bottom: 0)
             downScaleFactor = 1.0
             channelsToCompute = UInt(histogram.channels.count)
         }

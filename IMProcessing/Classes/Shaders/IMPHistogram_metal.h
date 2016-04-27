@@ -67,8 +67,8 @@ namespace IMProcessing
         
         inline float4 histogramSampledColor(
                                             texture2d<float, access::sample>  inTexture,
-                                            constant IMPCropRegion          &regionIn,
-                                            float                    scale,
+                                            constant IMPRegion               &regionIn,
+                                            float                             scale,
                                             uint2 gid){
             
             float w = float(inTexture.get_width())  * scale;
@@ -94,7 +94,7 @@ namespace IMProcessing
     ///
     inline uint4 channel_binIndex(
                                   texture2d<float, access::sample>  inTexture,
-                                  constant IMPCropRegion          &regionIn,
+                                  constant IMPRegion               &regionIn,
                                   constant float                    &scale,
                                   uint2 gid
                                   ){
@@ -112,7 +112,7 @@ namespace IMProcessing
                                            texture2d<float, access::sample>   inTexture  [[texture(0)]],
                                            device   IMPHistogramBuffer        *outArray  [[ buffer(0)]],
                                            constant uint                      &channels  [[ buffer(1)]],
-                                           constant IMPCropRegion             &regionIn  [[ buffer(2)]],
+                                           constant IMPRegion                 &regionIn  [[ buffer(2)]],
                                            constant float                     &scale     [[ buffer(3)]],
                                            uint  tid      [[thread_index_in_threadgroup]],
                                            uint2 groupid  [[threadgroup_position_in_grid]],
@@ -173,7 +173,7 @@ namespace IMProcessing
                                           texture2d<float, access::sample>   inTexture  [[texture(0)]],
                                           device IMPHistogramAtomicBuffer    &out       [[ buffer(0)]],
                                           constant uint                      &channels  [[ buffer(1)]],
-                                          constant IMPCropRegion             &regionIn  [[ buffer(2)]],
+                                          constant IMPRegion                &regionIn  [[ buffer(2)]],
                                           constant float                     &scale     [[ buffer(3)]],
                                           uint2 gid [[thread_position_in_grid]]
                                           )
@@ -193,7 +193,7 @@ namespace IMProcessing
     kernel void kernel_impHistogramVImage(
                                           texture2d<float, access::sample>  inTexture  [[texture(0)]],
                                           texture2d<float, access::write>  outTexture  [[texture(1)]],
-                                          constant IMPCropRegion           &regionIn   [[ buffer(0)]],
+                                          constant IMPRegion               &regionIn   [[ buffer(0)]],
                                           constant float                   &scale      [[ buffer(1)]],
                                           uint2 gid [[thread_position_in_grid]]
                                           )
@@ -284,7 +284,7 @@ namespace IMProcessing
                                               texture2d<float, access::sample>   inTexture  [[texture(0)]],
                                               device   IMPHistogramBuffer        *outArray  [[ buffer(0)]],
                                               constant uint                      &channels  [[ buffer(1)]],
-                                              constant IMPCropRegion             &regionIn  [[ buffer(2)]],
+                                              constant IMPRegion                 &regionIn  [[ buffer(2)]],
                                               constant float                     &scale     [[ buffer(3)]],
                                               constant IMPColorWeightsClipping   &clipping  [[ buffer(4)]],
                                               uint  tid      [[thread_index_in_threadgroup]],
@@ -355,7 +355,7 @@ namespace IMProcessing
     
     inline IMPHistogramCubeValue cube_binIndex(
                                                texture2d<float, access::sample>  inTexture,
-                                               constant IMPCropRegion          &regionIn,
+                                               constant IMPRegion               &regionIn,
                                                constant float                    &scale,
                                                uint2 gid
                                                ){
@@ -375,7 +375,7 @@ namespace IMProcessing
     kernel void kernel_impHistogramCubePartial(
                                                texture2d<float, access::sample>      inTexture  [[texture(0)]],
                                                device   IMPHistogramCubeAtomicBuffer *outArray  [[ buffer(0)]],
-                                               constant IMPCropRegion                 &regionIn [[ buffer(1)]],
+                                               constant IMPRegion                    &regionIn [[ buffer(1)]],
                                                constant float                         &scale    [[ buffer(2)]],
                                                constant IMPHistogramCubeClipping      &clipping [[ buffer(3)]],
                                                uint tid       [[thread_index_in_threadgroup]],

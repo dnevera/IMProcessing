@@ -1,16 +1,13 @@
 //
 //  IMPRenderNode.swift
-//  IMPGeometryTest
+//  IMProcessing
 //
 //  Created by denis svinarchuk on 26.04.16.
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
-import Foundation
 import Metal
-import QuartzCore
 import IMProcessing
-import GLKit
 
 /// 3D Node rendering
 public class IMPNode: IMPContextProvider {

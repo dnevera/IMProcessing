@@ -107,6 +107,11 @@ public extension IMPBlendingMode{
     static let NORMAL      = IMPBlendingMode(1)
 }
 
+public extension IMPRegion{
+    public var rectangle:NSRect{
+        return NSRect(origin: NSPoint(x:left.cgfloat,y:top.cgfloat), size: NSSize(width: 1-(left+right), height: 1-(top+bottom)))
+    }
+}
 
 public extension String {
     

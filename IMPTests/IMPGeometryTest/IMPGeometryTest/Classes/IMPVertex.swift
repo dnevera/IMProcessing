@@ -1,15 +1,13 @@
 //
 //  IMPVertex.swift
-//  IMPGeometryTest
+//  IMProcessing
 //
 //  Created by denis svinarchuk on 26.04.16.
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
 import IMProcessing
-import Foundation
 import Metal
-
 
 public extension IMPVertex{
     public init(x:Float, y:Float, z:Float, tx:Float, ty:Float){

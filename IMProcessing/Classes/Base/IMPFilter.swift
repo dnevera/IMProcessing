@@ -30,6 +30,9 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     public var enabled = true {
         didSet{
+            if enabled == false && oldValue != enabled {
+                executeDestinationObservers(source)
+            }
             dirty = true
         }
     }

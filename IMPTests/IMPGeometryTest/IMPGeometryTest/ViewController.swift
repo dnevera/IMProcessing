@@ -34,7 +34,9 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
-    var tranformer: IMPPhotoPlate!
+    var tranformer: IMPPhotoPlateFilter!
+    var photoCutter: IMPPhotoPlateFilter!
+    var cutter: IMPCropFilter!
     
     override func viewDidLoad() {
         
@@ -56,9 +58,13 @@ class ViewController: NSViewController {
         
         filter = IMPFilter(context: context)
         
-        tranformer = IMPPhotoPlate(context: context)
+        tranformer = IMPPhotoPlateFilter(context: context)
+        photoCutter = IMPPhotoPlateFilter(context: context)
+        cutter = IMPCropFilter(context: context)
         
         filter.addFilter(tranformer)
+        filter.addFilter(photoCutter)
+        filter.addFilter(cutter)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
@@ -83,7 +89,10 @@ class ViewController: NSViewController {
                     //
                     // Загружаем файл и связываем источником фильтра
                     //
+                    
                     self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file)
+                    
+                    
                     self.asyncChanges({ () -> Void in
                         self.zoomFit()
                     })
@@ -348,6 +357,34 @@ class ViewController: NSViewController {
         }
         allHeights+=40
  
+        //
+        // CROP
+        //
+        let cropLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(cropLabel)
+        cropLabel.stringValue = "Crop"
+        cropLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(moveYSlider.snp_bottom).offset(20)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        cropSlider = NSSlider(frame: view.bounds)
+        cropSlider.minValue = 0
+        cropSlider.maxValue = 100
+        cropSlider.integerValue = 0
+        cropSlider.action = #selector(ViewController.crop(_:))
+        cropSlider.continuous = true
+        sview.addSubview(cropSlider)
+        cropSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(cropLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+
       
         let reset = NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         reset.title = "Reset"
@@ -356,7 +393,7 @@ class ViewController: NSViewController {
         sview.addSubview(reset)
         
         reset.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(moveYSlider.snp_bottom).offset(20)
+            make.top.equalTo(cropSlider.snp_bottom).offset(20)
             make.width.equalTo(120)
             make.left.equalTo(sview).offset(5)
         }
@@ -391,6 +428,7 @@ class ViewController: NSViewController {
     var scaleSlider:NSSlider!
     var moveXSlider:NSSlider!
     var moveYSlider:NSSlider!
+    var cropSlider:NSSlider!
     
     func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
@@ -405,7 +443,6 @@ class ViewController: NSViewController {
     func scale(sender:NSSlider){
         asyncChanges { () -> Void in
             let scale = (sender.floatValue*2)/100
-            NSLog(" ### scale = \(scale)")
             self.tranformer.scale(float3(scale))
             self.tranformer.dirty = true
         }
@@ -415,6 +452,28 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
             self.tranformer.move(transition)
+        }
+    }
+ 
+    func crop(sender:NSSlider){
+        asyncChanges { () -> Void in
+            let crop = sender.floatValue/300
+            let region = IMPRegion(left: crop/2, right: crop/2, top: crop, bottom: crop)
+            //
+            // самый быстрый вариант
+            //
+            self.cutter.region = region
+            
+            // 
+            // устанавливает кроп на все дейтсвие, т.е. прикладывает к странсфорации
+            //
+            //self.tranformer.crop(region)
+            
+            //
+            // тоже самое что и self.cutter.region = region
+            // поскольку следующий в стеке фильтров, но медленнее
+            //
+            //self.photoCutter.crop(region)
         }
     }
     
@@ -431,6 +490,9 @@ class ViewController: NSViewController {
         moveXSlider.integerValue = 50
         moveYSlider.integerValue = 50
         move(moveXSlider)
+        
+        cropSlider.integerValue = 0
+        crop(cropSlider)
     }
     
     func disable(sender:NSButton){

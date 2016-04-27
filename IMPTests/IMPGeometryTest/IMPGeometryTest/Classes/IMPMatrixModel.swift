@@ -1,16 +1,14 @@
 //
 //  IMPMatrixModel.swift
-//  IMPGeometryTest
+//  IMProcessing
 //
 //  Created by denis svinarchuk on 27.04.16.
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
 import IMProcessing
-import Foundation
 import Metal
 import simd
-import simd.vector
 
 public extension IMPMatrixModel {
     
