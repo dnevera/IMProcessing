@@ -4,12 +4,15 @@ import IMProcessing
 import Cocoa
 import simd
 
-let transform = float4x4(diagonal: float4(1,1,1,1))
+let m2 = matrix_float4x4(columns: (
+    float4(3,0,0,0),
+    float4(0,4,0,0),
+    float4(0,0,5,0),
+    float4(0,0,0,1)
+    ))
 
+let mmm = matrix_transpose(matrix_multiply(matrix_identity_float4x4,  m2))
 
-let f1 = float4x4(diagonal: float4(1))
-let f2 = float4x4(diagonal: float4(2))
+print("\(mmm)")
 
-let f3 =
-
-print(f3)
+var m3 = float4x4(1)

@@ -394,12 +394,11 @@ class ViewController: NSViewController {
     
     func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
-            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float / 4
-            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float / 4
-            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float * 2
+            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float / 2
+            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float / 2
+            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float / 2
             let a = float3(anglex,angley,anglez)
             self.tranformer.rotate(a)
-            self.tranformer.dirty = true
         }
     }
     
@@ -416,7 +415,6 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
             self.tranformer.move(transition)
-            self.tranformer.dirty = true
         }
     }
     

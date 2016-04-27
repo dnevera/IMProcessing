@@ -15,10 +15,6 @@
 extern "C" {
 #endif
     
-    typedef struct {
-        float2 position;
-        float2 texcoord;
-    } IMPVertexIn;
     
 #ifndef __METAL_VERSION__
     
@@ -26,15 +22,31 @@ extern "C" {
         float4 position;
         float2 texcoord;
     } IMPVertexOut;
+
+    typedef struct {
+        float3 position;
+        float2 texcoord;
+    } IMPVertex;
     
 #else
     
+    typedef struct {
+        packed_float3 position;
+        packed_float2 texcoord;
+    } IMPVertex;
+
     typedef struct {
         float4 position [[position]];
         float2 texcoord;
     } IMPVertexOut;
     
 #endif
+    
+    typedef struct {
+        float4x4 modelMatrix;
+        float4x4 projectionMatrix;
+        float4x4 transitionMatrix;
+    } IMPMatrixModel;
     
     typedef struct {
         float3        scale;

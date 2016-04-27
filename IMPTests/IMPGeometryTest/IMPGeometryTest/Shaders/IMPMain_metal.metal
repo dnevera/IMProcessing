@@ -9,24 +9,12 @@
 using namespace metal;
 #include "IMPStdlib_metal.h"
 
-
-typedef struct {
-    packed_float3 position;
-    packed_float2 texcoord;
-} IMPVertexModel;
-
-typedef struct {
-    float4x4 modelMatrix;
-    float4x4 projectionMatrix;
-    float4x4 transitionMatrix;
-} IMPMatrixModel;
-
 vertex IMPVertexOut vertex_transformation(
-                                          const device IMPVertexModel*  vertex_array [[ buffer(0) ]],
+                                          const device IMPVertex*       vertex_array [[ buffer(0) ]],
                                           const device IMPMatrixModel&  matrix_model [[ buffer(1) ]],
                                           unsigned int vid [[ vertex_id ]]) {
     
-    IMPVertexModel in = vertex_array[vid];
+    IMPVertex in = vertex_array[vid];
     
     IMPVertexOut out;
     out.position = matrix_model.projectionMatrix * matrix_model.modelMatrix * float4(in.position,1) * matrix_model.transitionMatrix;

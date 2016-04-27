@@ -12,65 +12,48 @@ import QuartzCore
 import IMProcessing
 import GLKit
 
-
-public extension float4x4 {
-    public mutating func move(x x:Float, y: Float){
-        self = float4x4([
-            float4(1, 0, 0, x),
-            float4(0, 1, 0, y),
-            float4(0, 0, 1, 0),
-            float4(0, 0, 0, 1)])
-    }
-}
-
-//class IMPMatrix {
-//    var projection:float4x4
-//    var transform:float4x4
-//}
-
-
+/// 3D Node rendering
 public class IMPNode: IMPContextProvider {
     
     public var context:IMPContext!
     
+    /// Angle in radians which node rotation in scene
     public var angle = float3(0)
+    /// Node scale
     public var scale = float3(1)
+    /// Node transition
     public var transition = float2(0)
-
-    var translation = float3(0)
-
+    /// Field of view in radians
+    public lazy var fovy:Float = M_PI.float/2
+    /// Create Node
     public init(context: IMPContext, vertices: [IMPVertex]){
         self.context = context
-        matrixBuffer = context.device.newBufferWithLength(sizeof(IMPMatrixModel), options: .CPUCacheModeDefaultCache)
         defer{
             self.vertices = vertices
         }
     }
-    
+    ///  Render node
+    ///
+    ///  - parameter commandBuffer: command buffer
+    ///  - parameter pipelineState: graphics pipeline
+    ///  - parameter source:        source texture
+    ///  - parameter destination:   destination texture
     public func render(commandBuffer:  MTLCommandBuffer,
-                pipelineState: MTLRenderPipelineState,
-                source: IMPImageProvider,
-                destination: IMPImageProvider
+                       pipelineState: MTLRenderPipelineState,
+                       source: IMPImageProvider,
+                       destination: IMPImageProvider
         ) {
         
         let width = (destination.texture?.width.float)!
         let height = (destination.texture?.height.float)!
         
-        let projectionMatrix = Matrix4.makePerspectiveViewAngle(fovy, aspectRatio: width/height, nearZ: 0, farZ: 1)
+        matrixModel = matrixIdentityModel
         
-        let nodeModelMatrix = self.modelMatrix()
+        matrixModel.setPerspective(radians: fovy, aspect: width/height, nearZ: 0, farZ: 1)
         
-        transitionMatrix.move(x: transition.x, y: transition.y)
-
-        matrixBuffer = context.device.newBufferWithLength(sizeof(Float) * Matrix4.numberOfElements() * 2 * sizeofValue(transitionMatrix.cmatrix), options: .CPUCacheModeDefaultCache)
-        
-        let bufferPointer = matrixBuffer.contents()
-        memcpy(bufferPointer, nodeModelMatrix.raw(), sizeof(Float)*Matrix4.numberOfElements())
-        memcpy(bufferPointer + sizeof(Float)*Matrix4.numberOfElements(), projectionMatrix.raw(), sizeof(Float)*Matrix4.numberOfElements())
-        
-        var m = transitionMatrix.cmatrix
-        
-        memcpy(bufferPointer + 2*sizeof(Float)*Matrix4.numberOfElements(), &m, sizeofValue(transitionMatrix.cmatrix))
+        matrixModel.scale(x: scale.x, y: scale.y, z: scale.z)
+        matrixModel.rotateAround(x: angle.x, y: angle.y, z: angle.z)
+        matrixModel.move(x: transition.x, y: -transition.y)
         
         renderPassDescriptor.colorAttachments[0].texture = destination.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .Clear
@@ -78,19 +61,18 @@ public class IMPNode: IMPContextProvider {
         renderPassDescriptor.colorAttachments[0].storeAction = .Store
         
         let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
-
+        
         renderEncoder.setCullMode(MTLCullMode.Front)
         
         renderEncoder.setRenderPipelineState(pipelineState)
         
         renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, atIndex: 0)
         renderEncoder.setVertexBuffer(matrixBuffer, offset: 0, atIndex: 1)
-
+        
         renderEncoder.setFragmentTexture(source.texture, atIndex:0)
-
+        
         renderEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: vertices.count, instanceCount: vertices.count/3)
         renderEncoder.endEncoding()
-        
     }
     
     var vertices:[IMPVertex]! {
@@ -103,23 +85,29 @@ public class IMPNode: IMPContextProvider {
         }
     }
     
-    lazy var fovy:Float = {
-        return M_PI.float/2
-    }()
-
     var renderPassDescriptor = MTLRenderPassDescriptor()
-
     var vertexBuffer: MTLBuffer!
-    var matrixBuffer: MTLBuffer
     
-    var transitionMatrix = float4x4(diagonal:float4(1))
-    
-    func modelMatrix() -> Matrix4 {
-        let matrix = Matrix4()
-        matrix.translate(0, y: 0, z: -1.1002)
-        matrix.rotateAroundX(angle.x, y: angle.y, z: angle.z)
-        matrix.scale(scale.x, y: scale.y, z: scale.z)
-        return matrix
+    var matrixIdentityModel:IMPMatrixModel {
+        get{
+            var m = IMPMatrixModel.identity
+            m.translate(x: 0, y: 0, z: -1)
+            return m
+        }
     }
     
+    lazy var matrixModel: IMPMatrixModel = {
+        return self.matrixIdentityModel
+    }()
+    
+    lazy var _matrixBuffer: MTLBuffer = {
+        return self.context.device.newBufferWithLength(sizeof(IMPMatrixModel), options: .CPUCacheModeDefaultCache)
+    }()
+    
+    var matrixBuffer: MTLBuffer {
+        get{
+            memcpy(_matrixBuffer.contents(), &matrixModel, _matrixBuffer.length)
+            return _matrixBuffer
+        }
+    }
 }
