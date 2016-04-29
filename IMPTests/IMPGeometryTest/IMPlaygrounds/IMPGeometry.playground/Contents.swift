@@ -16,3 +16,6 @@ let mmm = matrix_transpose(matrix_multiply(matrix_identity_float4x4,  m2))
 print("\(mmm)")
 
 var m3 = float4x4(1)
+
+m3.inverse
+

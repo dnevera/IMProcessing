@@ -43,7 +43,7 @@ extern "C" {
 #endif
     
     typedef struct {
-        float4x4 modelMatrix;
+        float4x4 transformMatrix;
         float4x4 projectionMatrix;
         float4x4 transitionMatrix;
     } IMPMatrixModel;

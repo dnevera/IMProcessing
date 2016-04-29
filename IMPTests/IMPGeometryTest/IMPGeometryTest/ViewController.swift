@@ -34,7 +34,7 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
-    var tranformer: IMPPhotoPlateFilter!
+    var transformer: IMPPhotoPlateFilter!
     var photoCutter: IMPPhotoPlateFilter!
     var cutter: IMPCropFilter!
     
@@ -58,11 +58,11 @@ class ViewController: NSViewController {
         
         filter = IMPFilter(context: context)
         
-        tranformer = IMPPhotoPlateFilter(context: context)
+        transformer = IMPPhotoPlateFilter(context: context)
         photoCutter = IMPPhotoPlateFilter(context: context)
         cutter = IMPCropFilter(context: context)
         
-        filter.addFilter(tranformer)
+        filter.addFilter(transformer)
         filter.addFilter(photoCutter)
         filter.addFilter(cutter)
         
@@ -70,9 +70,121 @@ class ViewController: NSViewController {
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
         
-        filter.addDestinationObserver { (destination) -> Void in
+        
+        transformer.addMatrixModelObserver { (destination, model, a) in
+            let t = model.transformMatrix.toFloat4x4()
+            let p = model.projectionMatrix.toFloat4x4()
+            let m = model.transitionMatrix.toFloat4x4()
+            
+            let izometric = float4x4(rows:
+                [
+                    float4(1,0,0,0),
+                    float4(0,1,0,0),
+                    float4(0,0,0,0),
+                    float4(0,0,1/a,1),
+                ]
+            )
+            
+            let result =  izometric * (p * t * float4(-a,-1,1,1) )
+            //let result =  (p * t * float4(-a,-1,1,1) ) * izometric
+            //let result =  izometric * ( (float4(-1,-1,1,1) * p) * t )
+            let w      = 1+result.w
+            let xy     = float4(result.x/w,result.y/w,0,1)
+            
+            print(" result = \(result)\n  left-bottom = \(xy)")
         }
         
+//        transformer.addMatrixModelObserver { (destination, model, aa) in
+//            let t = model.transformMatrix.toIMPMatrix()
+//            let p = model.projectionMatrix.toIMPMatrix()
+//            let m = model.transitionMatrix.toIMPMatrix()
+//            
+//            let a:Float = 1
+//            
+////            let grid:[Float] = [
+////                0,0,0,1,
+////                0,0,1,1,
+////                0,1,0,1,
+////                0,1,1,1,
+////                a,0,0,1,
+////                a,0,1,1,
+////                a,1,0,1,
+////                a,1,1,1,
+////            ]
+//            
+////            let grid:[Float] = [
+////                -a, -1,  0, 1,
+////                -a, -1,  0, 1,
+////                -a,  1,  0, 1,
+////                -a,  1,  0, 1,
+////                 a, -1,  0, 1,
+////                 a, -1,  0, 1,
+////                 a,  1,  0, 1,
+////                 a,  1,  0, 1,
+////            ]
+//            
+//            let grid:[Float] = [
+//                -a, 1, 0, 1,
+//                -a,-1, 0, 1,
+//                 a,-1, 0, 1,
+//                 a, 1, 0, 1,
+//                -a, 1, 0, 1,
+//                 a, 1, 0, 1,
+//                 a,-1, 0, 1,
+//                -a,-1, 0, 1,
+//            ]
+//
+//            let cube  = (IMPMatrix(rows: 8, columns: 4, grid: grid) * t) * m
+//            
+//            let Pz = IMPMatrix(rows: 4, columns: 4, grid: [Float]([
+//                1, 0, 0, 0,
+//                0, 1, 0, 0,
+//                0, 0, 0, 0,
+//                0, 0, 1, 1
+//                ]))
+//            
+//            let xyz = IMPMatrix(rows: 4, columns: 1, grid: [Float]([cube[0,0],cube[0,1],cube[0,2],1]))
+//            
+//            let f =  Pz * xyz
+//            let pp = 1/(1+f[3,0]) * 2
+//            let pr = IMPMatrix(rows: 1, columns: 4, grid: [Float]([f[0,0]*pp,f[1,0]*pp,0,1]))
+//
+//            NSLog(" pr = \n\(cube) ->\n xy=\(xyz)\n p=\(pp)\n xy=\(pr) ")
+//        }
+//
+//            let gridPz:[Float] = [
+//                1, 0, 0, 0,
+//                0, 1, 0, 0,
+//                0, 0, 0, 0,
+//                0, 0, 1, 1
+//            ]
+//            
+//            let grid:[Float] = [
+//                -a, 1, 0, 1,
+//                -a,-1, 0, 1,
+//                a,-1, 0, 1,
+//                a, 1, 0, 1,
+//                -a, 1, 0, 1,
+//                a, 1, 0, 1,
+//                a,-1, 0, 1,
+//                -a,-1, 0, 1,
+//            ]
+//            
+//            
+//            let cube  = (IMPMatrix(rows: 8, columns: 4, grid: grid) * m * t)
+//            
+//            let xyzp =  (cube * p)
+//            
+//            let Pz = IMPMatrix(rows: 4, columns: 4, grid: gridPz)
+//            let xyz = IMPMatrix(rows: 4, columns: 1, grid: [Float]([xyzp[0,0],xyzp[0,1],xyzp[0,2],1]))
+//            
+//            let f = Pz * xyz
+//            let pp = f[3,0]
+//            let pr = IMPMatrix(rows: 1, columns: 4, grid: [Float]([f[0,0]/pp,f[1,0]/pp,0,1]))
+//            
+//            NSLog(" pr = \n\(xyzp) \(xyz) \(f) -> \(pr)")
+//        }
+//        
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -195,7 +307,7 @@ class ViewController: NSViewController {
     }
     
     private func configureControls() -> NSView {
-
+        
         
         let rotationXLabel  = IMPLabel(frame: view.bounds)
         sview.addSubview(rotationXLabel)
@@ -207,7 +319,7 @@ class ViewController: NSViewController {
             make.height.equalTo(20)
         }
         allHeights+=40
-
+        
         rotationXSlider = NSSlider(frame: view.bounds)
         rotationXSlider.minValue = 0
         rotationXSlider.maxValue = 100
@@ -221,7 +333,7 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
+        
         let rotationYLabel  = IMPLabel(frame: view.bounds)
         sview.addSubview(rotationYLabel)
         rotationYLabel.stringValue = "Rotate Y"
@@ -246,7 +358,7 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
+        
         let rotationZLabel  = IMPLabel(frame: view.bounds)
         sview.addSubview(rotationZLabel)
         rotationZLabel.stringValue = "Rotate Z"
@@ -299,7 +411,7 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
+        
         
         //
         // MOVE X
@@ -356,7 +468,7 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
- 
+        
         //
         // CROP
         //
@@ -384,8 +496,8 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
-      
+        
+        
         let reset = NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         reset.title = "Reset"
         reset.target = self
@@ -418,7 +530,7 @@ class ViewController: NSViewController {
             make.height.equalTo(20)
         }
         allHeights += 20
-
+        
         return disable
     }
     
@@ -432,42 +544,42 @@ class ViewController: NSViewController {
     
     func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
-            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float / 2
-            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float / 2
-            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float / 2
+            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float
+            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float
+            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float
             let a = float3(anglex,angley,anglez)
-            self.tranformer.rotate(a)
+            self.transformer.rotate(a)
         }
     }
     
     func scale(sender:NSSlider){
         asyncChanges { () -> Void in
             let scale = (sender.floatValue*2)/100
-            self.tranformer.scale(float3(scale))
-            self.tranformer.dirty = true
+            self.transformer.scale(float3(scale))
+            self.transformer.dirty = true
         }
     }
     
     func move(sender:NSSlider){
         asyncChanges { () -> Void in
             let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
-            self.tranformer.move(transition)
+            self.transformer.move(transition)
         }
     }
- 
+    
     func crop(sender:NSSlider){
         asyncChanges { () -> Void in
             let crop = sender.floatValue/300
-            let region = IMPRegion(left: crop/2, right: crop/2, top: crop, bottom: crop)
+            let region = IMPRegion(left: crop, right: crop, top: crop, bottom: crop)
             //
             // самый быстрый вариант
             //
             self.cutter.region = region
             
-            // 
+            //
             // устанавливает кроп на все дейтсвие, т.е. прикладывает к странсфорации
             //
-            //self.tranformer.crop(region)
+            //self.transformer.crop(region)
             
             //
             // тоже самое что и self.cutter.region = region
@@ -477,7 +589,7 @@ class ViewController: NSViewController {
         }
     }
     
-     func reset(sender:NSButton?){
+    func reset(sender:NSButton?){
         
         rotationXSlider.intValue = 50
         rotationYSlider.intValue = 50
@@ -504,7 +616,7 @@ class ViewController: NSViewController {
         }
         filter.dirty = true
     }
-  
+    
     var containerWidthConstraint:Constraint?
     var currentHeigh : CGFloat {
         get{

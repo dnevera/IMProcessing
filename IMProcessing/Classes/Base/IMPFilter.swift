@@ -13,10 +13,6 @@
 #endif
 import Metal
 
-public typealias IMPFilterSourceHandler = ((source:IMPImageProvider) -> Void)
-public typealias IMPFilterDestinationHandler = ((destination:IMPImageProvider) -> Void)
-public typealias IMPFilterDirtyHandler = (() -> Void)
-
 public protocol IMPFilterProtocol:IMPContextProvider {
     var source:IMPImageProvider? {get set}
     var destination:IMPImageProvider? {get}
@@ -26,6 +22,10 @@ public protocol IMPFilterProtocol:IMPContextProvider {
 
 public class IMPFilter: NSObject,IMPFilterProtocol {
     
+    public typealias SourceHandler = ((source:IMPImageProvider) -> Void)
+    public typealias DestinationHandler = ((destination:IMPImageProvider) -> Void)
+    public typealias DirtyHandler = (() -> Void)
+
     public var context:IMPContext!
     
     public var enabled = true {
@@ -101,10 +101,10 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     private var functionList:[IMPFunction] = [IMPFunction]()
     private var filterList:[IMPFilter] = [IMPFilter]()
-    private var newSourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
-    private var sourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
-    private var destinationObservers:[IMPFilterDestinationHandler] = [IMPFilterDestinationHandler]()
-    private var dirtyHandlers:[IMPFilterDirtyHandler] = [IMPFilterDirtyHandler]()
+    private var newSourceObservers:[SourceHandler] = [SourceHandler]()
+    private var sourceObservers:[SourceHandler] = [SourceHandler]()
+    private var destinationObservers:[DestinationHandler] = [DestinationHandler]()
+    private var dirtyHandlers:[DirtyHandler] = [DirtyHandler]()
     
     public final func addFunction(function:IMPFunction){
         if functionList.contains(function) == false {
@@ -142,19 +142,19 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         }
     }
     
-    public final func addNewSourceObserver(source observer:IMPFilterSourceHandler){
+    public final func addNewSourceObserver(source observer:SourceHandler){
         newSourceObservers.append(observer)
     }
     
-    public final func addSourceObserver(source observer:IMPFilterSourceHandler){
+    public final func addSourceObserver(source observer:SourceHandler){
         sourceObservers.append(observer)
     }
     
-    public final func addDestinationObserver(destination observer:IMPFilterDestinationHandler){
+    public final func addDestinationObserver(destination observer:DestinationHandler){
         destinationObservers.append(observer)
     }
     
-    public final func addDirtyObserver(observer:IMPFilterDirtyHandler){
+    public final func addDirtyObserver(observer:DirtyHandler){
         dirtyHandlers.append(observer)
         for f in filterList{
             f.addDirtyObserver(observer)

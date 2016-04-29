@@ -12,22 +12,22 @@ import simd
 
 public extension IMPMatrixModel {
     
-    public static let identity = IMPMatrixModel.init(modelMatrix: matrix_identity_float4x4,
+    public static let identity = IMPMatrixModel.init(transformMatrix: matrix_identity_float4x4,
                                                      projectionMatrix: matrix_identity_float4x4,
                                                      transitionMatrix: matrix_identity_float4x4)
     
     public mutating func scale(x x:Float, y:Float, z:Float)  {
-        modelMatrix.scale(x: x, y: y, z: z)
+        transformMatrix.scale(x: x, y: y, z: z)
     }
     
     public mutating func translate(x x:Float, y:Float, z:Float){
-        modelMatrix.translate(x: x, y: y, z: z)
+        transformMatrix.translate(x: x, y: y, z: z)
     }
     
     public mutating func rotateAround(x x:Float, y:Float, z:Float){
-        modelMatrix.rotate(radians: x, x: 1, y: 0, z: 0)
-        modelMatrix.rotate(radians: y, x: 0, y: 1, z: 0)
-        modelMatrix.rotate(radians: z, x: 0, y: 0, z: 1)
+        transformMatrix.rotate(radians: x, x: 1, y: 0, z: 0)
+        transformMatrix.rotate(radians: y, x: 0, y: 1, z: 0)
+        transformMatrix.rotate(radians: z, x: 0, y: 0, z: 1)
     }
     
     public mutating func move(x x:Float, y:Float){
@@ -69,6 +69,27 @@ public extension matrix_float4x4{
     
     public init(columns: [[Float]]){
         self = matrix_from_columns(float4(columns[0]), float4(columns[1]), float4(columns[2]), float4(columns[3]))
+    }
+    
+    public func toFloat4x4() -> float4x4 {
+        return float4x4(self)
+    }
+    
+    public func toIMPMatrix() -> IMPMatrix<Float> {
+        
+        let m0 = self.columns.0
+        let m1 = self.columns.1
+        let m2 = self.columns.2
+        let m3 = self.columns.3
+
+        let grid = [
+            m0.x, m1.x, m2.x, m3.x,
+            m0.y, m1.y, m2.y, m3.y,
+            m0.z, m1.z, m2.z, m3.z,
+            m0.w, m1.w, m2.w, m3.w,
+            ]
+        
+        return IMPMatrix(rows: 4, columns: 4, grid: grid)
     }
 }
 

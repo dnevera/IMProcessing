@@ -56,7 +56,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
         }
         return provider
     }
-        
+    
     public func rotate(vector:float3){
         plate.angle = vector
         dirty = true
@@ -80,7 +80,11 @@ public class IMPPhotoPlateFilter: IMPFilter {
     public var region:IMPRegion {
         return plate.region
     }
-    
+        
+    public final func addMatrixModelObserver(model observer:IMPRenderNode.MatrixModelHandler){
+        plate.addMatrixModelObserver(model: observer)
+    }
+
     lazy var plate:Plate = {
         return Plate(context: self.context, aspectRatio:self.aspectRatio)
     }()
@@ -96,7 +100,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
     }
     
     // Plate is a cube with virtual depth == 0
-    class Plate: IMPNode {
+    class Plate: IMPRenderNode {
         
         static func  newAspect (ascpectRatio a:Float, region:IMPRegion = IMPRegion()) -> [IMPVertex] {
             // Front
@@ -105,21 +109,21 @@ public class IMPPhotoPlateFilter: IMPFilter {
             let C = IMPVertex(x:  a, y:  -1, z:  0, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
             let D = IMPVertex(x:  a, y:   1, z:  0, tx: 1-region.right, ty: region.top)      // right-top
             
-            // Back
-            let Q = IMPVertex(x: -a, y:   1, z:  0, tx: 0, ty: 0) // virtual depth = 0
-            let R = IMPVertex(x:  a, y:   1, z:  0, tx: 0, ty: 0)
-            let S = IMPVertex(x: -a, y:  -1, z:  0, tx: 0, ty: 0)
-            let T = IMPVertex(x:  a, y:  -1, z:  0, tx: 0, ty: 0)
-            
+//            // Back
+//            let Q = IMPVertex(x: -a, y:   1, z:  0, tx: 0, ty: 0) // virtual depth = 0
+//            let R = IMPVertex(x:  a, y:   1, z:  0, tx: 0, ty: 0)
+//            let S = IMPVertex(x: -a, y:  -1, z:  0, tx: 0, ty: 0)
+//            let T = IMPVertex(x:  a, y:  -1, z:  0, tx: 0, ty: 0)
+
             return [
                 A,B,C ,A,C,D,   // The main front plate. Here we put image.
-                R,T,S ,Q,R,S,   // Back
-                
-                Q,S,B ,Q,B,A,   //Left
-                D,C,T ,D,T,R,   //Right
-                
-                Q,A,D ,Q,D,R,   //Top
-                B,S,T ,B,T,C    //Bot
+//                R,T,S ,Q,R,S,   // Back
+//                
+//                Q,S,B ,Q,B,A,   //Left
+//                D,C,T ,D,T,R,   //Right
+//                
+//                Q,A,D ,Q,D,R,   //Top
+//                B,S,T ,B,T,C    //Bot
             ]
         }
         
