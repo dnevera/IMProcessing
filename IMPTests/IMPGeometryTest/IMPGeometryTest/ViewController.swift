@@ -37,6 +37,7 @@ class ViewController: NSViewController {
     var transformer: IMPPhotoPlateFilter!
     var photoCutter: IMPPhotoPlateFilter!
     var cutter: IMPCropFilter!
+    var warp: IMPWarpFilter!
     
     override func viewDidLoad() {
         
@@ -61,10 +62,17 @@ class ViewController: NSViewController {
         transformer = IMPPhotoPlateFilter(context: context)
         photoCutter = IMPPhotoPlateFilter(context: context)
         cutter = IMPCropFilter(context: context)
+        warp = IMPWarpFilter(context: context)
+        
+        filter.addFilter(warp)
         
         filter.addFilter(transformer)
         filter.addFilter(photoCutter)
         filter.addFilter(cutter)
+        
+        
+        //warp.destinationQuad.left_bottom.x = -1
+        //warp.destinationQuad.right_bottom.x = 1.1
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
@@ -91,7 +99,7 @@ class ViewController: NSViewController {
             let w      = 1+result.w
             let xy     = float4(result.x/w,result.y/w,0,1)
             
-            print(" result = \(result)\n  left-bottom = \(xy)")
+            //print(" result = \(result)\n  left-bottom = \(xy)")
         }
         
 //        transformer.addMatrixModelObserver { (destination, model, aa) in

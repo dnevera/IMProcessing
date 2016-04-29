@@ -100,56 +100,5 @@ public class IMPPhotoPlateFilter: IMPFilter {
     }
     
     // Plate is a cube with virtual depth == 0
-    class Plate: IMPRenderNode {
-        
-        static func  newAspect (ascpectRatio a:Float, region:IMPRegion = IMPRegion()) -> [IMPVertex] {
-            // Front
-            let A = IMPVertex(x: -a, y:   1, z:  0, tx: region.left,    ty: region.top)      // left-top
-            let B = IMPVertex(x: -a, y:  -1, z:  0, tx: region.left,    ty: 1-region.bottom) // left-bottom
-            let C = IMPVertex(x:  a, y:  -1, z:  0, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
-            let D = IMPVertex(x:  a, y:   1, z:  0, tx: 1-region.right, ty: region.top)      // right-top
-            
-//            // Back
-//            let Q = IMPVertex(x: -a, y:   1, z:  0, tx: 0, ty: 0) // virtual depth = 0
-//            let R = IMPVertex(x:  a, y:   1, z:  0, tx: 0, ty: 0)
-//            let S = IMPVertex(x: -a, y:  -1, z:  0, tx: 0, ty: 0)
-//            let T = IMPVertex(x:  a, y:  -1, z:  0, tx: 0, ty: 0)
-
-            return [
-                A,B,C ,A,C,D,   // The main front plate. Here we put image.
-//                R,T,S ,Q,R,S,   // Back
-//                
-//                Q,S,B ,Q,B,A,   //Left
-//                D,C,T ,D,T,R,   //Right
-//                
-//                Q,A,D ,Q,D,R,   //Top
-//                B,S,T ,B,T,C    //Bot
-            ]
-        }
-        
-        var region = IMPRegion() {
-            didSet{
-                if
-                region.left != oldValue.left ||
-                region.right != oldValue.right ||
-                region.top != oldValue.top ||
-                region.bottom != oldValue.bottom
-                {
-                    vertices = Plate.newAspect(ascpectRatio: aspectRatio, region: self.region)
-                }
-            }
-        }
-        
-        var aspectRatio:Float! = 4/3 {
-            didSet{
-                if oldValue != aspectRatio {
-                    vertices = Plate.newAspect(ascpectRatio: aspectRatio, region: self.region)
-                }
-            }
-        }
-        
-        init(context: IMPContext, aspectRatio:Float, region:IMPRegion = IMPRegion()){
-            super.init(context: context, vertices: Plate.newAspect(ascpectRatio: aspectRatio, region: region))
-        }
-    }
+    class Plate: IMPPlateNode {}
 }

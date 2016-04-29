@@ -58,9 +58,7 @@ public class IMPCropFilter: IMPFilter {
                     destinationSlice: 0,
                     destinationLevel: 0,
                     destinationOrigin: MTLOrigin(x:0,y:0,z:0))
-                
-                //blit.synchronizeResource(provider.texture!)
-                
+                                
                 blit.endEncoding()
             }
         }

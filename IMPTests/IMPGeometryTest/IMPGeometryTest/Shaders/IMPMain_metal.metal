@@ -51,19 +51,25 @@ vertex IMPVertexOut vertex_transformation(
     return out;
 }
 
-vertex IMPVertexOut vertex_warpTransformation(
+typedef struct {
+    float4 position [[position]];
+    float3 texcoord;
+} IMPVertexOutPerspective;
+
+
+vertex IMPVertexOutPerspective vertex_warpTransformation(
                                           const device IMPVertex*   vertex_array     [[ buffer(0) ]],
-                                          const device float3x3    &homography_model [[ buffer(1) ]],
+                                          const device float4x4    &homography_model [[ buffer(1) ]],
                                           unsigned int vid [[ vertex_id ]]) {
     
     
     IMPVertex in = vertex_array[vid];
     float3 position = float3(in.position);
     
-    IMPVertexOut out;
-    out.position = float4(homography_model * position,1);
-    
-    out.texcoord = float2(in.texcoord);
+    IMPVertexOutPerspective out;
+    out.position =    homography_model * float4(position,1);
+
+    out.texcoord = float3(in.texcoord,out.position.z);
     
     return out;
 }
@@ -74,6 +80,14 @@ fragment float4 fragment_transformation(
                                         texture2d<float, access::sample> texture [[ texture(0) ]]
                                         ) {
     constexpr sampler s(address::clamp_to_edge, filter::linear, coord::normalized);
-    return texture.sample(s, in.texcoord);
+    return texture.sample(s, in.texcoord.xy);
+}
+
+fragment float4 fragment_warpTransformation(
+                                        IMPVertexOutPerspective in [[stage_in]],
+                                        texture2d<float, access::sample> texture [[ texture(0) ]]
+                                        ) {
+    constexpr sampler s(address::clamp_to_edge, filter::linear, coord::normalized);
+    return texture.sample(s, in.texcoord.xy);
 }
 
