@@ -8,6 +8,8 @@
 import Cocoa
 import IMProcessing
 import SnapKit
+import Quartz
+import ApplicationServices
 
 class IMPLabel: NSTextField {
     
@@ -25,6 +27,7 @@ class IMPLabel: NSTextField {
     }
 }
 
+
 class ViewController: NSViewController {
     
     var context = IMPContext()
@@ -39,6 +42,44 @@ class ViewController: NSViewController {
     var cutter: IMPCropFilter!
     var warp: IMPWarpFilter!
     
+    var points = [NSPoint]()
+    
+    override func mouseDown(theEvent: NSEvent) {
+        let event_location = theEvent.locationInWindow
+        let local_point = self.imageView.convertPoint(event_location,fromView:nil)
+        
+        points.append(local_point)
+        
+        let w = self.imageView.frame.size.width.float
+        let h = self.imageView.frame.size.height.float
+        
+        if points.count == 4 {
+            var left_bottom = points[0]
+ 
+            warp.sourceQuad.left_bottom.x = left_bottom.x.float / w - 1
+            warp.sourceQuad.left_bottom.y = left_bottom.y.float / h - 1
+            
+            var left_top = points[1]
+            
+            warp.sourceQuad.left_top.x = left_top.x.float / w - 1
+            warp.sourceQuad.left_top.y = left_top.y.float / h
+
+            let right_bottom = points[3]
+            
+            warp.sourceQuad.right_bottom.x = right_bottom.x.float / w
+            warp.sourceQuad.right_bottom.y = right_bottom.y.float / h - 1
+            
+            let right_top = points[2]
+            
+            warp.sourceQuad.right_top.x = right_top.x.float / w
+            warp.sourceQuad.right_top.y = right_top.y.float / h
+            
+            NSLog(" .... \(warp.sourceQuad, local_point)")
+
+            points.removeAll()
+        }
+    }
+
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -70,129 +111,17 @@ class ViewController: NSViewController {
         filter.addFilter(photoCutter)
         filter.addFilter(cutter)
         
-        
+
         //warp.destinationQuad.left_bottom.x = -1
-        //warp.destinationQuad.right_bottom.x = 1.1
+        //warp.destinationQuad.right_bottom.x = 1
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
         
-        
         transformer.addMatrixModelObserver { (destination, model, a) in
-            let t = model.transformMatrix.toFloat4x4()
-            let p = model.projectionMatrix.toFloat4x4()
-            let m = model.transitionMatrix.toFloat4x4()
-            
-            let izometric = float4x4(rows:
-                [
-                    float4(1,0,0,0),
-                    float4(0,1,0,0),
-                    float4(0,0,0,0),
-                    float4(0,0,1/a,1),
-                ]
-            )
-            
-            let result =  izometric * (p * t * float4(-a,-1,1,1) )
-            //let result =  (p * t * float4(-a,-1,1,1) ) * izometric
-            //let result =  izometric * ( (float4(-1,-1,1,1) * p) * t )
-            let w      = 1+result.w
-            let xy     = float4(result.x/w,result.y/w,0,1)
-            
-            //print(" result = \(result)\n  left-bottom = \(xy)")
         }
         
-//        transformer.addMatrixModelObserver { (destination, model, aa) in
-//            let t = model.transformMatrix.toIMPMatrix()
-//            let p = model.projectionMatrix.toIMPMatrix()
-//            let m = model.transitionMatrix.toIMPMatrix()
-//            
-//            let a:Float = 1
-//            
-////            let grid:[Float] = [
-////                0,0,0,1,
-////                0,0,1,1,
-////                0,1,0,1,
-////                0,1,1,1,
-////                a,0,0,1,
-////                a,0,1,1,
-////                a,1,0,1,
-////                a,1,1,1,
-////            ]
-//            
-////            let grid:[Float] = [
-////                -a, -1,  0, 1,
-////                -a, -1,  0, 1,
-////                -a,  1,  0, 1,
-////                -a,  1,  0, 1,
-////                 a, -1,  0, 1,
-////                 a, -1,  0, 1,
-////                 a,  1,  0, 1,
-////                 a,  1,  0, 1,
-////            ]
-//            
-//            let grid:[Float] = [
-//                -a, 1, 0, 1,
-//                -a,-1, 0, 1,
-//                 a,-1, 0, 1,
-//                 a, 1, 0, 1,
-//                -a, 1, 0, 1,
-//                 a, 1, 0, 1,
-//                 a,-1, 0, 1,
-//                -a,-1, 0, 1,
-//            ]
-//
-//            let cube  = (IMPMatrix(rows: 8, columns: 4, grid: grid) * t) * m
-//            
-//            let Pz = IMPMatrix(rows: 4, columns: 4, grid: [Float]([
-//                1, 0, 0, 0,
-//                0, 1, 0, 0,
-//                0, 0, 0, 0,
-//                0, 0, 1, 1
-//                ]))
-//            
-//            let xyz = IMPMatrix(rows: 4, columns: 1, grid: [Float]([cube[0,0],cube[0,1],cube[0,2],1]))
-//            
-//            let f =  Pz * xyz
-//            let pp = 1/(1+f[3,0]) * 2
-//            let pr = IMPMatrix(rows: 1, columns: 4, grid: [Float]([f[0,0]*pp,f[1,0]*pp,0,1]))
-//
-//            NSLog(" pr = \n\(cube) ->\n xy=\(xyz)\n p=\(pp)\n xy=\(pr) ")
-//        }
-//
-//            let gridPz:[Float] = [
-//                1, 0, 0, 0,
-//                0, 1, 0, 0,
-//                0, 0, 0, 0,
-//                0, 0, 1, 1
-//            ]
-//            
-//            let grid:[Float] = [
-//                -a, 1, 0, 1,
-//                -a,-1, 0, 1,
-//                a,-1, 0, 1,
-//                a, 1, 0, 1,
-//                -a, 1, 0, 1,
-//                a, 1, 0, 1,
-//                a,-1, 0, 1,
-//                -a,-1, 0, 1,
-//            ]
-//            
-//            
-//            let cube  = (IMPMatrix(rows: 8, columns: 4, grid: grid) * m * t)
-//            
-//            let xyzp =  (cube * p)
-//            
-//            let Pz = IMPMatrix(rows: 4, columns: 4, grid: gridPz)
-//            let xyz = IMPMatrix(rows: 4, columns: 1, grid: [Float]([xyzp[0,0],xyzp[0,1],xyzp[0,2],1]))
-//            
-//            let f = Pz * xyz
-//            let pp = f[3,0]
-//            let pr = IMPMatrix(rows: 1, columns: 4, grid: [Float]([f[0,0]/pp,f[1,0]/pp,0,1]))
-//            
-//            NSLog(" pr = \n\(xyzp) \(xyz) \(f) -> \(pr)")
-//        }
-//        
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -613,6 +542,9 @@ class ViewController: NSViewController {
         
         cropSlider.integerValue = 0
         crop(cropSlider)
+        
+        warp.sourceQuad = IMPQuad()
+        warp.destinationQuad = IMPQuad()
     }
     
     func disable(sender:NSButton){
