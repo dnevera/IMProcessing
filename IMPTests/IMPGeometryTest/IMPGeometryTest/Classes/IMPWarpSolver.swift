@@ -34,27 +34,22 @@ public struct IMPQuad {
 }
 
 
+
 public class IMPWarpSolver {
     
     public var source = IMPQuad() {
-        didSet{
-            print (".... source = \(source)")
+        didSet{            
             solve()
         }
     }
     
     public var destination = IMPQuad(){
         didSet{
-            print (".... destination = \(source)")
             solve()
         }
     }
     
-    private var _transformation = float4x4() {
-        didSet{
-            print (".... _transformation = \(_transformation)")
-        }
-    }
+    private var _transformation = float4x4()
     
     public var transformation:float4x4 {
         return _transformation
@@ -70,7 +65,7 @@ public class IMPWarpSolver {
     func solve(){
         
         var t = general2DProjection(x1s: source.left_bottom.x,
-                                    y1s: source.left_bottom.x,
+                                    y1s: source.left_bottom.y,
                                     x1d: destination.left_bottom.x,
                                     y1d: destination.left_bottom.y,
                                     x2s: source.left_top.x,
@@ -101,6 +96,9 @@ public class IMPWarpSolver {
         
     }
     
+    //
+    // http://jsfiddle.net/dFrHS/1/
+    //
     func adj(m m:[Float]) -> [Float] { // Compute the adjugate of m
         return [
             m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
@@ -158,7 +156,9 @@ public class IMPWarpSolver {
 }
 
 
-
+//
+// LAPACK la_solve works incorect...
+//
 //public class IMPWarpSolver {
 //    
 //    public var source = IMPQuad() {

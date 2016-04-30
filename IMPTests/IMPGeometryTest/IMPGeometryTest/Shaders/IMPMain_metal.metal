@@ -19,30 +19,6 @@ vertex IMPVertexOut vertex_transformation(
     IMPVertex in = vertex_array[vid];
     float3 position = float3(in.position);
     
-//    float2 BL(-1,-1);
-//    float2 BR( 1,-1.2);
-//    float2 TL(-1, 1);
-//    float2 TR( 1.,1.2);
-//    
-//
-//    
-//    float2 vertex_p = position.xy;
-//    
-//    // transform from QC object coords to 0...1
-//    float2 p = (float2(vertex_p.x, vertex_p.y) + 1.) * 0.5;
-//    
-//    // interpolate bottom edge x coordinate
-//    float2 x1 = mix(BL, BR, p.x);
-//    
-//    // interpolate top edge x coordinate
-//    float2 x2 = mix(TL, TR, p.x);
-//    
-//    // interpolate y position
-//    p = mix(x1, x2, p.y);
-//    
-//    //p = (p - 0.5) ;
-//    
-
     IMPVertexOut out;
     out.position = matrix_model.projectionMatrix * matrix_model.transformMatrix * float4(position,1) * matrix_model.transitionMatrix;
     
@@ -91,3 +67,20 @@ fragment float4 fragment_warpTransformation(
     return texture.sample(s, in.texcoord.xy);
 }
 
+typedef struct{
+    float2 left_bottom;
+    float2 left_top;
+    float2 right_bottom;
+    float2 right_top;
+} IMPQuad;
+
+kernel void kernel_quad(
+                                  texture2d<float, access::sample>   inTexture   [[texture(0)]],
+                                  texture2d<float, access::write>    outTexture  [[texture(1)]],
+                                  constant IMPQuad     &quad [[buffer(0)]],
+                                  uint2 gid [[thread_position_in_grid]]){
+    
+    float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
+    
+    outTexture.write(inColor,gid);
+}
