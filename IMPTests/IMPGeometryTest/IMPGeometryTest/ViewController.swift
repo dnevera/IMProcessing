@@ -27,6 +27,21 @@ class IMPLabel: NSTextField {
     }
 }
 
+public func == (left:NSPoint, right:NSPoint) -> Bool{
+    return left.x==right.x && left.y==right.y
+}
+
+public func != (left:NSPoint, right:NSPoint) -> Bool{
+    return !(left==right)
+}
+
+public func - (left:NSPoint, right:NSPoint) -> NSPoint {
+    return NSPoint(x: left.x-right.x, y: left.y-right.y)
+}
+
+public func + (left:NSPoint, right:NSPoint) -> NSPoint {
+    return NSPoint(x: left.x+right.x, y: left.y+right.y)
+}
 
 class ViewController: NSViewController {
     
@@ -42,44 +57,90 @@ class ViewController: NSViewController {
     var cutter: IMPCropFilter!
     var warp: IMPWarpFilter!
     
-    var points = [NSPoint]()
+    var mouse_point_offset = NSPoint()
+    var mouse_point_before = NSPoint()
+    var mouse_point = NSPoint() {
+        didSet{
+            mouse_point_before = oldValue
+            mouse_point_offset = mouse_point_before - mouse_point
+        }
+    }
+    
+    var tuoched = false
+    var warpDelta:Float = 0.005
     
     override func mouseDown(theEvent: NSEvent) {
         let event_location = theEvent.locationInWindow
-        let local_point = self.imageView.convertPoint(event_location,fromView:nil)
+        mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
+        mouse_point_before = mouse_point
+        mouse_point_offset = NSPoint(x: 0,y: 0)
+        tuoched = true
+    }
+    
+    override func mouseUp(theEvent: NSEvent) {
+        tuoched = false
+    }
+    
+    override func touchesMovedWithEvent(theEvent: NSEvent) {
         
-        points.append(local_point)
+        if !tuoched {
+            return
+        }
         
+        let event_location = theEvent.locationInWindow
+        mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
+        
+        NSLog("---> \(mouse_point_offset)")
+
         let w = self.imageView.frame.size.width.float
         let h = self.imageView.frame.size.height.float
         
-        if points.count == 4 {
-            var left_bottom = points[0]
- 
-            warp.sourceQuad.left_bottom.x = left_bottom.x.float / w - 1
-            warp.sourceQuad.left_bottom.y = left_bottom.y.float / h - 1
+        let distancex = 1/w * mouse_point_offset.x.float
+        let distancey = 1/h * mouse_point_offset.y.float
+        
+        if mouse_point.x < w/3 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            // LM
+            warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
+            warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
+        }
+        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y < h/2 {
+            // LRM
+            warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
+            warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
+        }
+        else if mouse_point.x < w/3 && mouse_point.y < h/3 {
+            // LB
+            warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
+            warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
+        }
+        else if mouse_point.x < w/3 && mouse_point.y > h*2/3 {
+            // LT
+            warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
+            warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
+        }
             
-            var left_top = points[1]
-            
-            warp.sourceQuad.left_top.x = left_top.x.float / w - 1
-            warp.sourceQuad.left_top.y = left_top.y.float / h
-
-            let right_bottom = points[3]
-            
-            warp.sourceQuad.right_bottom.x = right_bottom.x.float / w
-            warp.sourceQuad.right_bottom.y = right_bottom.y.float / h - 1
-            
-            let right_top = points[2]
-            
-            warp.sourceQuad.right_top.x = right_top.x.float / w
-            warp.sourceQuad.right_top.y = right_top.y.float / h
-            
-            NSLog(" .... \(warp.sourceQuad, local_point)")
-
-            points.removeAll()
+        else if mouse_point.x > w/3 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            // RM
+            warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
+            warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
+        }
+        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y > h/2 {
+            // LRT
+            warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
+            warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
+        }
+        else if mouse_point.x > w/3 && mouse_point.y < h/3 {
+            // RB
+            warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
+            warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
+        }
+        else if mouse_point.x > w/3 && mouse_point.y > h*2/3 {
+            // RT
+            warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
+            warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
         }
     }
-
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -105,15 +166,11 @@ class ViewController: NSViewController {
         cutter = IMPCropFilter(context: context)
         warp = IMPWarpFilter(context: context)
         
-        filter.addFilter(warp)
-        
         filter.addFilter(transformer)
         filter.addFilter(photoCutter)
         filter.addFilter(cutter)
         
-
-        //warp.destinationQuad.left_bottom.x = -1
-        //warp.destinationQuad.right_bottom.x = 1
+        filter.addFilter(warp)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
