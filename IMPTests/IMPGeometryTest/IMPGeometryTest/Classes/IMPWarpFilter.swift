@@ -65,7 +65,7 @@ public class IMPWarpFilter: IMPFilter {
                 
                 let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
                 
-                renderEncoder.setCullMode(MTLCullMode.Front)
+                //renderEncoder.setCullMode(.Front)
                 
                 renderEncoder.setRenderPipelineState(self.graphics.pipeline!)
                 
@@ -107,8 +107,8 @@ public class IMPWarpFilter: IMPFilter {
     
     lazy var vertices:[IMPVertex] = {
         // Front
-        let A = IMPVertex(x: -1, y:   1, z:  0, tx: 0,    ty: 0) // left-top
-        let B = IMPVertex(x: -1, y:  -1, z:  0, tx: 0,    ty: 1) // left-bottom
+        let A = IMPVertex(x: -1, y:   1, z:  0, tx: 0, ty: 0) // left-top
+        let B = IMPVertex(x: -1, y:  -1, z:  0, tx: 0, ty: 1) // left-bottom
         let C = IMPVertex(x:  1, y:  -1, z:  0, tx: 1, ty: 1)    // right-bottom
         let D = IMPVertex(x:  1, y:   1, z:  0, tx: 1, ty: 0)    // right-top
         return [

@@ -18,21 +18,21 @@ extern "C" {
     
 #ifndef __METAL_VERSION__
     
+     typedef struct {
+        float3 position;
+        float3 texcoord;
+    } IMPVertex;
+    
     typedef struct {
         float4 position;
         float2 texcoord;
     } IMPVertexOut;
-
-    typedef struct {
-        float3 position;
-        float2 texcoord;
-    } IMPVertex;
     
 #else
     
     typedef struct {
         packed_float3 position;
-        packed_float2 texcoord;
+        packed_float3 texcoord;
     } IMPVertex;
 
     typedef struct {

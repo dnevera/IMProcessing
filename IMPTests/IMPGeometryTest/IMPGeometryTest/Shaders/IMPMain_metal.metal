@@ -11,18 +11,17 @@ using namespace metal;
 
 
 vertex IMPVertexOut vertex_transformation(
-                                          const device IMPVertex*       vertex_array [[ buffer(0) ]],
+                                          const device IMPVertex*      vertex_array [[ buffer(0) ]],
                                           const device IMPMatrixModel&  matrix_model [[ buffer(1) ]],
                                           unsigned int vid [[ vertex_id ]]) {
-    
-    
+        
     IMPVertex in = vertex_array[vid];
     float3 position = float3(in.position);
     
     IMPVertexOut out;
     out.position = matrix_model.projectionMatrix * matrix_model.transformMatrix * float4(position,1) * matrix_model.transitionMatrix;
     
-    out.texcoord = float2(in.texcoord);
+    out.texcoord = float2(float3(in.texcoord).xy);
     
     return out;
 }
@@ -31,6 +30,15 @@ typedef struct {
     float4 position [[position]];
     float3 texcoord;
 } IMPVertexOutPerspective;
+
+
+fragment float4 fragment_transformation(
+                                        IMPVertexOut in [[stage_in]],
+                                        texture2d<float, access::sample> texture [[ texture(0) ]]
+                                        ) {
+    constexpr sampler s(address::clamp_to_edge, filter::linear, coord::normalized);
+    return texture.sample(s, in.texcoord.xy);
+}
 
 
 vertex IMPVertexOutPerspective vertex_warpTransformation(
@@ -43,21 +51,14 @@ vertex IMPVertexOutPerspective vertex_warpTransformation(
     float3 position = float3(in.position);
     
     IMPVertexOutPerspective out;
-    out.position =    homography_model * float4(position,1);
+    out.position =    homography_model * float4(position,1);    
 
-    out.texcoord = float3(in.texcoord,out.position.z);
+    out.texcoord = float3(float3(in.texcoord).xy,out.position.z);
     
     return out;
 }
 
 
-fragment float4 fragment_transformation(
-                                        IMPVertexOut in [[stage_in]],
-                                        texture2d<float, access::sample> texture [[ texture(0) ]]
-                                        ) {
-    constexpr sampler s(address::clamp_to_edge, filter::linear, coord::normalized);
-    return texture.sample(s, in.texcoord.xy);
-}
 
 fragment float4 fragment_warpTransformation(
                                         IMPVertexOutPerspective in [[stage_in]],
@@ -78,9 +79,7 @@ kernel void kernel_quad(
                                   texture2d<float, access::sample>   inTexture   [[texture(0)]],
                                   texture2d<float, access::write>    outTexture  [[texture(1)]],
                                   constant IMPQuad     &quad [[buffer(0)]],
-                                  uint2 gid [[thread_position_in_grid]]){
-    
-    float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);
-    
+                                  uint2 gid [[thread_position_in_grid]]){    
+    float4 inColor = IMProcessing::sampledColor(inTexture,outTexture,gid);    
     outTexture.write(inColor,gid);
 }

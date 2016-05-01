@@ -80,7 +80,7 @@ public class IMPRenderNode: IMPContextProvider {
             
             let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
             
-            renderEncoder.setCullMode(MTLCullMode.Front)
+            renderEncoder.setCullMode(.Front)
             
             renderEncoder.setRenderPipelineState(pipelineState)
             
