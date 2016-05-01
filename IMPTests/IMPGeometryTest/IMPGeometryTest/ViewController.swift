@@ -75,12 +75,10 @@ class ViewController: NSViewController {
         mouse_point_before = mouse_point
         mouse_point_offset = NSPoint(x: 0,y: 0)
         tuoched = true
-        NSLog(" mouseDown")
     }
     
     override func mouseUp(theEvent: NSEvent) {
         tuoched = false
-        NSLog(" mouseUp")
     }
     
     func pointerMoved(theEvent: NSEvent)  {
