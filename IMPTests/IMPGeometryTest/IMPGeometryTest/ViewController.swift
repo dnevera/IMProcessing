@@ -75,14 +75,15 @@ class ViewController: NSViewController {
         mouse_point_before = mouse_point
         mouse_point_offset = NSPoint(x: 0,y: 0)
         tuoched = true
+        NSLog(" mouseDown")
     }
     
     override func mouseUp(theEvent: NSEvent) {
         tuoched = false
+        NSLog(" mouseUp")
     }
     
-    override func touchesMovedWithEvent(theEvent: NSEvent) {
-        
+    func pointerMoved(theEvent: NSEvent)  {
         if !tuoched {
             return
         }
@@ -90,8 +91,6 @@ class ViewController: NSViewController {
         let event_location = theEvent.locationInWindow
         mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
         
-        NSLog("---> \(mouse_point_offset)")
-
         let w = self.imageView.frame.size.width.float
         let h = self.imageView.frame.size.height.float
         
@@ -141,6 +140,14 @@ class ViewController: NSViewController {
         }
     }
     
+    override func mouseDragged(theEvent: NSEvent) {
+        pointerMoved(theEvent)
+    }
+    
+    override func touchesMovedWithEvent(theEvent: NSEvent) {
+        pointerMoved(theEvent)        
+    }
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -168,9 +175,10 @@ class ViewController: NSViewController {
         
         filter.addFilter(transformer)
         filter.addFilter(photoCutter)
-        filter.addFilter(cutter)
         
         filter.addFilter(warp)
+        
+        filter.addFilter(cutter)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
