@@ -182,7 +182,21 @@ class ViewController: NSViewController {
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
         
-        transformer.addMatrixModelObserver { (destination, model, a) in
+        transformer.addMatrixModelObserver { (destination, model, aspect) in
+            
+            let projection_on_xy = matrix_float4x4(rows: [
+                [ 1, 0, 0, 0],
+                [ 0, 1, 0, 0],
+                [ 0, 1, 0, 0],
+                [ 0, 0, 0, 1],
+                ]
+            )
+            let left_bottom = float4(-1*aspect,-1,-1,1)
+            
+            let result = matrix_multiply(left_bottom, matrix_multiply(model.projection, model.transform))
+            let xy     = matrix_multiply(projection_on_xy, result)
+
+            NSLog("aspect = \(result) model = \(xy)")
         }
                 
         view.addSubview(imageView)
