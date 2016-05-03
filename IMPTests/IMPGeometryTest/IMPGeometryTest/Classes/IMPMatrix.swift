@@ -7,6 +7,26 @@
 //
 
 import Foundation
+import simd
+
+extension matrix_float4x4 {
+    public func toIMPMatrix() -> IMPMatrix<Float> {
+        
+        let m0 = self.columns.0
+        let m1 = self.columns.1
+        let m2 = self.columns.2
+        let m3 = self.columns.3
+        
+        let grid = [
+            m0.x, m1.x, m2.x, m3.x,
+            m0.y, m1.y, m2.y, m3.y,
+            m0.z, m1.z, m2.z, m3.z,
+            m0.w, m1.w, m2.w, m3.w,
+            ]
+        
+        return IMPMatrix(rows: 4, columns: 4, grid: grid)
+    }
+}
 
 /// A Matrix is a fixed size generic 2D collection.
 /// You can set and get elements using subscript notation. Example:

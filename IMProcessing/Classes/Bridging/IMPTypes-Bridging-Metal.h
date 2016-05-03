@@ -42,12 +42,12 @@ extern "C" {
     
 #endif
     
-    typedef struct {
-        float4x4 transformMatrix;
-        float4x4 projectionMatrix;
-        float4x4 transitionMatrix;
+    typedef struct {         
+        float4x4 projection; // camera view model 
+        float4x4 transform;  // rotation,scale
+        float4x4 transition; // moving
     } IMPMatrixModel;
-    
+
     typedef struct {
         float3        scale;
         float3x3      rotation;

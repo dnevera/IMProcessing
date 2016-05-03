@@ -77,6 +77,16 @@ public class IMPPhotoPlateFilter: IMPFilter {
         dirty = true
     }
     
+    public var flip:(horizontal:IMPRenderNode.FlipMode, vertical:IMPRenderNode.FlipMode) {
+        set{
+            plate.flip = newValue
+            dirty = true
+        }
+        get{
+            return plate.flip
+        }
+    }
+    
     public var region:IMPRegion {
         return plate.region
     }
@@ -84,7 +94,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
     public final func addMatrixModelObserver(model observer:IMPRenderNode.MatrixModelHandler){
         plate.addMatrixModelObserver(model: observer)
     }
-
+    
     lazy var plate:Plate = {
         return Plate(context: self.context, aspectRatio:self.aspectRatio)
     }()

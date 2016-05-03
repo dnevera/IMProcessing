@@ -12,6 +12,11 @@ import IMProcessing
 /// 3D Node rendering
 public class IMPRenderNode: IMPContextProvider {
     
+    public enum FlipMode {
+        case Flipped
+        case None
+    }    
+    
     public typealias MatrixModelHandler =  ((destination:IMPImageProvider, model:IMPMatrixModel, aspect:Float) -> Void)
     
     public var context:IMPContext!
@@ -41,6 +46,27 @@ public class IMPRenderNode: IMPContextProvider {
     public var fovy:Float = M_PI.float/2{
         didSet{
             updateMatrixModel(currentDestinationSize)
+        }
+    }
+    
+    public var flip:(horizontal:FlipMode, vertical:FlipMode) = (horizontal:.None, vertical:.None) {
+        didSet{
+            switch flip.horizontal {
+            case .Flipped:
+                flipVector.x =  1
+                flipVector.y = -1
+            default:
+                flipVector.x =  0
+                flipVector.y =  1                
+            }
+            switch flip.vertical {
+            case .Flipped:
+                flipVector.z =  1
+                flipVector.w = -1
+            default:
+                flipVector.z =  0
+                flipVector.w =  1                
+            }
         }
     }
    
@@ -77,16 +103,17 @@ public class IMPRenderNode: IMPContextProvider {
             renderPassDescriptor.colorAttachments[0].loadAction = .Clear
             renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
             renderPassDescriptor.colorAttachments[0].storeAction = .Store
-            
+                        
             let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
             
             renderEncoder.setCullMode(.Front)
             
-            renderEncoder.setRenderPipelineState(pipelineState)
+            renderEncoder.setRenderPipelineState(pipelineState)            
             
             renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, atIndex: 0)
             renderEncoder.setVertexBuffer(matrixBuffer, offset: 0, atIndex: 1)
             
+            renderEncoder.setFragmentBuffer(flipVectorBuffer, offset: 0, atIndex: 0)
             renderEncoder.setFragmentTexture(source.texture, atIndex:0)
             
             renderEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: vertices.count, instanceCount: vertices.count/3)
@@ -108,7 +135,11 @@ public class IMPRenderNode: IMPContextProvider {
         matrixModelObservers.append(observer)
     }
 
-    var renderPassDescriptor = MTLRenderPassDescriptor()
+    lazy var renderPassDescriptor:MTLRenderPassDescriptor = {
+        return MTLRenderPassDescriptor()                
+    }()
+    
+    
     var vertexBuffer: MTLBuffer!
     
     var matrixIdentityModel:IMPMatrixModel {
@@ -119,6 +150,17 @@ public class IMPRenderNode: IMPContextProvider {
         }
     }
     
+    var flipVector = float4(0,1,0,1)
+    
+    lazy var _flipVectorBuffer:MTLBuffer = {
+        return self.context.device.newBufferWithLength(sizeof(float4), options: .CPUCacheModeDefaultCache)
+    }()
+    
+    var flipVectorBuffer:MTLBuffer {
+        memcpy(_flipVectorBuffer.contents(), &flipVector, _flipVectorBuffer.length)
+        return _flipVectorBuffer
+    } 
+
     var currentDestinationSize = MTLSize(width: 1,height: 1,depth: 1) {
         didSet {
             if oldValue.width != currentDestinationSize.width ||
@@ -139,10 +181,11 @@ public class IMPRenderNode: IMPContextProvider {
         let height = currentDestinationSize.height.float
         
         matrix.setPerspective(radians: fovy, aspect: width/height, nearZ: 0, farZ: 1)
+
         matrix.scale(x: scale.x, y: scale.y, z: scale.z)
         matrix.rotateAround(x: angle.x, y: angle.y, z: angle.z)
         matrix.move(x: transition.x, y: transition.y)
-        
+                
         memcpy(matrixBuffer.contents(), &matrix, matrixBuffer.length)
         
         if let destination = currentDestination {

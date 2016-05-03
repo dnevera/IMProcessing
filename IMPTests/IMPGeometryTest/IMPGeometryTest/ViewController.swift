@@ -172,10 +172,10 @@ class ViewController: NSViewController {
         warp = IMPWarpFilter(context: context)
         
         filter.addFilter(transformer)
-        filter.addFilter(photoCutter)
         
-        filter.addFilter(warp)
-        
+        filter.addFilter(warp)        
+
+        filter.addFilter(photoCutter)        
         filter.addFilter(cutter)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
@@ -184,7 +184,7 @@ class ViewController: NSViewController {
         
         transformer.addMatrixModelObserver { (destination, model, a) in
         }
-        
+                
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -510,10 +510,51 @@ class ViewController: NSViewController {
             make.left.equalTo(sview).offset(5)
         }
         allHeights += 20
+
+        let flipHorizontal =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         
+        var attrTitle = NSMutableAttributedString(string: "Flip Horizontal")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        flipHorizontal.attributedTitle = attrTitle
+        flipHorizontal.setButtonType(.SwitchButton)
+        flipHorizontal.target = self
+        flipHorizontal.action = #selector(ViewController.flipHorizontalHandler(_:))
+        flipHorizontal.state = 0
+        sview.addSubview(flipHorizontal)
+        
+        flipHorizontal.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(reset.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
+            make.width.equalTo(120)
+            make.height.equalTo(20)
+        }
+        allHeights += 20
+        
+        let flipVertical =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
+
+        attrTitle = NSMutableAttributedString(string: "Flip Vertical")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        flipVertical.attributedTitle = attrTitle
+        flipVertical.setButtonType(.SwitchButton)
+        flipVertical.target = self
+        flipVertical.action = #selector(ViewController.flipVerticalHandler(_:))
+        flipVertical.state = 0
+        sview.addSubview(flipVertical)
+        
+        flipVertical.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(flipHorizontal.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
+            make.width.equalTo(120)
+            make.height.equalTo(20)
+        }
+        allHeights += 20
+        
+
         let disable =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         
-        let attrTitle = NSMutableAttributedString(string: "Enable")
+        attrTitle = NSMutableAttributedString(string: "Enable")
         attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
         
         disable.attributedTitle = attrTitle
@@ -524,7 +565,7 @@ class ViewController: NSViewController {
         sview.addSubview(disable)
         
         disable.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(reset.snp_bottom).offset(10)
+            make.top.equalTo(flipVertical.snp_bottom).offset(10)
             make.left.equalTo(sview).offset(10)
             make.width.equalTo(120)
             make.height.equalTo(20)
@@ -606,10 +647,18 @@ class ViewController: NSViewController {
         cropSlider.integerValue = 0
         crop(cropSlider)
         
-        warp.sourceQuad = IMPQuad()
-        warp.destinationQuad = IMPQuad()
+        warp.sourceQuad = IMPWarpFilter.Quad()
+        warp.destinationQuad = IMPWarpFilter.Quad()
     }
     
+    func  flipHorizontalHandler(sender:NSButton) {
+        transformer.flip = (horizontal:sender.state == 1 ? .Flipped : .None, vertical: transformer.flip.vertical) 
+    }
+
+    func  flipVerticalHandler(sender:NSButton) {
+        transformer.flip = (vertical:sender.state == 1 ? .Flipped : .None, horizontal: transformer.flip.horizontal) 
+    }
+
     func disable(sender:NSButton){
         if filter?.enabled == true {
             filter?.enabled = false

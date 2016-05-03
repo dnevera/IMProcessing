@@ -16,6 +16,10 @@ import simd
 
 public class IMPFunction: NSObject, IMPContextProvider {
 
+    //
+    // inherits ==/!= from NSObject
+    //
+    
     public struct GroupSize {
         public var width:Int  = 16
         public var height:Int = 16
