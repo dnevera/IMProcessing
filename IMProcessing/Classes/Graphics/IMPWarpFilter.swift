@@ -93,7 +93,10 @@ public class IMPWarpFilter: IMPFilter {
     }
     
     lazy var _matrixBuffer:MTLBuffer = {
-        return  self.context.device.newBufferWithLength(sizeofValue(self.transformation.cmatrix), options: .CPUCacheModeDefaultCache)
+        var m = self.transformation.cmatrix
+        var mm = self.context.device.newBufferWithLength(sizeofValue(self.transformation.cmatrix), options: .CPUCacheModeDefaultCache)
+        memcpy(mm.contents(), &m, mm.length)
+        return mm
     }()
 
     var matrixBuffer: MTLBuffer {
