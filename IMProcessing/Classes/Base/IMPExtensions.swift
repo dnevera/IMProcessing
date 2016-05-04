@@ -20,7 +20,8 @@ import Metal
     public typealias IMPColor = UIColor
     public typealias NSRect   = CGRect
     public typealias NSSize   = CGSize
-        
+    public typealias NSPoint  = CGPoint
+
 #else
     public typealias IMPImage = NSImage
     public typealias IMPColor = NSColor
@@ -107,6 +108,11 @@ public extension IMPBlendingMode{
     static let NORMAL      = IMPBlendingMode(1)
 }
 
+public extension IMPRegion{
+    public var rectangle:NSRect{
+        return NSRect(origin: NSPoint(x:left.cgfloat,y:top.cgfloat), size: NSSize(width: 1-(left+right), height: 1-(top+bottom)))
+    }
+}
 
 public extension String {
     

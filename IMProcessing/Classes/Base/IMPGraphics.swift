@@ -28,6 +28,8 @@ public class IMPGraphics: NSObject, IMPContextProvider {
         do {
             let renderPipelineDescription = MTLRenderPipelineDescriptor()
             
+            renderPipelineDescription.vertexDescriptor = self.vertexDescriptor 
+            
             renderPipelineDescription.colorAttachments[0].pixelFormat = IMProcessing.colors.pixelFormat
             
             renderPipelineDescription.vertexFunction   = self.context.defaultLibrary.newFunctionWithName(self.vertexName)
@@ -40,9 +42,37 @@ public class IMPGraphics: NSObject, IMPContextProvider {
         }
     }()
     
-    public required init(context:IMPContext, vertex:String, fragment:String) {
+    public required init(context:IMPContext, vertex:String, fragment:String, vertexDescriptor:MTLVertexDescriptor? = nil) {                
         self.context = context
         self.vertexName = vertex
         self.fragmentName = fragment
+        self._vertexDescriptor = vertexDescriptor        
     }
+    
+    lazy var _defaultVertexDescriptor:MTLVertexDescriptor = {
+        // 
+        // By default  
+        //
+        // typedef struct {
+        //    float3 position;
+        //    float3 texcoord;
+        // } IMPVertex;
+        //
+        //
+        var v = MTLVertexDescriptor()
+        v.attributes[0].format = .Float3;
+        v.attributes[0].bufferIndex = 0;
+        v.attributes[0].offset = 0;
+        v.attributes[1].format = .Float3;
+        v.attributes[1].bufferIndex = 0;
+        v.attributes[1].offset = sizeof(float3);  
+        v.layouts[0].stride = sizeof(IMPVertex) 
+        
+        return v
+    }()
+    
+    var _vertexDescriptor:MTLVertexDescriptor? 
+    public var vertexDescriptor:MTLVertexDescriptor {
+        return _vertexDescriptor ?? _defaultVertexDescriptor
+    }     
 }

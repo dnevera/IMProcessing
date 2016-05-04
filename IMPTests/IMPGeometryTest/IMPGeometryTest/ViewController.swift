@@ -8,6 +8,8 @@
 import Cocoa
 import IMProcessing
 import SnapKit
+import Quartz
+import ApplicationServices
 
 class IMPLabel: NSTextField {
     
@@ -25,6 +27,22 @@ class IMPLabel: NSTextField {
     }
 }
 
+public func == (left:NSPoint, right:NSPoint) -> Bool{
+    return left.x==right.x && left.y==right.y
+}
+
+public func != (left:NSPoint, right:NSPoint) -> Bool{
+    return !(left==right)
+}
+
+public func - (left:NSPoint, right:NSPoint) -> NSPoint {
+    return NSPoint(x: left.x-right.x, y: left.y-right.y)
+}
+
+public func + (left:NSPoint, right:NSPoint) -> NSPoint {
+    return NSPoint(x: left.x+right.x, y: left.y+right.y)
+}
+
 class ViewController: NSViewController {
     
     var context = IMPContext()
@@ -34,7 +52,134 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
-    var tranformer: IMPRender!
+    var transformer: IMPPhotoPlateFilter!
+    var photoCutter: IMPPhotoPlateFilter!
+    var cutter: IMPCropFilter!
+    var warp: IMPWarpFilter!
+    
+    var mouse_point_offset = NSPoint()
+    var mouse_point_before = NSPoint()
+    var mouse_point = NSPoint() {
+        didSet{
+            mouse_point_before = oldValue
+            mouse_point_offset = mouse_point_before - mouse_point
+        }
+    }
+    
+    var tuoched = false
+    var warpDelta:Float = 0.005
+    
+    enum PointerPlace {
+        case LeftBottom
+        case LeftTop
+        case RightBottom
+        case RightTop
+        case Top
+        case Bottom
+        case Left        
+        case Right
+        case Undefined
+    }
+    
+    var pointerPlace:PointerPlace = .Undefined
+    
+    override func mouseDown(theEvent: NSEvent) {
+        let event_location = theEvent.locationInWindow
+        mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
+        mouse_point_before = mouse_point
+        mouse_point_offset = NSPoint(x: 0,y: 0)
+        tuoched = true
+
+        let w = self.imageView.frame.size.width.float
+        let h = self.imageView.frame.size.height.float
+
+        if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y < h/2 {
+            pointerPlace = .Bottom
+        }
+        else if mouse_point.x < w/2 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            pointerPlace = .Left
+        }
+        else if mouse_point.x < w/3 && mouse_point.y < h/3 {
+            pointerPlace = .LeftBottom
+        }
+        else if mouse_point.x < w/3 && mouse_point.y > h*2/3 {
+            pointerPlace = .LeftTop
+        }
+            
+        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y > h/2 {
+            pointerPlace = .Top
+        }
+        else if mouse_point.x > w/2 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            pointerPlace = .Right
+        }
+        else if mouse_point.x > w/3 && mouse_point.y < h/3 {
+            pointerPlace = .RightBottom
+        }
+        else if mouse_point.x > w/3 && mouse_point.y > h*2/3 {
+            pointerPlace = .RightTop
+        }
+    }
+    
+    override func mouseUp(theEvent: NSEvent) {
+        tuoched = false
+    }
+    
+    func pointerMoved(theEvent: NSEvent)  {
+        if !tuoched {
+            return
+        }
+        
+        let event_location = theEvent.locationInWindow
+        mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
+        
+        let w = self.imageView.frame.size.width.float
+        let h = self.imageView.frame.size.height.float
+        
+        let distancex = 1/w * mouse_point_offset.x.float
+        let distancey = 1/h * mouse_point_offset.y.float
+        
+        if pointerPlace == .Left {
+            warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
+            warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
+        }
+        else if pointerPlace == .Bottom {
+            warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
+            warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
+        }
+        else if pointerPlace == .LeftBottom {
+            warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
+            warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
+        }
+        else if pointerPlace == .LeftTop {
+            warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
+            warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
+        }
+            
+        else if pointerPlace == .Right {
+            warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
+            warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
+        }
+        else if pointerPlace == .Top {
+            warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
+            warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
+        }
+        else if pointerPlace == .RightBottom {
+            warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
+            warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
+        }
+        else if pointerPlace == .RightTop {
+            warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
+            warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
+        }
+    }
+    
+    override func mouseDragged(theEvent: NSEvent) {
+        pointerMoved(theEvent)
+    }
+    
+    override func touchesMovedWithEvent(theEvent: NSEvent) {
+        pointerMoved(theEvent)        
+    }
     
     override func viewDidLoad() {
         
@@ -54,20 +199,31 @@ class ViewController: NSViewController {
         
         configurePannel()
         
-        
         filter = IMPFilter(context: context)
         
-        tranformer = IMPRender(context: context)
+        transformer = IMPPhotoPlateFilter(context: context)
+        photoCutter = IMPPhotoPlateFilter(context: context)
+        cutter = IMPCropFilter(context: context)
+        warp = IMPWarpFilter(context: context)
         
-        filter.addFilter(tranformer)
+        filter.addFilter(transformer)
+        
+        filter.addFilter(warp)        
+
+        filter.addFilter(photoCutter)        
+        filter.addFilter(cutter)
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
         
-        filter.addDestinationObserver { (destination) -> Void in
+        transformer.addMatrixModelObserver { (destination, model, aspect) in
+            
+            let plate = IMPPlate(aspect: aspect)
+            
+            NSLog(" ... plate = \(plate.xyProjection(model))")
         }
-        
+                
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -84,7 +240,10 @@ class ViewController: NSViewController {
                     //
                     // Загружаем файл и связываем источником фильтра
                     //
+                    
                     self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file)
+                    
+                    
                     self.asyncChanges({ () -> Void in
                         self.zoomFit()
                     })
@@ -169,6 +328,8 @@ class ViewController: NSViewController {
         sview.layer?.backgroundColor = IMPColor.clearColor().CGColor
         pannelScrollView.documentView = sview
         
+        configureControls()
+        
         pannelScrollView.snp_makeConstraints { (make) -> Void in
             make.width.equalTo(280)
             make.top.equalTo(pannelScrollView.superview!).offset(10)
@@ -177,90 +338,204 @@ class ViewController: NSViewController {
         }
         
         sview.snp_makeConstraints { (make) -> Void in
-            make.edges.equalTo(pannelScrollView).inset(NSEdgeInsetsMake(10, 10, 10, 10))
+            make.top.equalTo(sview.superview!).offset(0)
+            make.left.equalTo(sview.superview!).offset(0)
+            make.right.equalTo(sview.superview!).offset(0)
+            containerWidthConstraint = make.height.equalTo(currentHeigh).constraint
         }
-        
-        configureControls()
     }
     
     private func configureControls() -> NSView {
         
-        let horizontLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(horizontLabel)
-        horizontLabel.stringValue = "Horizont"
-        horizontLabel.snp_makeConstraints { (make) -> Void in
+        
+        let rotationXLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationXLabel)
+        rotationXLabel.stringValue = "Rotate X"
+        rotationXLabel.snp_makeConstraints { (make) -> Void in
             make.top.equalTo(sview).offset(20)
             make.right.equalTo(sview).offset(-20)
             make.width.equalTo(100)
             make.height.equalTo(20)
         }
         allHeights+=40
-
-        horizontSlider = NSSlider(frame: view.bounds)
-        horizontSlider.minValue = 0
-        horizontSlider.maxValue = 100
-        horizontSlider.integerValue = 50
-        horizontSlider.action = #selector(ViewController.changeHorizont(_:))
-        horizontSlider.continuous = true
-        sview.addSubview(horizontSlider)
-        horizontSlider.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(horizontLabel.snp_bottom).offset(5)
+        
+        rotationXSlider = NSSlider(frame: view.bounds)
+        rotationXSlider.minValue = 0
+        rotationXSlider.maxValue = 100
+        rotationXSlider.integerValue = 50
+        rotationXSlider.action = #selector(ViewController.rotate(_:))
+        rotationXSlider.continuous = true
+        sview.addSubview(rotationXSlider)
+        rotationXSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationXLabel.snp_bottom).offset(5)
             make.right.equalTo(sview).offset(5)
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
-        let verticalLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(verticalLabel)
-        verticalLabel.stringValue = "Vertical"
-        verticalLabel.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(horizontSlider.snp_bottom).offset(20)
+        
+        let rotationYLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationYLabel)
+        rotationYLabel.stringValue = "Rotate Y"
+        rotationYLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationXSlider.snp_bottom).offset(5)
             make.right.equalTo(sview).offset(-20)
             make.width.equalTo(100)
             make.height.equalTo(20)
         }
         allHeights+=40
         
-        verticalSlider = NSSlider(frame: view.bounds)
-        verticalSlider.minValue = 0
-        verticalSlider.maxValue = 100
-        verticalSlider.integerValue = 50
-        verticalSlider.action = #selector(ViewController.changeVertical(_:))
-        verticalSlider.continuous = true
-        sview.addSubview(verticalSlider)
-        verticalSlider.snp_makeConstraints { (make) -> Void in
+        rotationYSlider = NSSlider(frame: view.bounds)
+        rotationYSlider.minValue = 0
+        rotationYSlider.maxValue = 100
+        rotationYSlider.integerValue = 50
+        rotationYSlider.action = #selector(ViewController.rotate(_:))
+        rotationYSlider.continuous = true
+        sview.addSubview(rotationYSlider)
+        rotationYSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationYLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+        
+        let rotationZLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(rotationZLabel)
+        rotationZLabel.stringValue = "Rotate Z"
+        rotationZLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationYSlider.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        rotationZSlider = NSSlider(frame: view.bounds)
+        rotationZSlider.minValue = 0
+        rotationZSlider.maxValue = 100
+        rotationZSlider.integerValue = 50
+        rotationZSlider.action = #selector(ViewController.rotate(_:))
+        rotationZSlider.continuous = true
+        sview.addSubview(rotationZSlider)
+        rotationZSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationZLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+        
+        //
+        // Scale
+        //
+        let verticalLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(verticalLabel)
+        verticalLabel.stringValue = "Scale"
+        verticalLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(rotationZSlider.snp_bottom).offset(20)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        scaleSlider = NSSlider(frame: view.bounds)
+        scaleSlider.minValue = 0
+        scaleSlider.maxValue = 100
+        scaleSlider.integerValue = 100
+        scaleSlider.action = #selector(ViewController.scale(_:))
+        scaleSlider.continuous = true
+        sview.addSubview(scaleSlider)
+        scaleSlider.snp_makeConstraints { (make) -> Void in
             make.top.equalTo(verticalLabel.snp_bottom).offset(5)
             make.right.equalTo(sview).offset(5)
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
-
-        let aspectRatioLabel  = IMPLabel(frame: view.bounds)
-        sview.addSubview(aspectRatioLabel)
-        aspectRatioLabel.stringValue = "Aspect Ratio"
-        aspectRatioLabel.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(verticalSlider.snp_bottom).offset(20)
+        
+        
+        //
+        // MOVE X
+        //
+        let moveXLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(moveXLabel)
+        moveXLabel.stringValue = "Move X"
+        moveXLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(scaleSlider.snp_bottom).offset(20)
             make.right.equalTo(sview).offset(-20)
             make.width.equalTo(100)
             make.height.equalTo(20)
         }
         allHeights+=40
         
-        aspectRatioSlider = NSSlider(frame: view.bounds)
-        aspectRatioSlider.minValue = 0
-        aspectRatioSlider.maxValue = 100
-        aspectRatioSlider.integerValue = 50
-        aspectRatioSlider.action = #selector(ViewController.changeVertical(_:))
-        aspectRatioSlider.continuous = true
-        sview.addSubview(aspectRatioSlider)
-        aspectRatioSlider.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(aspectRatioLabel.snp_bottom).offset(5)
+        moveXSlider = NSSlider(frame: view.bounds)
+        moveXSlider.minValue = 0
+        moveXSlider.maxValue = 100
+        moveXSlider.integerValue = 50
+        moveXSlider.action = #selector(ViewController.move(_:))
+        moveXSlider.continuous = true
+        sview.addSubview(moveXSlider)
+        moveXSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(moveXLabel.snp_bottom).offset(5)
             make.right.equalTo(sview).offset(5)
             make.left.equalTo(sview).offset(5)
         }
         allHeights+=40
         
-
+        //
+        // MOVE Y
+        //
+        let moveYLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(moveYLabel)
+        moveYLabel.stringValue = "Move Y"
+        moveYLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(moveXSlider.snp_bottom).offset(20)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        moveYSlider = NSSlider(frame: view.bounds)
+        moveYSlider.minValue = 0
+        moveYSlider.maxValue = 100
+        moveYSlider.integerValue = 50
+        moveYSlider.action = #selector(ViewController.move(_:))
+        moveYSlider.continuous = true
+        sview.addSubview(moveYSlider)
+        moveYSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(moveYLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+        
+        //
+        // CROP
+        //
+        let cropLabel  = IMPLabel(frame: view.bounds)
+        sview.addSubview(cropLabel)
+        cropLabel.stringValue = "Crop"
+        cropLabel.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(moveYSlider.snp_bottom).offset(20)
+            make.right.equalTo(sview).offset(-20)
+            make.width.equalTo(100)
+            make.height.equalTo(20)
+        }
+        allHeights+=40
+        
+        cropSlider = NSSlider(frame: view.bounds)
+        cropSlider.minValue = 0
+        cropSlider.maxValue = 100
+        cropSlider.integerValue = 0
+        cropSlider.action = #selector(ViewController.crop(_:))
+        cropSlider.continuous = true
+        sview.addSubview(cropSlider)
+        cropSlider.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(cropLabel.snp_bottom).offset(5)
+            make.right.equalTo(sview).offset(5)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights+=40
+        
         
         let reset = NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         reset.title = "Reset"
@@ -269,16 +544,75 @@ class ViewController: NSViewController {
         sview.addSubview(reset)
         
         reset.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(aspectRatioSlider.snp_bottom).offset(20)
-            make.center.equalTo(sview).offset(0)
+            make.top.equalTo(cropSlider.snp_bottom).offset(20)
+            make.width.equalTo(120)
+            make.left.equalTo(sview).offset(5)
+        }
+        allHeights += 20
+
+        let flipHorizontal =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
+        
+        var attrTitle = NSMutableAttributedString(string: "Flip Horizontal")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        flipHorizontal.attributedTitle = attrTitle
+        flipHorizontal.setButtonType(.SwitchButton)
+        flipHorizontal.target = self
+        flipHorizontal.action = #selector(ViewController.flipHorizontalHandler(_:))
+        flipHorizontal.state = 0
+        sview.addSubview(flipHorizontal)
+        
+        flipHorizontal.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(reset.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
             make.width.equalTo(120)
             make.height.equalTo(20)
         }
         allHeights += 20
         
+        let flipVertical =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
+
+        attrTitle = NSMutableAttributedString(string: "Flip Vertical")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        flipVertical.attributedTitle = attrTitle
+        flipVertical.setButtonType(.SwitchButton)
+        flipVertical.target = self
+        flipVertical.action = #selector(ViewController.flipVerticalHandler(_:))
+        flipVertical.state = 0
+        sview.addSubview(flipVertical)
+        
+        flipVertical.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(flipHorizontal.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
+            make.width.equalTo(120)
+            make.height.equalTo(20)
+        }
+        allHeights += 20
+
+        let left90 =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
+        
+        attrTitle = NSMutableAttributedString(string: "Left")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        left90.attributedTitle = attrTitle
+        left90.setButtonType(.SwitchButton)
+        left90.target = self
+        left90.action = #selector(ViewController.left(_:))
+        left90.state = 0
+        sview.addSubview(left90)
+        
+        left90.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(flipVertical.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
+            make.width.equalTo(120)
+            make.height.equalTo(20)
+        }
+        allHeights += 20
+
         let disable =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         
-        let attrTitle = NSMutableAttributedString(string: "Enable")
+        attrTitle = NSMutableAttributedString(string: "Enable")
         attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
         
         disable.attributedTitle = attrTitle
@@ -289,41 +623,107 @@ class ViewController: NSViewController {
         sview.addSubview(disable)
         
         disable.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(reset.snp_bottom).offset(10)
+            make.top.equalTo(left90.snp_bottom).offset(10)
             make.left.equalTo(sview).offset(10)
             make.width.equalTo(120)
             make.height.equalTo(20)
         }
         allHeights += 20
-
+        
         return disable
     }
     
-    var horizontSlider:NSSlider!
-    var verticalSlider:NSSlider!
-    var aspectRatioSlider:NSSlider!
+    var rotationXSlider:NSSlider!
+    var rotationYSlider:NSSlider!
+    var rotationZSlider:NSSlider!
+    var scaleSlider:NSSlider!
+    var moveXSlider:NSSlider!
+    var moveYSlider:NSSlider!
+    var cropSlider:NSSlider!
     
-    func changeHorizont(sender:NSSlider){
+    func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
+            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float
+            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float
+            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float
+            let a = float3(anglex,angley,anglez)
+            self.transformer.rotate(a)
         }
     }
     
-    func changeVertical(sender:NSSlider){
+    func scale(sender:NSSlider){
         asyncChanges { () -> Void in
+            let scale = (sender.floatValue*2)/100
+            self.transformer.scale(float3(scale))
+            self.transformer.dirty = true
         }
     }
     
-    func changeAspectRatio(sender:NSSlider){
+    func move(sender:NSSlider){
         asyncChanges { () -> Void in
+            let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
+            self.transformer.move(transition)
+        }
+    }
+    
+    func crop(sender:NSSlider){
+        asyncChanges { () -> Void in
+            let crop = sender.floatValue/300
+            let region = IMPRegion(left: crop, right: crop, top: crop, bottom: crop)
+            //
+            // самый быстрый вариант
+            //
+            self.cutter.region = region
+            
+            //
+            // устанавливает кроп на все дейтсвие, т.е. прикладывает к странсфорации
+            //
+            //self.transformer.crop(region)
+            
+            //
+            // тоже самое что и self.cutter.region = region
+            // поскольку следующий в стеке фильтров, но медленнее
+            //
+            //self.photoCutter.crop(region)
         }
     }
     
     func reset(sender:NSButton?){
-        horizontSlider.intValue = 50
-        verticalSlider.intValue = 50
-        aspectRatioSlider.integerValue = 50
+        
+        rotationXSlider.intValue = 50
+        rotationYSlider.intValue = 50
+        rotationZSlider.intValue = 50
+        rotate(rotationXSlider)
+        
+        scaleSlider.intValue = 50
+        scale(scaleSlider)
+        
+        moveXSlider.integerValue = 50
+        moveYSlider.integerValue = 50
+        move(moveXSlider)
+        
+        cropSlider.integerValue = 0
+        crop(cropSlider)
+        
+        warp.sourceQuad = IMPQuad()
+        warp.destinationQuad = IMPQuad()
     }
     
+    func  flipHorizontalHandler(sender:NSButton) {
+        transformer.reflection = (horizontal:sender.state == 1 ? .Mirroring : .None, vertical: transformer.reflection.vertical)
+    }
+
+    func  flipVerticalHandler(sender:NSButton) {
+        transformer.reflection = (vertical:sender.state == 1 ? .Mirroring : .None, horizontal: transformer.reflection.horizontal)
+    }
+
+    
+    func  left(sender:NSButton) {
+        asyncChanges { () -> Void in
+            self.transformer.rotate(sender.state == 1 ? IMPMatrixModel.left : IMPMatrixModel.flat)
+        }
+    }
+
     func disable(sender:NSButton){
         if filter?.enabled == true {
             filter?.enabled = false
@@ -331,17 +731,19 @@ class ViewController: NSViewController {
         else {
             filter?.enabled = true
         }
-        filter.apply() 
+        filter.dirty = true
+    }
+    
+    var containerWidthConstraint:Constraint?
+    var currentHeigh : CGFloat {
+        get{
+            return allHeights < view.bounds.height ? view.bounds.height: allHeights + 20
+        }
     }
     
     override func viewDidLayout() {
-        let h = view.bounds.height < allHeights ? allHeights : view.bounds.height
-        sview.snp_remakeConstraints { (make) -> Void in
-            make.top.equalTo(pannelScrollView).offset(0)
-            make.left.equalTo(pannelScrollView).offset(0)
-            make.right.equalTo(pannelScrollView).offset(0)
-            make.height.equalTo(h)
-        }
+        super.viewDidLayout()
+        containerWidthConstraint?.updateOffset(currentHeigh)
     }
 }
 

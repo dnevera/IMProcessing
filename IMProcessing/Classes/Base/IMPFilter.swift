@@ -13,10 +13,6 @@
 #endif
 import Metal
 
-public typealias IMPFilterSourceHandler = ((source:IMPImageProvider) -> Void)
-public typealias IMPFilterDestinationHandler = ((destination:IMPImageProvider) -> Void)
-public typealias IMPFilterDirtyHandler = (() -> Void)
-
 public protocol IMPFilterProtocol:IMPContextProvider {
     var source:IMPImageProvider? {get set}
     var destination:IMPImageProvider? {get}
@@ -26,10 +22,17 @@ public protocol IMPFilterProtocol:IMPContextProvider {
 
 public class IMPFilter: NSObject,IMPFilterProtocol {
     
+    public typealias SourceHandler = ((source:IMPImageProvider) -> Void)
+    public typealias DestinationHandler = ((destination:IMPImageProvider) -> Void)
+    public typealias DirtyHandler = (() -> Void)
+
     public var context:IMPContext!
     
     public var enabled = true {
         didSet{
+            if enabled == false && oldValue != enabled {
+                executeDestinationObservers(source)
+            }
             dirty = true
         }
     }
@@ -98,10 +101,10 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     private var functionList:[IMPFunction] = [IMPFunction]()
     private var filterList:[IMPFilter] = [IMPFilter]()
-    private var newSourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
-    private var sourceObservers:[IMPFilterSourceHandler] = [IMPFilterSourceHandler]()
-    private var destinationObservers:[IMPFilterDestinationHandler] = [IMPFilterDestinationHandler]()
-    private var dirtyHandlers:[IMPFilterDirtyHandler] = [IMPFilterDirtyHandler]()
+    private var newSourceObservers:[SourceHandler] = [SourceHandler]()
+    private var sourceObservers:[SourceHandler] = [SourceHandler]()
+    private var destinationObservers:[DestinationHandler] = [DestinationHandler]()
+    private var dirtyHandlers:[DirtyHandler] = [DirtyHandler]()
     
     public final func addFunction(function:IMPFunction){
         if functionList.contains(function) == false {
@@ -139,19 +142,19 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         }
     }
     
-    public final func addNewSourceObserver(source observer:IMPFilterSourceHandler){
+    public final func addNewSourceObserver(source observer:SourceHandler){
         newSourceObservers.append(observer)
     }
     
-    public final func addSourceObserver(source observer:IMPFilterSourceHandler){
+    public final func addSourceObserver(source observer:SourceHandler){
         sourceObservers.append(observer)
     }
     
-    public final func addDestinationObserver(destination observer:IMPFilterDestinationHandler){
+    public final func addDestinationObserver(destination observer:DestinationHandler){
         destinationObservers.append(observer)
     }
     
-    public final func addDirtyObserver(observer:IMPFilterDirtyHandler){
+    public final func addDirtyObserver(observer:DirtyHandler){
         dirtyHandlers.append(observer)
         for f in filterList{
             f.addDirtyObserver(observer)
@@ -190,7 +193,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         return doApply()
     }
     
-    public func main(provider provider:IMPImageProvider) -> IMPImageProvider {
+    public func main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider {
         
         if functionList.count > 0 {
             
@@ -198,7 +201,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                 
                 autoreleasepool({ () -> () in
                     
-                    var inputTexture:MTLTexture! = self.source!.texture
+                    var inputTexture:MTLTexture! = source.texture
                     
                     var reverseIndex = self.functionList.count
                     
@@ -240,7 +243,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                                 
                                 if texture.width != inputTexture.width || texture.height != inputTexture.height
                                     ||
-                                    inputTexture === self.source?.texture
+                                    inputTexture === source.texture
                                 {
                                     let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                                         (self.source?.texture!.pixelFormat)!,
@@ -270,7 +273,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         else {
             self.context.execute { (commandBuffer) -> Void in
                 autoreleasepool({ () -> () in
-                    let inputTexture:MTLTexture! = self.source!.texture
+                    let inputTexture:MTLTexture! = source.texture
                     let width  = inputTexture.width
                     let height = inputTexture.height
                     
@@ -291,9 +294,11 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         
         if filterList.count > 0 {
             
-            guard var newSource = provider ?? source else {
-                return provider
-            }
+            //guard var newSource = provider ?? source else {
+            //    return provider
+            //}
+            
+            var newSource = provider
             
             for filter in filterList {
                 
@@ -346,27 +351,33 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     func doApply() -> IMPImageProvider {
         
-        if self.source?.texture == nil {
+//        if self.source?.texture == nil {
+//            dirty = false
+//            return _destination
+//        }
+        
+        if let source = self.source{
+            if dirty {
+                
+                if functionList.count == 0 && filterList.count == 0 {
+                    //
+                    // copy source to destination
+                    //
+                    passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
+                    
+                    addFunction(passThroughKernel!)
+                }
+                
+                executeSourceObservers(source)
+                
+                executeDestinationObservers(main(source:  source, destination: _destination))
+                
+                dirty = false
+            }
+        }
+        else {
             dirty = false
             return _destination
-        }
-        
-        if dirty {
-            
-            if functionList.count == 0 && filterList.count == 0 {
-                //
-                // copy source to destination
-                //
-                passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
-                
-                addFunction(passThroughKernel!)
-            }
-            
-            executeSourceObservers(source)
-            
-            executeDestinationObservers(main(provider: _destination))
-            
-            dirty = false
         }
         
         return _destination

@@ -79,22 +79,9 @@
                 imageView?.filter = filter
                 filter?.addNewSourceObserver(source: { (source) in
                     self.scrollView.zoomScale = 1
-                    //self.setOrientation(self.orientation, animate: false)
                 })
             }
         }
-        
-//        public var source:IMPImageProvider?{
-//            get{
-//                return imageView.source
-//            }
-//            set{
-//                imageView?.source = newValue
-//                scrollView.zoomScale = 1
-//                setOrientation(orientation, animate: false)
-//            }
-//        }
-
         
         func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
             
@@ -301,34 +288,42 @@
         }
         
         /// View filter
+        
+        func updateFrameSize()  {
+            
+        }
+        
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
-                filter?.addNewSourceObserver(source: { (source) in
-                    if let texture = source.texture{
-                        self.imageView.frame = CGRect(x: 0, y: 0,
-                            width:  Int(texture.width.float/self.imageView.scaleFactor),
-                            height: Int(texture.height.float/self.imageView.scaleFactor))
+//                filter?.addNewSourceObserver(source: { (source) in
+//                    if let texture = source.texture{
+//                        self.imageView.frame = CGRect(x: 0, y: 0,
+//                            width:  Int(texture.width.float/self.imageView.scaleFactor),
+//                            height: Int(texture.height.float/self.imageView.scaleFactor))
+//                    }
+//                })
+                                
+                filter?.addDestinationObserver(destination: { (destination) in
+                    if let texture = destination.texture{
+                        let w = (texture.width.float/self.imageView.scaleFactor).cgfloat
+                        let h = (texture.height.float/self.imageView.scaleFactor).cgfloat
+                        if w != self.imageView.frame.size.width || h != self.imageView.frame.size.height {
+                            dispatch_async(dispatch_get_main_queue(), {
+                                CATransaction.begin()
+                                CATransaction.setDisableActions(true)
+                                self.imageView.frame = CGRect(x: 0, y: 0,
+                                    width:  w,
+                                    height: h)
+                                CATransaction.commit()
+                                
+                            })
+                        }
                     }
                 })
             }
         }
         
-        /// Image source
-//        public var source:IMPImageProvider?{
-//            get{
-//                return imageView.source
-//            }
-//            set{
-//                if let texture = newValue?.texture{
-//                    imageView.frame = CGRect(x: 0, y: 0,
-//                        width:  Int(texture.width.float/imageView.scaleFactor),
-//                        height: Int(texture.height.float/imageView.scaleFactor))
-//                }
-//                imageView?.source = newValue
-//                imageView.filter?.dirty = true
-//            }
-//        }
         
         ///  Magnify image to fit rectangle
         ///

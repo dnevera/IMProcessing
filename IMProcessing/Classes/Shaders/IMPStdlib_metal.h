@@ -28,6 +28,7 @@
 #include "IMPRandomNoise_metal.h"
 #include "IMPFilmGrain_metal.h"
 #include "IMPDithering_metal.h"
+#include "IMPGraphics_metal.h"
 
 #ifdef __cplusplus
 
