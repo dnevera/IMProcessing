@@ -63,18 +63,18 @@ public extension Float{
         set(newValue){
             self = Float(newValue)
         }
+    }    
+}
+
+
+public extension Float {
+    /// Convert radians to degrees
+    public var degrees:Float{
+        return self * (180 / M_PI.float)
     }
-    
-    public var deegres:Float {
-        get{
-            return GLKMathRadiansToDegrees(self)
-        }
-    }
-    
+    /// Convert degrees to radians
     public var radians:Float{
-        get{
-            return GLKMathDegreesToRadians(self)
-        }
+        return self * (M_PI.float / 180)
     }
 }
 

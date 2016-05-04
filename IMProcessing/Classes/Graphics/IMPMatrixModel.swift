@@ -6,21 +6,9 @@
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
-import IMProcessing
 import Metal
 import simd
 
-
-public extension Float {
-    /// Convert radians to degrees
-    public var degrees:Float{
-        return self * (180 / M_PI.float)
-    }
-    /// Convert degrees to radians
-    public var radians:Float{
-        return self * (M_PI.float / 180)
-    }
-}
 
 // MARK: - Matrix transformation model
 public extension IMPMatrixModel {

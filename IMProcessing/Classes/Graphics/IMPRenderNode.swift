@@ -7,7 +7,6 @@
 //
 
 import Metal
-import IMProcessing
 
 /// 3D Node rendering
 public class IMPRenderNode: IMPContextProvider {

@@ -6,7 +6,6 @@
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
-import IMProcessing
 import Metal
 
 // MARK: - Vertex structure

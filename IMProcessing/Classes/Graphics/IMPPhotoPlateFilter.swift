@@ -6,7 +6,6 @@
 //  Copyright © 2016 ImageMetalling. All rights reserved.
 //
 
-import IMProcessing
 import Metal
 
 /// Photo Plate Node is a Cube Node with virtual depth == 0

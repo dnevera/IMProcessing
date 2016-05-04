@@ -20,7 +20,8 @@ import Metal
     public typealias IMPColor = UIColor
     public typealias NSRect   = CGRect
     public typealias NSSize   = CGSize
-        
+    public typealias NSPoint  = CGPoint
+
 #else
     public typealias IMPImage = NSImage
     public typealias IMPColor = NSColor

@@ -13,13 +13,21 @@ import simd
 public struct IMPQuad {
     
     /// Left bottom point of the quad
-    var left_bottom  = float2( -1, -1)
+    public var left_bottom  = float2( -1, -1)
     /// Left top point of the quad
-    var left_top     = float2( -1,  1)
+    public var left_top     = float2( -1,  1)
     /// Right bottom point of the quad
-    var right_bottom = float2(  1, -1)
+    public var right_bottom = float2(  1, -1)
     /// Right top point of the quad
-    var right_top    = float2(  1,  1)
+    public var right_top    = float2(  1,  1)
+    
+    public init(){}
+    public init(left_bottom:float2,left_top:float2, right_bottom:float2, right_top:float2){
+        self.left_bottom = left_bottom
+        self.left_top = left_top
+        self.right_bottom = right_bottom
+        self.right_top = right_top
+    }
     
     /// Basis matrix
     public var basis:float3x3 {
