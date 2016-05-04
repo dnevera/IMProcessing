@@ -69,12 +69,55 @@ class ViewController: NSViewController {
     var tuoched = false
     var warpDelta:Float = 0.005
     
+    enum PointerPlace {
+        case LeftBottom
+        case LeftTop
+        case RightBottom
+        case RightTop
+        case Top
+        case Bottom
+        case Left        
+        case Right
+        case Undefined
+    }
+    
+    var pointerPlace:PointerPlace = .Undefined
+    
     override func mouseDown(theEvent: NSEvent) {
         let event_location = theEvent.locationInWindow
         mouse_point = self.imageView.convertPoint(event_location,fromView:nil)
         mouse_point_before = mouse_point
         mouse_point_offset = NSPoint(x: 0,y: 0)
         tuoched = true
+
+        let w = self.imageView.frame.size.width.float
+        let h = self.imageView.frame.size.height.float
+
+        if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y < h/2 {
+            pointerPlace = .Bottom
+        }
+        else if mouse_point.x < w/2 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            pointerPlace = .Left
+        }
+        else if mouse_point.x < w/3 && mouse_point.y < h/3 {
+            pointerPlace = .LeftBottom
+        }
+        else if mouse_point.x < w/3 && mouse_point.y > h*2/3 {
+            pointerPlace = .LeftTop
+        }
+            
+        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y > h/2 {
+            pointerPlace = .Top
+        }
+        else if mouse_point.x > w/2 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
+            pointerPlace = .Right
+        }
+        else if mouse_point.x > w/3 && mouse_point.y < h/3 {
+            pointerPlace = .RightBottom
+        }
+        else if mouse_point.x > w/3 && mouse_point.y > h*2/3 {
+            pointerPlace = .RightTop
+        }
     }
     
     override func mouseUp(theEvent: NSEvent) {
@@ -95,44 +138,36 @@ class ViewController: NSViewController {
         let distancex = 1/w * mouse_point_offset.x.float
         let distancey = 1/h * mouse_point_offset.y.float
         
-        if mouse_point.x < w/3 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
-            // LM
+        if pointerPlace == .Left {
             warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
             warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
         }
-        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y < h/2 {
-            // LRM
+        else if pointerPlace == .Bottom {
             warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
             warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
         }
-        else if mouse_point.x < w/3 && mouse_point.y < h/3 {
-            // LB
+        else if pointerPlace == .LeftBottom {
             warp.sourceQuad.left_bottom.x = warp.sourceQuad.left_bottom.x + distancex
             warp.sourceQuad.left_bottom.y = warp.sourceQuad.left_bottom.y + distancey
         }
-        else if mouse_point.x < w/3 && mouse_point.y > h*2/3 {
-            // LT
+        else if pointerPlace == .LeftTop {
             warp.sourceQuad.left_top.x = warp.sourceQuad.left_top.x + distancex
             warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
         }
             
-        else if mouse_point.x > w/3 && mouse_point.y >= h/3 && mouse_point.y <= h*2/3 {
-            // RM
+        else if pointerPlace == .Right {
             warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
             warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
         }
-        else if mouse_point.x > w/3 && mouse_point.x < w*2/3 && mouse_point.y > h/2 {
-            // LRT
+        else if pointerPlace == .Top {
             warp.sourceQuad.left_top.y = warp.sourceQuad.left_top.y + distancey
             warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
         }
-        else if mouse_point.x > w/3 && mouse_point.y < h/3 {
-            // RB
+        else if pointerPlace == .RightBottom {
             warp.sourceQuad.right_bottom.x = warp.sourceQuad.right_bottom.x + distancex
             warp.sourceQuad.right_bottom.y = warp.sourceQuad.right_bottom.y + distancey
         }
-        else if mouse_point.x > w/3 && mouse_point.y > h*2/3 {
-            // RT
+        else if pointerPlace == .RightTop {
             warp.sourceQuad.right_top.x = warp.sourceQuad.right_top.x + distancex
             warp.sourceQuad.right_top.y = warp.sourceQuad.right_top.y + distancey
         }
@@ -184,19 +219,9 @@ class ViewController: NSViewController {
         
         transformer.addMatrixModelObserver { (destination, model, aspect) in
             
-            let projection_on_xy = matrix_float4x4(rows: [
-                [ 1, 0, 0, 0],
-                [ 0, 1, 0, 0],
-                [ 0, 1, 0, 0],
-                [ 0, 0, 0, 1],
-                ]
-            )
-            let left_bottom = float4(-1*aspect,-1,-1,1)
+            let plate = IMPPlate(aspect: aspect)
             
-            let result = matrix_multiply(left_bottom, matrix_multiply(model.projection, model.transform))
-            let xy     = matrix_multiply(projection_on_xy, result)
-
-            NSLog("aspect = \(result) model = \(xy)")
+            NSLog(" ... plate = \(plate.xyProjection(model))")
         }
                 
         view.addSubview(imageView)
@@ -661,8 +686,8 @@ class ViewController: NSViewController {
         cropSlider.integerValue = 0
         crop(cropSlider)
         
-        warp.sourceQuad = IMPWarpFilter.Quad()
-        warp.destinationQuad = IMPWarpFilter.Quad()
+        warp.sourceQuad = IMPQuad()
+        warp.destinationQuad = IMPQuad()
     }
     
     func  flipHorizontalHandler(sender:NSButton) {

@@ -71,7 +71,7 @@ public class IMPRenderNode: IMPContextProvider {
     }
    
     /// Create Node
-    public init(context: IMPContext, vertices: [IMPVertex]){
+    public init(context: IMPContext, vertices: IMPVertices){
         self.context = context
         defer{
             self.vertices = vertices
@@ -121,13 +121,9 @@ public class IMPRenderNode: IMPContextProvider {
         }
     }
     
-    public var vertices:[IMPVertex]! {
+    public var vertices:IMPVertices! {
         didSet{
-            var vertexData = [Float]()
-            for vertex in vertices{
-                vertexData += vertex.raw
-            }
-            vertexBuffer = context.device.newBufferWithBytes(vertexData, length: vertexData.count * sizeofValue(vertexData[0]), options: .CPUCacheModeDefaultCache)
+            vertexBuffer = context.device.newBufferWithBytes(vertices.raw, length: vertices.length, options: .CPUCacheModeDefaultCache)
         }
     }
     

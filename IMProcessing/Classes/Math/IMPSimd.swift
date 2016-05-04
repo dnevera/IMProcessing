@@ -27,6 +27,34 @@ public extension float4x4 {
     }
 }
 
+public extension matrix_float3x3{
+    
+    public init(rows: (float3,float3,float3)){
+        self = matrix_from_rows(rows.0, rows.1, rows.2)
+    }
+    
+    public init(rows: [float3]){
+        self = matrix_from_rows(rows[0], rows[1], rows[2])
+    }
+    
+    public init(columns: [float3]){
+        self = matrix_from_columns(columns[0], columns[1], columns[2])
+    }
+    
+    public init(rows: [[Float]]){
+        self = matrix_from_rows(float3(rows[0]), float3(rows[1]), float3(rows[2]))
+    }
+    
+    public init(columns: [[Float]]){
+        self = matrix_from_columns(float3(columns[0]), float3(columns[1]), float3(columns[2]))
+    }
+    
+    public func toFloat3x3() -> float3x3 {
+        return float3x3(self)
+    }    
+}
+
+
 public extension matrix_float4x4{
     
     public init(rows: (float4,float4,float4,float4)){
@@ -51,7 +79,7 @@ public extension matrix_float4x4{
     
     public func toFloat4x4() -> float4x4 {
         return float4x4(self)
-    }    
+    }
 }
 
 // MARK: - Basic matrix transformations
