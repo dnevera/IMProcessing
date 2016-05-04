@@ -10,8 +10,10 @@
 import IMProcessing
 import Metal
 
+/// Warp transformation filter
 public class IMPWarpFilter: IMPFilter {
     
+    /// Source image quad
     public var sourceQuad = IMPQuad() {
         didSet{
             transformation = sourceQuad.projection2D(destination: destinationQuad)
@@ -19,6 +21,7 @@ public class IMPWarpFilter: IMPFilter {
         }
     }
     
+    /// Destination image quad
     public var destinationQuad = IMPQuad() {
         didSet{
             transformation = sourceQuad.projection2D(destination: destinationQuad)
@@ -26,8 +29,10 @@ public class IMPWarpFilter: IMPFilter {
         }
     }
     
+    /// Graphic function
     public var graphics:IMPGraphics!
     
+    /// Create Warp with new graphic function
     required public init(context: IMPContext, vertex:String, fragment:String) {
         super.init(context: context)
         graphics = IMPGraphics(context: context, vertex: vertex, fragment: fragment)
@@ -60,7 +65,7 @@ public class IMPWarpFilter: IMPFilter {
                 
                 self.renderPassDescriptor.colorAttachments[0].texture = provider.texture
                 self.renderPassDescriptor.colorAttachments[0].loadAction = .Clear
-                self.renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
+                self.renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 0)
                 self.renderPassDescriptor.colorAttachments[0].storeAction = .Store
                 
                 let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)

@@ -589,7 +589,26 @@ class ViewController: NSViewController {
             make.height.equalTo(20)
         }
         allHeights += 20
+
+        let left90 =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         
+        attrTitle = NSMutableAttributedString(string: "Left")
+        attrTitle.addAttribute(NSForegroundColorAttributeName, value: IMPColor.whiteColor(), range: NSMakeRange(0, attrTitle.length))
+        
+        left90.attributedTitle = attrTitle
+        left90.setButtonType(.SwitchButton)
+        left90.target = self
+        left90.action = #selector(ViewController.left(_:))
+        left90.state = 0
+        sview.addSubview(left90)
+        
+        left90.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(flipVertical.snp_bottom).offset(10)
+            make.left.equalTo(sview).offset(10)
+            make.width.equalTo(120)
+            make.height.equalTo(20)
+        }
+        allHeights += 20
 
         let disable =  NSButton(frame: NSRect(x: 230, y: 0, width: 50, height: view.bounds.height))
         
@@ -604,7 +623,7 @@ class ViewController: NSViewController {
         sview.addSubview(disable)
         
         disable.snp_makeConstraints { (make) -> Void in
-            make.top.equalTo(flipVertical.snp_bottom).offset(10)
+            make.top.equalTo(left90.snp_bottom).offset(10)
             make.left.equalTo(sview).offset(10)
             make.width.equalTo(120)
             make.height.equalTo(20)
@@ -691,11 +710,18 @@ class ViewController: NSViewController {
     }
     
     func  flipHorizontalHandler(sender:NSButton) {
-        transformer.flip = (horizontal:sender.state == 1 ? .Flipped : .None, vertical: transformer.flip.vertical) 
+        transformer.reflection = (horizontal:sender.state == 1 ? .Mirroring : .None, vertical: transformer.reflection.vertical)
     }
 
     func  flipVerticalHandler(sender:NSButton) {
-        transformer.flip = (vertical:sender.state == 1 ? .Flipped : .None, horizontal: transformer.flip.horizontal) 
+        transformer.reflection = (vertical:sender.state == 1 ? .Mirroring : .None, horizontal: transformer.reflection.horizontal)
+    }
+
+    
+    func  left(sender:NSButton) {
+        asyncChanges { () -> Void in
+            self.transformer.rotate(sender.state == 1 ? IMPMatrixModel.left : IMPMatrixModel.flat)
+        }
     }
 
     func disable(sender:NSButton){

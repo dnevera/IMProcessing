@@ -9,53 +9,27 @@
 import IMProcessing
 import Metal
 
-public struct IMPQuad {
-    var left_bottom  = float2( -1, -1)
-    var left_top     = float2( -1,  1)
-    var right_bottom = float2(  1, -1)
-    var right_top    = float2(  1,  1)
-    
-    public func basis(points:IMPQuad) -> float3x3 {
-        let A = float3x3(rows:[
-            [points.left_bottom.x,points.left_top.x,points.right_bottom.x],
-            [points.left_bottom.y,points.left_top.y,points.right_bottom.y],
-            [1,1,1]
-            ])
-        let B = float3(points.right_top.x,points.right_top.y,1)
-        let X = A.inverse * B
-        // C = (Ai)*B
-        return A * float3x3(diagonal: X)
-    }
-    
-    public func projection2D(destination d:IMPQuad) -> float4x4 {
-        let t = basis(d) * basis(self).inverse
-        
-        return float4x4(rows: [
-            [t[0,0], t[1,0], 0, t[2,0]],
-            [t[0,1], t[1,1], 0, t[2,1]],
-            [0     , 0     , 1, 0   ],
-            [t[0,2], t[1,2], 0, t[2,2]]
-            ])
-    }
-}
-
+// MARK: - Vertex structure
 public extension IMPVertex{
     public init(x:Float, y:Float, z:Float, tx:Float, ty:Float){
         self.position = float3(x,y,z)
         self.texcoord = float3(tx,ty,1)
     }
+    /// Get vertex raw buffer
     public var raw:[Float] {
         return [position.x,position.y,position.z,texcoord.x,texcoord.y,1]
     }
 }
 
+///  @brief Vertices protocol
 public protocol IMPVertices{
     var vertices:[IMPVertex] {get}
 }
 
-
+// MARK: - Vertices basic read properties
 public extension IMPVertices{
     
+    /// Raw buffer
     public var raw:[Float]{
         var vertexData = [Float]()
         for vertex in vertices{
@@ -64,14 +38,21 @@ public extension IMPVertices{
         return vertexData
     }
     
+        /// Vertices count
     public var count:Int {
         return vertices.count
     }
     
+        /// Vertices buffer langth
     public var length:Int{
         return vertices.count * sizeofValue(vertices[0])
     }
     
+    ///  XY plane projection
+    ///
+    ///  - parameter model: 3D matrix transformation model
+    ///
+    ///  - returns: x,y coordinates
     public func xyProjection(model:IMPMatrixModel) -> [float2] {
         var points = [float2]()
         for v in vertices {
@@ -89,10 +70,16 @@ public extension IMPVertices{
     }
 }
 
+/// Photo plate model
 public class IMPPlate:IMPVertices{
     
+    /// Plate vertices
     public let vertices:[IMPVertex]
+    
+    /// Aspect ratio of the plate sides
     public let aspect:Float
+    
+    /// Processing region
     public let region:IMPRegion
     
     public init(aspect a:Float=1,region r:IMPRegion=IMPRegion()){

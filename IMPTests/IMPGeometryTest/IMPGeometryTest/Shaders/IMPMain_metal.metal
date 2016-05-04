@@ -20,9 +20,6 @@ vertex IMPVertexOut vertex_transformation(
     
     IMPVertexOut out;
     out.position = matrix_model.projection * matrix_model.transform * float4(position,1) * matrix_model.transition ;
-    
-    //out.position.xy =  out.position.xy * float2x2(float2(1,0),float2(0,-1));
-    
     out.texcoord = float2(float3(in.texcoord).xy);
     
     return out;

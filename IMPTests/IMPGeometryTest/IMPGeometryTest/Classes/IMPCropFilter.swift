@@ -9,8 +9,10 @@
 import IMProcessing
 import Metal
 
+/// Crop filter
 public class IMPCropFilter: IMPFilter {
     
+    /// Cropping region 
     public var region = IMPRegion() {
         didSet{
             dirty = true
