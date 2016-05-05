@@ -52,7 +52,7 @@ public extension IMPVertices{
     ///  - parameter model: 3D matrix transformation model
     ///
     ///  - returns: x,y coordinates
-    public func xyProjection(model:IMPMatrixModel) -> [float2] {
+    public func xyProjection(model model:IMPMatrixModel) -> [float2] {
         var points = [float2]()
         for v in vertices {
             
@@ -66,6 +66,57 @@ public extension IMPVertices{
             
         }
         return points
+    }
+    
+
+    ///  Scale factor to find largest inscribed quadrangle
+    ///
+    ///  - parameter model: transformation matrix model
+    ///
+    ///  - returns: scale factor
+    public func scaleFactorFor(model model:IMPMatrixModel) -> Float {
+        let points = xyProjection(model: model)
+        
+        var left:Float   = 0
+        var right:Float  = 0
+        var bottom:Float = 0
+        var top:Float    = 0
+        
+        for p in points {
+            
+            if p.x<0 {
+                if abs(p.x) > left {
+                    left = abs(p.x)
+                }
+            }
+            
+            if p.x>=0 {
+                if abs(p.x) > right {
+                    right = abs(p.x)
+                }
+            }
+            
+            if p.y<0 {
+                if abs(p.y) > bottom {
+                    bottom = abs(p.y)
+                }
+            }
+            
+            if p.y>=0 {
+                if abs(p.y) > top {
+                    top = abs(p.y)
+                }
+            }
+        }
+        
+        let W:Float = 2 
+        let H:Float = 2
+        let w = left + right
+        let h = top + bottom
+        
+        var scale = min(W / w, H / h)
+        
+        return scale > 1 ? 2-scale : scale
     }
 }
 

@@ -221,7 +221,13 @@ class ViewController: NSViewController {
             
             let plate = IMPPlate(aspect: aspect)
             
-            NSLog(" ... plate = \(plate.xyProjection(model))")
+            var offset = (1-plate.scaleFactorFor(model: model))/2
+
+            offset = offset > 0.49 ? 0.49 : offset
+            
+            let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+            
+            self.cutter.region = region
         }
                 
         view.addSubview(imageView)

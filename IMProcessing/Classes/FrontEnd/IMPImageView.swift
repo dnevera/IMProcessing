@@ -72,6 +72,14 @@
     
     public class IMPImageView: IMPViewBase, IMPContextProvider, UIScrollViewDelegate  {
         
+        public var metalTransform: CATransform3D {
+            return self.imageView.metalLayer.transform
+        }
+        
+        public var metalLayer: CAMetalLayer {
+            return self.imageView.metalLayer
+        }
+        
         public var context:IMPContext!
         
         public var filter:IMPFilter?{
@@ -120,7 +128,6 @@
         }
         
         public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-            currentDeviceOrientation = orientation
             let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
             
             UIView.animateWithDuration(
@@ -143,12 +150,18 @@
                             
                         case .LandscapeLeft:
                             angle = Float(-90.0).radians.cgfloat
-                            
+                            self.currentDeviceOrientation = orientation
+
                         case .LandscapeRight:
                             angle = Float(90.0).radians.cgfloat
-                            
+                            self.currentDeviceOrientation = orientation
+
                         case .PortraitUpsideDown:
                             angle = Float(180.0).radians.cgfloat
+                            self.currentDeviceOrientation = orientation
+
+                        case .Portrait:
+                            self.currentDeviceOrientation = orientation
                             
                         default:
                             break
@@ -402,6 +415,8 @@
                 sizeFit()
             }
         }
+        
+        
         
         private var imageView:IMPView!
         private var scrollView:IMPScrollView!

@@ -49,7 +49,7 @@ public struct IMPQuad {
     ///  - parameter destination: destination quad
     ///
     ///  - returns: transformation matrix
-    public func projection2D(destination d:IMPQuad) -> float4x4 {
+    public func transformTo(destination d:IMPQuad) -> float4x4 {
         let t = d.basis * self.basis.inverse
         
         return float4x4(rows: [

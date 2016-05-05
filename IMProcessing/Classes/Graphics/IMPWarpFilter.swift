@@ -15,7 +15,7 @@ public class IMPWarpFilter: IMPFilter {
     /// Source image quad
     public var sourceQuad = IMPQuad() {
         didSet{
-            transformation = sourceQuad.projection2D(destination: destinationQuad)
+            transformation = sourceQuad.transformTo(destination: destinationQuad)
             dirty = true
         }
     }
@@ -23,7 +23,7 @@ public class IMPWarpFilter: IMPFilter {
     /// Destination image quad
     public var destinationQuad = IMPQuad() {
         didSet{
-            transformation = sourceQuad.projection2D(destination: destinationQuad)
+            transformation = sourceQuad.transformTo(destination: destinationQuad)
             dirty = true
         }
     }
