@@ -100,6 +100,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             make.left.equalTo(view).offset(40)
         }
 
+        
+        let enableButton = UISwitch()
+        enableButton.on = true
+        enableButton.backgroundColor = IMPColor.clearColor()
+        enableButton.tintColor = IMPColor.whiteColor()
+        enableButton.addTarget(self, action: #selector(self.disable(_:)), forControlEvents: .TouchUpInside)
+        view.addSubview(enableButton)
+        
+        enableButton.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(imageView.snp_bottom).offset(10)
+            make.right.equalTo(view).offset(-40)
+        }
+
         slider.value = 0.5
         slider.addTarget(self, action: #selector(ViewController.rotate(_:)), forControlEvents: .ValueChanged)
         view.addSubview(slider)
@@ -311,6 +324,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         rotate(slider)
         warpFilter.sourceQuad = IMPQuad()
         warpFilter.destinationQuad = IMPQuad()
+    }
+
+    func disable(sender:UISwitch){
+        filter.enabled = sender.on
     }
 
     func rotate(sender:UISlider){
