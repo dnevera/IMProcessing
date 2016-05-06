@@ -40,27 +40,55 @@
         ///  - Reset:          Reset foucus to center POI
         public enum Focus{
             
-            case Auto(atPoint:CGPoint,begin:PointBlockType?,complete:PointBlockType?)
-            case ContinuousAuto(atPoint:CGPoint,begin:PointBlockType?,complete:PointBlockType?)
-            case Locked(complete:PointBlockType?)
+            case Auto          (atPoint:CGPoint, restriction:AVCaptureAutoFocusRangeRestriction?, begin:PointBlockType?, complete:PointBlockType?)
+            case ContinuousAuto(atPoint:CGPoint, restriction:AVCaptureAutoFocusRangeRestriction?, begin:PointBlockType?, complete:PointBlockType?)
+            case Locked(position:Float?, complete:PointBlockType?)
             case Reset(complete:PointBlockType?)
 
             /// Device focus mode
             public var mode: AVCaptureFocusMode {
                 switch self {
-                case .Auto(_,_,_): return .AutoFocus
-                case .ContinuousAuto(_,_,_): return .ContinuousAutoFocus
-                case .Locked(_): return .Locked
+                case .Auto(_,_,_,_): return .AutoFocus
+                case .ContinuousAuto(_,_,_,_): return .ContinuousAutoFocus
+                case .Locked(_,_): return .Locked
                 case .Reset(_): return .ContinuousAutoFocus
+                }
+            }
+            
+            /// Focus range restriction
+            public var restriction:AVCaptureAutoFocusRangeRestriction {
+                if let r = self.realRestriction {
+                    return r
+                }
+                else {
+                    return .None
+                }
+            }
+
+            var realRestriction:AVCaptureAutoFocusRangeRestriction? {
+                switch self {
+                case .Auto(_,let restriction,_,_): return restriction
+                case .ContinuousAuto(_,let restriction,_,_): return restriction
+                default:
+                    return .None
+                }
+            }
+
+            // Lens desired position
+            var position:Float? {
+                switch self {
+                case .Locked(let position,_): return position
+                default:
+                    return nil
                 }
             }
             
             // POI of focusing
             var poi: CGPoint? {
                 switch self {
-                case .Auto(let focusPoint,_,_): return focusPoint
-                case .ContinuousAuto(let focusPoint,_,_): return focusPoint
-                case .Locked(_): return nil
+                case .Auto(let focusPoint,_,_,_): return focusPoint
+                case .ContinuousAuto(let focusPoint,_,_,_): return focusPoint
+                case .Locked(_,_): return nil
                 case .Reset(_): return CGPoint(x: 0.5,y: 0.5)
                 }
             }
@@ -68,9 +96,9 @@
             // Begining block calls when lens start to change its position
             var begin: PointBlockType? {
                 switch self {
-                case .Auto(_, let beginBlock, _): return beginBlock
-                case .ContinuousAuto(_, let beginBlock, _): return beginBlock
-                case .Locked(_): return nil
+                case .Auto(_, _, let beginBlock, _): return beginBlock
+                case .ContinuousAuto(_, _, let beginBlock, _): return beginBlock
+                case .Locked(_,_): return nil
                 case .Reset(_): return nil
                 }
             }
@@ -78,9 +106,9 @@
             // Completetion block calls when focus has adjusted
             var complete: PointBlockType? {
                 switch self {
-                case .Auto(_,_, let completeBlock): return completeBlock
-                case .ContinuousAuto(_,_, let completeBlock): return completeBlock
-                case .Locked(let completeBlock): return completeBlock
+                case .Auto(_,_,_, let completeBlock): return completeBlock
+                case .ContinuousAuto(_,_,_, let completeBlock): return completeBlock
+                case .Locked(_,let completeBlock): return completeBlock
                 case .Reset(let completeBlock): return completeBlock
                 }
             }
@@ -323,11 +351,11 @@
         lazy var currentFocus:Focus = {
             switch self.currentCamera.focusMode {
             case .Locked:
-                return .Locked(complete: nil)
+                return .Locked(position: nil, complete: nil)
             case .AutoFocus:
-                return .Auto(atPoint: CGPoint(x: 0.5,y: 0.5),begin: nil,complete: nil)
+                return .Auto(atPoint: CGPoint(x: 0.5,y: 0.5), restriction: nil, begin: nil,complete: nil)
             case .ContinuousAutoFocus:
-                return .ContinuousAuto(atPoint: CGPoint(x: 0.5,y: 0.5),begin: nil,complete: nil)
+                return .ContinuousAuto(atPoint: CGPoint(x: 0.5,y: 0.5), restriction: nil, begin: nil,complete: nil)
             }
         }()
         
@@ -337,10 +365,36 @@
                 currentFocus = newValue
                 controlCameraFocus(atPoint: currentFocus.poi,
                                    action: { (poi) in
+                                    
                                     if newValue.mode != .Locked {
                                         self.currentCamera.focusPointOfInterest = poi
                                     }
-                                    self.currentCamera.focusMode = self.currentFocus.mode
+                                    
+                                    if let position = newValue.position {
+                                        if self.currentCamera.isFocusModeSupported(.Locked) {
+                                            do {
+                                                if let position = newValue.position {
+                                                    self.currentCamera.setFocusModeLockedWithLensPosition(position, completionHandler: { (time) in
+                                                        if let complete = self.currentFocus.complete {
+                                                            complete(camera: self, point: self.focusPOI)
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                            catch let error as NSError {
+                                                NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if self.currentCamera.autoFocusRangeRestrictionSupported {
+                                            if let r = self.currentFocus.realRestriction {
+                                                self.currentCamera.autoFocusRangeRestriction = r
+                                            }
+                                        }
+                                        self.currentCamera.focusMode = self.currentFocus.mode
+                                    }
+                                    
                     }, complete: nil)
             }
             get {
@@ -451,7 +505,11 @@
             return self.currentCamera.ISO
         }
         
-
+        /// Get current lens position
+        public var lensPosition:Float {
+            return self.currentCamera.lensPosition
+        }
+        
         /// Set focusing smooth mode
         public var smoothFocusEnabled:Bool {
             set {
@@ -750,11 +808,16 @@
                         }
                     }
                     else if new == 0 {
-                        if let complete = currentFocus.complete{
-                            complete(camera: self, point: self.focusPOI)
-                            switch currentFocus {
-                            case .Reset(_): currentFocus = .Reset(complete: nil)
-                            default: break
+                        if currentFocus.position == nil {
+                            //
+                            // .Locked at lens position is ignored
+                            //
+                            if let complete = currentFocus.complete{
+                                complete(camera: self, point: self.focusPOI)
+                                switch currentFocus {
+                                case .Reset(_): currentFocus = .Reset(complete: nil)
+                                default: break
+                                }
                             }
                         }
                     }
