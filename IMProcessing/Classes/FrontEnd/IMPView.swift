@@ -201,15 +201,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var viewReadyHandler:(()->Void)?
     private var isFirstFrame = true
     
+    var encoder:MTLComputeCommandEncoder!
+    
     internal func refresh() {
                 
         if layerNeedUpdate {
             
             layerNeedUpdate = false
             
-            autoreleasepool({ () -> () in
+            //autoreleasepool({ () -> () in
                 
-                if let actualImageTexture = self.filter?.destination?.texture {
+                if let actualImageTexture = filter?.destination?.texture {
                     
                     if threadGroups == nil {
                         threadGroups = MTLSizeMake(
@@ -227,17 +229,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                                 self.context.resume()
                             })
                             
-                            let encoder = commandBuffer.computeCommandEncoder()
+                            self.encoder = commandBuffer.computeCommandEncoder()
                             
-                            encoder.setComputePipelineState(self.pipeline!)
+                            self.encoder.setComputePipelineState(self.pipeline!)
                             
-                            encoder.setTexture(actualImageTexture, atIndex: 0)
+                            self.encoder.setTexture(actualImageTexture, atIndex: 0)
                             
-                            encoder.setTexture(drawable.texture, atIndex: 1)
+                            self.encoder.setTexture(drawable.texture, atIndex: 1)
                             
-                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+                            self.encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
                             
-                            encoder.endEncoding()
+                            self.encoder.endEncoding()
                             
                             commandBuffer.presentDrawable(drawable)
                             
@@ -248,10 +250,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         }
                     }
                     else{
-                        self.context.resume()
+                       self.context.resume()
                     }
                 }
-            })
+            //})
         }
     }
     

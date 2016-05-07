@@ -71,7 +71,7 @@ public class IMPContext {
     public let defaultLibrary:MTLLibrary
     
     /// How context execution is processed
-    public let isLasy:Bool
+    public let isLazy:Bool
     
     /// check whether the MTL device is supported
     public static var supportsSystemDevice:Bool{
@@ -84,7 +84,8 @@ public class IMPContext {
         }
     }
     
-    private let semaphore = dispatch_semaphore_create(1)
+    private let semaphore = dispatch_semaphore_create(3)
+    
     public func wait() {
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
     }
@@ -101,7 +102,7 @@ public class IMPContext {
     ///  - returns: context instanc
     ///
     required public init(lazy:Bool = false) {
-        isLasy = lazy
+        isLazy = lazy
         if let device = self.device{
             commandQueue = device.newCommandQueue()
             if let library = device.newDefaultLibrary(){
@@ -126,7 +127,7 @@ public class IMPContext {
     
     var commandBuffer:MTLCommandBuffer?  {
         return self.commandQueue?.commandBuffer()
-//            (self.supportsGPUv2 ?
+//        return (self.supportsGPUv2 ?
 //            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
 //            self.commandQueue?.commandBuffer())
     }
@@ -143,11 +144,11 @@ public class IMPContext {
                 closure(commandBuffer: commandBuffer)
                 commandBuffer.commit()
                 
-                if !self.isLasy || complete {
+                if !self.isLazy || complete {
                     commandBuffer.waitUntilCompleted()
                 }
             }
-        }
+       }
     }
     
     /// Get the maximum supported devices texture size.

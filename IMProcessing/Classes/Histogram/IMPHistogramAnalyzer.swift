@@ -106,6 +106,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
         didSet{
             scaleUniformBuffer = scaleUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(Float), options: .CPUCacheModeDefaultCache)
             memcpy(scaleUniformBuffer.contents(), &downScaleFactor, sizeof(Float))
+            dirty = true
         }
     }
     private var scaleUniformBuffer:MTLBuffer!
@@ -225,9 +226,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     ///
     public override var source:IMPImageProvider?{
         didSet{
-            
             super.source = source
-            
             if source?.texture != nil {
                 // выполняем фильтр
                 self.apply()

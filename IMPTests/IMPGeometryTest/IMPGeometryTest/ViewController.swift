@@ -227,7 +227,7 @@ class ViewController: NSViewController {
             
             let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
             
-            self.cutter.region = region
+            //self.cutter.region = region
         }
                 
         view.addSubview(imageView)

@@ -1060,6 +1060,8 @@
         }
     }
     
+    var imageProvider:IMPImageProvider?
+    
     // MARK: - Capturing API
     public extension IMPCameraManager {
         //
@@ -1084,12 +1086,15 @@
                 }
                 
                 if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                    if liveView.filter?.source == nil {
-                        liveView.filter?.source = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
+                    
+                    if imageProvider == nil {
+                        imageProvider = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
                     }
                     else {
-                        liveView.filter?.source?.update(pixelBuffer: pixelBuffer)
+                        imageProvider?.update(pixelBuffer: pixelBuffer)
                     }
+                    
+                    liveView.filter?.source = imageProvider
                 }
             }
         }

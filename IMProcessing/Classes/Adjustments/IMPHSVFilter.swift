@@ -246,7 +246,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         
         addFunction(kernel)
         
-        hueWeights = IMPHSVFilter.defaultHueWeights(self.context, overlap: IMProcessing.hsv.hueOverlapFactor)
+        //hueWeights = IMPHSVFilter.defaultHueWeights(self.context, overlap: IMProcessing.hsv.hueOverlapFactor)
         
         defer{
             adjustment = IMPHSVFilter.defaultAdjustment
@@ -258,7 +258,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     ///  - parameter context: device execution context
     ///
     public convenience required init(context: IMPContext) {
-        self.init(context: context, optimization:.NORMAL)
+        self.init(context: context, optimization:context.isLazy ? .HIGH : .NORMAL)
     }
     
     public override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {
@@ -313,7 +313,9 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     public var kernel:IMPFunction!
 
     internal static let level:IMPHSVLevel = IMPHSVLevel(hue: 0.0, saturation: 0, value: 0)
-    internal var hueWeights:MTLTexture!
+    internal lazy var hueWeights:MTLTexture = {
+        return IMPHSVFilter.defaultHueWeights(self.context, overlap: IMProcessing.hsv.hueOverlapFactor)
+    }()
     
     private  var adjustmentLut = IMPAdjustment(blending: IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1))
     internal var adjustmentLutBuffer:MTLBuffer?
@@ -325,7 +327,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     //
     //
     private var kernel_hsv3DLut:IMPFunction!
-    private var context_hsv3DLut = IMPContext()
+    private lazy var context_hsv3DLut:IMPContext = IMPContext() //{return self.context }()
     
     private func applyHsv3DLut(){
         
