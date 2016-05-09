@@ -39,6 +39,6 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     
     public func completeUpdate(){
         filter?.dirty = true
-        filter?.executeNewSourceObservers(self)
+        //filter?.executeNewSourceObservers(self)
     }
 }

@@ -128,13 +128,13 @@ public class IMPAutoWBFilter:IMPFilter{
         }
 
         colorWeightsAnalyzer.addUpdateObserver { (histogram) -> Void in
-            let solver = self.colorWeightsAnalyzer.solver                        
+            let solver = self.colorWeightsAnalyzer.solver
             self.updateHsvProfile(solver)
         }
     }
     
     required public convenience init(context: IMPContext) {
-        self.init(context:context, optimization:.NORMAL)
+        self.init(context:context, optimization: context.isLazy ? .HIGH : .NORMAL)
     }
     
     private func updateHsvProfile(solver:IMPColorWeightsSolver){
@@ -175,7 +175,13 @@ public class IMPAutoWBFilter:IMPFilter{
     }()
     
     
-    private lazy var hsvFilter:IMPHSVFilter = IMPHSVFilter(context: self.context, optimization: self.optimization)
+    private lazy var hsvFilter:IMPHSVFilter = {
+        let f = IMPHSVFilter(context: self.context, optimization: self.optimization)
+        if self.optimization == .HIGH {
+            f.rgbCubeSize = 16
+        }
+        return f
+    }()
     private lazy var wbFilter:IMPWBFilter = IMPWBFilter(context: self.context)
     
 }

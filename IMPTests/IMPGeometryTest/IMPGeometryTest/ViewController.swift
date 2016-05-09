@@ -213,6 +213,15 @@ class ViewController: NSViewController {
         filter.addFilter(photoCutter)        
         filter.addFilter(cutter)
         
+//        let hist = IMPGHistogramAnalizer(context: context)
+//        
+//        filter.addSourceObserver { (source) in
+//            hist.source = source
+//            hist.apply()
+//            
+//            NSLog(" hist = \(hist.histogram)")
+//        }
+        
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
@@ -227,7 +236,7 @@ class ViewController: NSViewController {
             
             let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
             
-            //self.cutter.region = region
+            self.cutter.region = region
         }
                 
         view.addSubview(imageView)

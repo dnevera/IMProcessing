@@ -164,8 +164,6 @@ public extension IMPHSVAdjustment{
 ///
 public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
-    public static let cubeSize = 64
-    
     ///  Optimization level description
     ///
     ///  - HIGH:   default optimization uses when you need to accelerate hsv adjustment
@@ -189,10 +187,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         didSet{
             if self.optimization == .HIGH {
                 adjustmentLut.blending = adjustment.blending
-                self.updateBuffer(&adjustmentLutBuffer, context:context, adjustment:&adjustmentLut, size:sizeof(IMPAdjustment))
-            }
-            
-            if self.optimization == .HIGH {
+                updateBuffer(&adjustmentLutBuffer, context:context, adjustment:&adjustmentLut, size:sizeof(IMPAdjustment))
                 updateBuffer(&adjustmentBuffer, context:context_hsv3DLut, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
                 applyHsv3DLut()
             }
@@ -236,7 +231,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         self.optimization = optimization
         
         if self.optimization == .HIGH {
-            hsv3DlutTexture = hsv3DLut(IMPHSVFilter.cubeSize)
+            hsv3DlutTexture = hsv3DLut(self.rgbCubeSize)
             kernel_hsv3DLut = IMPFunction(context: self.context_hsv3DLut, name: "kernel_adjustHSV3DLut")
             kernel = IMPFunction(context: self.context, name: "kernel_adjustLutD3D")
         }
@@ -245,8 +240,6 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
         }
         
         addFunction(kernel)
-        
-        //hueWeights = IMPHSVFilter.defaultHueWeights(self.context, overlap: IMProcessing.hsv.hueOverlapFactor)
         
         defer{
             adjustment = IMPHSVFilter.defaultAdjustment
@@ -311,6 +304,25 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     
     public var adjustmentBuffer:MTLBuffer?
     public var kernel:IMPFunction!
+    
+    public var rgbCube:MTLTexture? {
+        return hsv3DlutTexture
+    }
+    
+    public var rgbCubeSize = 64 {
+        didSet{
+            if self.optimization == .HIGH {
+                
+                adjustmentLut.blending = adjustment.blending
+                updateBuffer(&adjustmentLutBuffer, context:context, adjustment:&adjustmentLut, size:sizeof(IMPAdjustment))
+                updateBuffer(&adjustmentBuffer, context:context_hsv3DLut, adjustment:&adjustment, size:sizeof(IMPHSVAdjustment))
+                
+                applyHsv3DLut()
+                
+                dirty = true
+            }
+        }
+    }
 
     internal static let level:IMPHSVLevel = IMPHSVLevel(hue: 0.0, saturation: 0, value: 0)
     internal lazy var hueWeights:MTLTexture = {
@@ -327,7 +339,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
     //
     //
     private var kernel_hsv3DLut:IMPFunction!
-    private lazy var context_hsv3DLut:IMPContext = IMPContext() //{return self.context }()
+    private lazy var context_hsv3DLut:IMPContext = {return self.context }()
     
     private func applyHsv3DLut(){
         
@@ -357,7 +369,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
             #endif
         }
     }
-    
+
     private var hsv3DlutTexture:MTLTexture?
     
     private func hsv3DLut(dimention:Int) -> MTLTexture {

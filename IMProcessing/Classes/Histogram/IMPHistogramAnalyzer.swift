@@ -242,9 +242,11 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     
     func applyKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer, commandBuffer:MTLCommandBuffer) {
         #if os(iOS)
-            let blitEncoder = commandBuffer.blitCommandEncoder()
-            blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-            blitEncoder.endEncoding()
+            //let blitEncoder = commandBuffer.blitCommandEncoder()
+            //blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
+            //blitEncoder.endEncoding()
+            //memset(buffer.contents(), 0, buffer.length)
+
         #else
             memset(buffer.contents(), 0, buffer.length)
         #endif

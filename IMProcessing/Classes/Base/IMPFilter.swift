@@ -25,7 +25,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     public typealias SourceHandler = ((source:IMPImageProvider) -> Void)
     public typealias DestinationHandler = ((destination:IMPImageProvider) -> Void)
     public typealias DirtyHandler = (() -> Void)
-
+    
     public var context:IMPContext!
     
     public var enabled = true {
@@ -193,13 +193,17 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         return doApply()
     }
     
+    var weakCopy:Bool {
+        return self.context.isLazy
+    }
+    
     public func main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider {
         
         if functionList.count > 0 {
             
             self.context.execute { (commandBuffer) -> Void in
                 
-                //autoreleasepool({ () -> () in
+                autoreleasepool({ () -> () in
                     
                     var inputTexture:MTLTexture! = source.texture
                     
@@ -253,9 +257,9 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                                     inputTexture = self.context.device.newTextureWithDescriptor(descriptor)
                                 }
                                 
-                                //if self.context.isLazy {
-                                //    provider.texture = texture
-                                //}else {
+                                if self.weakCopy {
+                                    provider.texture = texture
+                                }else {
                                     let blit = commandBuffer.blitCommandEncoder()
                                     blit.copyFromTexture(
                                         texture,
@@ -265,47 +269,43 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                                         sourceSize: MTLSizeMake(texture.width, texture.height, provider.texture!.depth),
                                         toTexture: inputTexture, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
                                     blit.endEncoding()
-                                //}
+                                }
                             }
                         }
                     }
                     
                     inputTexture = nil
-                //})
+                })
             }
         }
         else {
             self.context.execute { (commandBuffer) -> Void in
-                //autoreleasepool({ () -> () in
+                autoreleasepool({ () -> () in
                     let inputTexture:MTLTexture! = source.texture
                     let width  = inputTexture.width
                     let height = inputTexture.height
                     
                     self.updateDestination(provider: provider, width: width, height: height, inputTexture: inputTexture)
-                
-                //if self.context.isLazy {
-                //    provider.texture = inputTexture
-                //}else {
-
-                    let blit = commandBuffer.blitCommandEncoder()
-                    blit.copyFromTexture(
-                        inputTexture,
-                        sourceSlice: 0,
-                        sourceLevel: 0,
-                        sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                        sourceSize: MTLSizeMake(width, height, provider.texture!.depth),
-                        toTexture: provider.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
-                    blit.endEncoding()
-                //}
-               // })
+                    
+                    if self.weakCopy {
+                        provider.texture = inputTexture
+                    }else {
+                        
+                        let blit = commandBuffer.blitCommandEncoder()
+                        blit.copyFromTexture(
+                            inputTexture,
+                            sourceSlice: 0,
+                            sourceLevel: 0,
+                            sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                            sourceSize: MTLSizeMake(width, height, provider.texture!.depth),
+                            toTexture: provider.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+                        blit.endEncoding()
+                    }
+               })
             }
         }
         
         if filterList.count > 0 {
-            
-            //guard var newSource = provider ?? source else {
-            //    return provider
-            //}
             
             var newSource = provider
             
@@ -327,23 +327,23 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
             self.updateDestination(provider: provider, width: newTexture.width, height: newTexture.height, inputTexture: newTexture)
             
             self.context.execute{ (commandBuffer) -> Void in
-                //autoreleasepool({ () -> () in
-                //if self.context.isLazy{
-                //    provider.texture = newTexture
-               // }
-               // else {
-                    
-                    let blit = commandBuffer.blitCommandEncoder()
-                    blit.copyFromTexture(
-                        newTexture,
-                        sourceSlice: 0,
-                        sourceLevel: 0,
-                        sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                        sourceSize: MTLSizeMake(newTexture.width, newTexture.height, newTexture.depth),
-                        toTexture: provider.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
-                    blit.endEncoding()
-                //}
-                //})
+                autoreleasepool({ () -> () in
+                    if self.weakCopy {
+                        provider.texture = newTexture
+                    }
+                    else {
+                        
+                        let blit = commandBuffer.blitCommandEncoder()
+                        blit.copyFromTexture(
+                            newTexture,
+                            sourceSlice: 0,
+                            sourceLevel: 0,
+                            sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                            sourceSize: MTLSizeMake(newTexture.width, newTexture.height, newTexture.depth),
+                            toTexture: provider.texture!, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+                        blit.endEncoding()
+                    }
+                })
             }
             
         }
@@ -366,11 +366,6 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     func doApply() -> IMPImageProvider {
         
-//        if self.source?.texture == nil {
-//            dirty = false
-//            return _destination
-//        }
-        
         if let source = self.source{
             if dirty {
                 
@@ -386,15 +381,9 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                 executeSourceObservers(source)
                 
                 executeDestinationObservers(main(source:  source, destination: _destination))
-                
-                dirty = false
             }
         }
-        else {
-            dirty = false
-            return _destination
-        }
-        
+        dirty = false
         return _destination
     }
 }

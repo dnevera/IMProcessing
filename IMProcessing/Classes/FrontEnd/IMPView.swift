@@ -26,6 +26,14 @@ import QuartzCore
 
 typealias __IMPViewLayerUpdate = (()->Void)
 
+let viewVertexData:[Float] = [
+    -1.0,  -1.0,  0.0,  1.0,
+     1.0,  -1.0,  1.0,  1.0,
+    -1.0,   1.0,  0.0,  0.0,
+     1.0,   1.0,  1.0,  0.0,
+]
+
+
 
 /// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
@@ -201,15 +209,37 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var viewReadyHandler:(()->Void)?
     private var isFirstFrame = true
     
-    var encoder:MTLComputeCommandEncoder!
+    lazy var vertexBuffer:MTLBuffer = {
+        let v = self.context.device.newBufferWithBytes(viewVertexData, length:sizeof(Float)*viewVertexData.count, options:.CPUCacheModeDefaultCache)
+        v.label = "Vertices"
+        return v
+    }()
+
+    lazy var renderPipeline:MTLRenderPipelineState? = {
+        do {
+            let descriptor = MTLRenderPipelineDescriptor()
+            
+            descriptor.colorAttachments[0].pixelFormat = .BGRA8Unorm
+            descriptor.vertexFunction = self.context.defaultLibrary.newFunctionWithName("vertex_passview")
+            descriptor.fragmentFunction = self.context.defaultLibrary.newFunctionWithName("fragment_passview")
+            
+            return try self.context.device.newRenderPipelineStateWithDescriptor(descriptor)
+        }
+        catch let error as NSError {
+            NSLog("IMPView error: \(error)")
+            return nil
+        }
+    }()
     
+    lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
+
     internal func refresh() {
                 
         if layerNeedUpdate {
             
             layerNeedUpdate = false
             
-            //autoreleasepool({ () -> () in
+            autoreleasepool({ () -> () in
                 
                 if let actualImageTexture = filter?.destination?.texture {
                     
@@ -220,6 +250,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     }
                     
                     if let drawable = self.metalLayer.nextDrawable(){
+
+                        renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
+                        renderPassDescriptor.colorAttachments[0].loadAction  = .Clear;
+                        renderPassDescriptor.colorAttachments[0].storeAction = .Store;
+                        renderPassDescriptor.colorAttachments[0].clearColor =  MTLClearColorMake(0, 0, 0, 0);
+                        
                         
                         self.context.execute { (commandBuffer) -> Void in
                             
@@ -228,18 +264,35 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
                                 self.context.resume()
                             })
+
+//                            let encoder = commandBuffer.computeCommandEncoder()
+//                            
+//                            encoder.setComputePipelineState(self.pipeline!)
+//                            
+//                            encoder.setTexture(actualImageTexture, atIndex: 0)
+//                            
+//                            encoder.setTexture(drawable.texture, atIndex: 1)
+//                            
+//                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+//                            
+//                            encoder.endEncoding()
                             
-                            self.encoder = commandBuffer.computeCommandEncoder()
+                            let encoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
                             
-                            self.encoder.setComputePipelineState(self.pipeline!)
+                            //
+                            // render current texture
+                            //
                             
-                            self.encoder.setTexture(actualImageTexture, atIndex: 0)
-                            
-                            self.encoder.setTexture(drawable.texture, atIndex: 1)
-                            
-                            self.encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-                            
-                            self.encoder.endEncoding()
+                            if let pipeline = self.renderPipeline {
+                                
+                                encoder.setRenderPipelineState(pipeline)
+                                
+                                encoder.setVertexBuffer(self.vertexBuffer, offset:0, atIndex:0)
+                                encoder.setFragmentTexture(actualImageTexture, atIndex:0)
+                                
+                                encoder.drawPrimitives(.TriangleStrip, vertexStart:0, vertexCount:4, instanceCount:1)
+                                encoder.endEncoding()
+                            }
                             
                             commandBuffer.presentDrawable(drawable)
                             
@@ -253,7 +306,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                        self.context.resume()
                     }
                 }
-            //})
+            })
         }
     }
     
