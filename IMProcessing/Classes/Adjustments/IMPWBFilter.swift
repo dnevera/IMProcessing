@@ -25,8 +25,8 @@ public class IMPWBFilter:IMPFilter,IMPAdjustmentProtocol{
     /// Adjust filter
     public var adjustment:IMPWBAdjustment!{
         didSet{
-            self.updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPWBAdjustment))
-            self.dirty = true
+            updateBuffer(&adjustmentBuffer, context:context, adjustment:&adjustment, size:sizeof(IMPWBAdjustment))
+            dirty = true
         }
     }
     
@@ -40,9 +40,9 @@ public class IMPWBFilter:IMPFilter,IMPAdjustmentProtocol{
     public required init(context: IMPContext) {
         super.init(context: context)
         kernel = IMPFunction(context: self.context, name: "kernel_adjustWB")
-        self.addFunction(kernel)
+        addFunction(kernel)
         defer{
-            self.adjustment = IMPWBFilter.defaultAdjustment
+            adjustment = IMPWBFilter.defaultAdjustment
         }
     }
     

@@ -56,7 +56,7 @@ public class IMPWarpFilter: IMPFilter {
                         mipmapped: false)
                     
                     if provider.texture != nil {
-                        provider.texture?.setPurgeableState(MTLPurgeableState.Empty)
+                       // provider.texture?.setPurgeableState(MTLPurgeableState.Empty)
                     }
                     
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)

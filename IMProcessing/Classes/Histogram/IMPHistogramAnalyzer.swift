@@ -106,6 +106,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
         didSet{
             scaleUniformBuffer = scaleUniformBuffer ?? self.context.device.newBufferWithLength(sizeof(Float), options: .CPUCacheModeDefaultCache)
             memcpy(scaleUniformBuffer.contents(), &downScaleFactor, sizeof(Float))
+            dirty = true
         }
     }
     private var scaleUniformBuffer:MTLBuffer!
@@ -225,9 +226,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     ///
     public override var source:IMPImageProvider?{
         didSet{
-            
             super.source = source
-            
             if source?.texture != nil {
                 // выполняем фильтр
                 self.apply()
@@ -243,9 +242,11 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     
     func applyKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer, commandBuffer:MTLCommandBuffer) {
         #if os(iOS)
-            let blitEncoder = commandBuffer.blitCommandEncoder()
-            blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-            blitEncoder.endEncoding()
+            //let blitEncoder = commandBuffer.blitCommandEncoder()
+            //blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
+            //blitEncoder.endEncoding()
+            //memset(buffer.contents(), 0, buffer.length)
+
         #else
             memset(buffer.contents(), 0, buffer.length)
         #endif

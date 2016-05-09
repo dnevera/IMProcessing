@@ -114,7 +114,7 @@ public extension IMPVertices{
         let w = left + right
         let h = top + bottom
         
-        var scale = min(W / w, H / h)
+        let scale = min(W / w, H / h)
         
         return scale > 1 ? 2-scale : scale
     }
@@ -140,7 +140,27 @@ public class IMPPlate:IMPVertices{
         let B = IMPVertex(x: -a, y:  -1, z:  0, tx: region.left,    ty: 1-region.bottom) // left-bottom
         let C = IMPVertex(x:  a, y:  -1, z:  0, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
         let D = IMPVertex(x:  a, y:   1, z:  0, tx: 1-region.right, ty: region.top)      // right-top
-        
+//        let A = IMPVertex(x: -a, y:   1, z:  1, tx: region.left,    ty: region.top)      // left-top
+//        let B = IMPVertex(x: -a, y:  -1, z:  1, tx: region.left,    ty: 1-region.bottom) // left-bottom
+//        let C = IMPVertex(x:  a, y:  -1, z:  1, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
+//        let D = IMPVertex(x:  a, y:   1, z:  1, tx: 1-region.right, ty: region.top)      // right-top
+//        
+//        let Q = IMPVertex(x: -1.0*a, y:   1.0, z:  -1, tx: 0, ty: 0) // virtual depth = 0
+//        let R = IMPVertex(x:  1.0*a, y:   1.0, z:  -1, tx: 0, ty: 0)
+//        let S = IMPVertex(x: -1.0*a, y:  -1.0, z:  -1, tx: 0, ty: 0)
+//        let T = IMPVertex(x:  1.0*a, y:  -1.0, z:  -1, tx: 0, ty: 0)
+//        
+//        vertices = [
+//            A,B,C ,A,C,D,   // The main front plate. Here we put image.
+//            R,T,S ,Q,R,S,   // Back
+//            
+//            Q,S,B ,Q,B,A,   //Left
+//            D,C,T ,D,T,R,   //Right
+//            
+//            Q,A,D ,Q,D,R,   //Top
+//            B,S,T ,B,T,C    //Bot
+//        ]
+
         vertices = [
             A,B,C, A,C,D,   // The main front plate. Here we put image.
         ]

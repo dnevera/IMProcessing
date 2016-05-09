@@ -41,12 +41,13 @@ class IMPTestFilter: IMPFilter {
         histogram.addSolver(rangeSolver)
         
         histogram.addUpdateObserver { (histogram) -> Void in
+            NSLog(" --- \(histogram[.W])")
             self.contrast.adjustment.minimum = self.rangeSolver.minimum
             self.contrast.adjustment.maximum = self.rangeSolver.maximum
         }
         
         contrast = IMPContrastFilter(context: context)
-        contrast.adjustment.blending.opacity = 0.0
+        contrast.adjustment.blending.opacity = 1.0
         
         contrast.addSourceObserver { (source) -> Void in
             self.histogram.source = source

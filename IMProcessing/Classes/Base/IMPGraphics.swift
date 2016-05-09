@@ -32,6 +32,16 @@ public class IMPGraphics: NSObject, IMPContextProvider {
             
             renderPipelineDescription.colorAttachments[0].pixelFormat = IMProcessing.colors.pixelFormat
             
+            //renderPipelineDescription.colorAttachments[0].blendingEnabled = true
+            //renderPipelineDescription.colorAttachments[0].rgbBlendOperation = .Add
+            //renderPipelineDescription.colorAttachments[0].alphaBlendOperation = .Add
+
+            //renderPipelineDescription.colorAttachments[0].sourceRGBBlendFactor = .SourceColor
+            //renderPipelineDescription.colorAttachments[0].sourceAlphaBlendFactor = .SourceAlpha
+
+            //renderPipelineDescription.colorAttachments[0].destinationRGBBlendFactor = .OneMinusBlendAlpha
+            //renderPipelineDescription.colorAttachments[0].destinationAlphaBlendFactor = .OneMinusBlendAlpha
+            
             renderPipelineDescription.vertexFunction   = self.context.defaultLibrary.newFunctionWithName(self.vertexName)
             renderPipelineDescription.fragmentFunction = self.context.defaultLibrary.newFunctionWithName(self.fragmentName)
             

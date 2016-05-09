@@ -332,6 +332,102 @@ namespace IMProcessing
         }
     }
     
+    inline void circle_bin_positionAtomic(float3 hsv,
+                                          device IMProcessing::IMPHistogramAtomicBuffer    &out,
+                                          constant IMPColorWeightsClipping   &clipping
+                                          ){
+        constexpr uint c = 3;
+        float      hue =  hsv.x * 360.0;
+        int        bin = 0;
+        
+        //
+        // Change REDS
+        //
+        if ((hue>=kIMP_Reds.x && hue<=360.0) || (hue>=0.0 && hue<=kIMP_Reds.w))
+            bin = 0;
+        
+        //
+        // Change YELLOWS
+        //
+        if (hue>=kIMP_Yellows.x && hue<=kIMP_Yellows.w)
+            bin = 1;
+        
+        //
+        // Change GREENS
+        //
+        if (hue>=kIMP_Greens.x && hue<=kIMP_Greens.w)
+            bin = 2;
+        
+        //
+        // Change CYANS
+        //
+        if (hue>=kIMP_Cyans.x && hue<=kIMP_Cyans.w)
+            bin = 3;
+        
+        //
+        // Change BLUES
+        //
+        if (hue>=kIMP_Blues.x && hue<=kIMP_Blues.w)
+            bin = 4;
+        
+        
+        //
+        // Change MAGENTAS
+        //
+        if (hue>=kIMP_Magentas.x && hue<=kIMP_Magentas.w)
+            bin = 5;
+        
+        if (hsv.y > clipping.saturation)
+            atomic_fetch_add_explicit(&(out.channels[c][bin]), 1, memory_order_relaxed);
+        
+        if (hsv.y <= clipping.saturation){
+            
+            if (hsv.z <= clipping.black)
+                //
+                // Out of black point
+                //
+                bin = 253;
+            else if (hsv.z >= (1.0-clipping.white))
+                bin = 254;
+            else
+                //
+                // GRAYS
+                //
+                bin = 255;
+        }
+        else
+            //
+            // COLORED
+            //
+            bin = 252;
+        
+        atomic_fetch_add_explicit(&(out.channels[c][bin]), 1, memory_order_relaxed);
+    }
+        
+    ///  @brief Compute color weights
+    ///
+    kernel void kernel_impColorWeightsAtomic(
+                                             texture2d<float, access::sample>   inTexture  [[texture(0)]],
+                                             device IMProcessing::IMPHistogramAtomicBuffer    &out  [[ buffer(0)]],
+                                             constant uint                      &channels  [[ buffer(1)]],
+                                             constant IMPRegion                 &regionIn  [[ buffer(2)]],
+                                             constant float                     &scale     [[ buffer(3)]],
+                                             constant IMPColorWeightsClipping   &clipping  [[ buffer(4)]],
+                                             uint2 gid [[thread_position_in_grid]]
+                                             )
+    {
+        
+        uint4  rgby = IMProcessing::channel_binIndex(inTexture,regionIn,scale,gid);
+        float3 hsv = IMProcessing::rgb_2_HSV(float3(rgby.rgb)/float3(IMProcessing::histogram::Im));
+        circle_bin_positionAtomic(hsv,out,clipping);
+        
+        if (rgby.a>0){
+            for (uint i=0; i<channels; i++){
+                atomic_fetch_add_explicit(&out.channels[i][rgby[i]], 1, memory_order_relaxed);
+            }
+        }
+    }
+
     
     typedef struct {
         atomic_uint count;

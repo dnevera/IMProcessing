@@ -22,8 +22,16 @@ public struct IMPAutoWBAdjustment{
 /// The main idea based on seeking a dominant color of the image and 
 /// rearrange gamma of the image according to this dominant color. The image becames neutral-balanced.
 ///
-public class IMPAutoWBFilter:IMPFilter{
-
+public class IMPAutoWBFilter:IMPFilter{    
+    
+    public var analyzeDownScaleFactor:Float = 1 {
+        didSet{
+            colorWeightsAnalyzer.downScaleFactor = analyzeDownScaleFactor
+            dominantColorAnalayzer.downScaleFactor = analyzeDownScaleFactor
+            dirty = true
+        }
+    }
+    
     ///  @brief Correction preferences
     public struct Preferences{
         /// Neutrals threshold
@@ -91,34 +99,34 @@ public class IMPAutoWBFilter:IMPFilter{
     ///
     public var colorsAnalyzeHandler:IMPAutoWBAnalyzeHandler?
     
+    lazy var optimization:IMPHSVFilter.optimizationLevel = {
+        return self.context.isLazy ? .HIGH : .NORMAL
+    }()
+    
     public required init(context: IMPContext, optimization:IMPHSVFilter.optimizationLevel) {
+        
         super.init(context: context)
         
+        self.optimization = optimization
+
         defer{
             adjustment = IMPAutoWBFilter.defaultAdjustment
         }
         
-        wbFilter = IMPWBFilter(context: context)
-        self.addFilter(wbFilter)
-        
-        hsvFilter = IMPHSVFilter(context: context, optimization: optimization)
-        self.addFilter(hsvFilter)
-        
-        dominantColorAnalayzer = IMPHistogramAnalyzer(context: context)
+        addFilter(wbFilter)
+        addFilter(hsvFilter)
+
         dominantColorAnalayzer.addSolver(dominantColorSolver)
-        
-        colorWeightsAnalyzer = IMPColorWeightsAnalyzer(context: context)
-        colorWeightsAnalyzer.clipping = preferences.clipping
-        
+
         addSourceObserver { (source) -> Void in
             self.colorWeightsAnalyzer.source = source
             self.dominantColorAnalayzer.source = source
         }
-        
+
         dominantColorAnalayzer.addUpdateObserver { (histogram) -> Void in
             self.wbFilter.adjustment.dominantColor = self.dominantColorSolver.color
         }
-        
+
         colorWeightsAnalyzer.addUpdateObserver { (histogram) -> Void in
             let solver = self.colorWeightsAnalyzer.solver
             self.updateHsvProfile(solver)
@@ -126,7 +134,7 @@ public class IMPAutoWBFilter:IMPFilter{
     }
     
     required public convenience init(context: IMPContext) {
-        self.init(context:context, optimization:.NORMAL)
+        self.init(context:context, optimization: context.isLazy ? .HIGH : .NORMAL)
     }
     
     private func updateHsvProfile(solver:IMPColorWeightsSolver){
@@ -157,13 +165,24 @@ public class IMPAutoWBFilter:IMPFilter{
         wbFilter.adjustment.blending.opacity = opacity
     }
     
-    private let dominantColorSolver = IMPHistogramDominantColorSolver()
+    private let dominantColorSolver:IMPHistogramDominantColorSolver = IMPHistogramDominantColorSolver()
+    private lazy var dominantColorAnalayzer:IMPHistogramAnalyzer = IMPHistogramAnalyzer(context: self.context, hardware: .GPU)
     
-    private var dominantColorAnalayzer:IMPHistogramAnalyzer!
-    private var colorWeightsAnalyzer:IMPColorWeightsAnalyzer!
+    private lazy var colorWeightsAnalyzer:IMPColorWeightsAnalyzer =  {
+        let a = IMPColorWeightsAnalyzer(context: self.context)
+        a.clipping = self.preferences.clipping
+        return a
+    }()
     
-    private var hsvFilter:IMPHSVFilter!
-    private var wbFilter:IMPWBFilter!
+    
+    private lazy var hsvFilter:IMPHSVFilter = {
+        let f = IMPHSVFilter(context: self.context, optimization: self.optimization)
+        if self.optimization == .HIGH {
+            f.rgbCubeSize = 16
+        }
+        return f
+    }()
+    private lazy var wbFilter:IMPWBFilter = IMPWBFilter(context: self.context)
     
 }
  

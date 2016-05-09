@@ -41,7 +41,6 @@ public extension IMPImageProvider{
             
             if let t = CVMetalTextureGetTexture(ref) {
                 texture = t
-                completeUpdate()
             }
             else {
                 fatalError("IMPImageProvider error: couldn't create texture from pixelBuffer: \(error)")

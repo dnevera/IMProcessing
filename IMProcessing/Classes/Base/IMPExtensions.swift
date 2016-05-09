@@ -33,11 +33,11 @@ public enum IMProcessing{
     
     public struct meta {
         
-        static let version                  = 1.0
-        static let versionKey               = "IMProcessingVersion"
-        static let imageOrientationKey      = "Orientation"
-        static let imageSourceExposureMode  = "SourceExposureMode"
-        static let imageSourceFocusMode     = "SourceFocusMode"
+        public static let version                  = 1.0
+        public static let versionKey               = "IMProcessingVersion"
+        public static let imageOrientationKey      = "Orientation"
+        public static let imageSourceExposureMode  = "SourceExposureMode"
+        public static let imageSourceFocusMode     = "SourceFocusMode"
     }
     
     public struct names {
@@ -46,9 +46,10 @@ public enum IMProcessing{
     
     public struct colors {
         #if os(iOS)
-        static let pixelFormat = MTLPixelFormat.RGBA8Unorm
+        public static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #else
-        static let pixelFormat = MTLPixelFormat.RGBA16Unorm
+        //public static let pixelFormat = MTLPixelFormat.RGBA16Unorm
+        public static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #endif
     }
 }
