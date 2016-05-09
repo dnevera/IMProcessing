@@ -215,10 +215,13 @@ public class IMPHistogram {
 
     public func update(red red:[vImagePixelCount], green:[vImagePixelCount], blue:[vImagePixelCount], alpha:[vImagePixelCount]){
         self.clearHistogram()
-        self.updateChannel(&channels[0], address: UnsafePointer<vImagePixelCount>.init(red),   index: 0)
-        self.updateChannel(&channels[1], address: UnsafePointer<vImagePixelCount>.init(blue),  index: 0)
-        self.updateChannel(&channels[2], address: UnsafePointer<vImagePixelCount>.init(green), index: 0)
-        self.updateChannel(&channels[3], address: UnsafePointer<vImagePixelCount>.init(alpha), index: 0)
+        self.updateChannel(&channels[0], address: red,   index: 0)
+        self.updateChannel(&channels[1], address: green, index: 0)
+        self.updateChannel(&channels[2], address: blue,  index: 0)
+        self.updateChannel(&channels[3], address: alpha, index: 0)
+        for c in 0..<channels.count{
+            updateBinCountForChannel(c)
+        }
     }
     
     ///

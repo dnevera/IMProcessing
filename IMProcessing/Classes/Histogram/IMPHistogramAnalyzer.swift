@@ -299,6 +299,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     private var imageBuffer:MTLBuffer?
     
     func applyVImageKernel(texture:MTLTexture, threadgroups:MTLSize, threadgroupCounts: MTLSize, buffer:MTLBuffer!) {
+        
         context.execute(complete: true) { (commandBuffer) in
             
             let width  = Int(floor(Float(texture.width) * self.downScaleFactor))
@@ -306,65 +307,79 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
             
             if self.analizeTexture?.width != width || self.analizeTexture?.height != height {
                 let textureDescription = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-                    texture.pixelFormat,
+                    .RGBA8Unorm,
                     width: width,
                     height:height, mipmapped: false)
                 self.analizeTexture = self.context.device.newTextureWithDescriptor(textureDescription)
             }
             
-            let commandEncoder = commandBuffer.computeCommandEncoder()
-            
-            commandEncoder.setComputePipelineState(self.kernel.pipeline!);
-            commandEncoder.setTexture(texture, atIndex:0)
-            commandEncoder.setTexture(self.analizeTexture, atIndex:1)
-            commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:0)
-            commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:1)
-            
-            commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts);
-            commandEncoder.endEncoding()
-            
-            let imageBufferSize = width*height*4
-            if self.imageBuffer?.length != imageBufferSize {
-                self.imageBuffer = self.context.device.newBufferWithLength( imageBufferSize, options: MTLResourceOptions.CPUCacheModeDefaultCache)
+            if let actual = self.analizeTexture {
+                
+                let commandEncoder = commandBuffer.computeCommandEncoder()
+                
+                commandEncoder.setComputePipelineState(self.kernel.pipeline!);
+                commandEncoder.setTexture(texture, atIndex:0)
+                commandEncoder.setTexture(self.analizeTexture, atIndex:1)
+                commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:0)
+                commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:1)
+                
+                commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts);
+                commandEncoder.endEncoding()
+                
+                let imageBufferSize = width*height*4
+                
+                if self.imageBuffer?.length != imageBufferSize {
+                    self.imageBuffer = self.context.device.newBufferWithLength( imageBufferSize, options: MTLResourceOptions.CPUCacheModeDefaultCache)
+                }
+                
+                if let data = self.imageBuffer {
+                    
+                    let blitEncoder = commandBuffer.blitCommandEncoder()
+                    
+                    blitEncoder.copyFromTexture(actual,
+                                                sourceSlice: 0,
+                                                sourceLevel: 0,
+                                                sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                                                sourceSize: MTLSize(width: width, height: height, depth: actual.depth),
+                                                toBuffer: data,
+                                                destinationOffset: 0,
+                                                destinationBytesPerRow: width*4,
+                                                destinationBytesPerImage: 0)
+                    
+                    blitEncoder.endEncoding()
+                    
+                    var vImage = vImage_Buffer(
+                        data: data.contents(),
+                        height: vImagePixelCount(height),
+                        width: vImagePixelCount(width),
+                        rowBytes: width*4)
+                    
+                    vImageHistogramCalculation_ARGB8888(&vImage, self._vImage_hist, 0)
+                    
+                    self.histogram.update(red: self._vImage_red, green: self._vImage_green, blue: self._vImage_blue, alpha: self._vImage_alpha)
+                }
             }
-            
-            let blitEncoder = commandBuffer.blitCommandEncoder()
-            
-            blitEncoder.copyFromTexture(self.analizeTexture!,
-                sourceSlice: 0,
-                sourceLevel: 0,
-                sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                sourceSize: MTLSize(width: self.analizeTexture!.width, height: self.analizeTexture!.height, depth: 1),
-                toBuffer: self.imageBuffer!,
-                destinationOffset: 0,
-                destinationBytesPerRow: width*4,
-                destinationBytesPerImage: 0)
-            blitEncoder.endEncoding()
         }
-        
-        var vImage = vImage_Buffer(
-            data: (imageBuffer?.contents())!,
-            height: vImagePixelCount(analizeTexture!.height),
-            width: vImagePixelCount(analizeTexture!.width),
-            rowBytes: analizeTexture!.width*4)
-        
-        let red   = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
-        let green = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
-        let blue  = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
-        let alpha = [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
-        
-        let redPtr   = UnsafeMutablePointer<vImagePixelCount>(red)
-        let greenPtr = UnsafeMutablePointer<vImagePixelCount>(green)
-        let bluePtr  = UnsafeMutablePointer<vImagePixelCount> (blue)
-        let alphaPtr = UnsafeMutablePointer<vImagePixelCount>(alpha)
-        
-        let rgba = [redPtr, greenPtr, bluePtr, alphaPtr]
-        
-        let hist = UnsafeMutablePointer<UnsafeMutablePointer<vImagePixelCount>>(rgba)
-        vImageHistogramCalculation_ARGB8888(&vImage, hist, 0)
-        
-        histogram.update(red: red, green: green, blue: blue, alpha: alpha)
     }
+
+    static func _vImage_createChannel256() -> [vImagePixelCount] {
+        return [vImagePixelCount](count: Int(kIMP_HistogramSize), repeatedValue: 0)
+    }
+    
+    typealias _vImagePointer = UnsafeMutablePointer<vImagePixelCount>
+    
+    let _vImage_red   = IMPHistogramAnalyzer._vImage_createChannel256()
+    let _vImage_green = IMPHistogramAnalyzer._vImage_createChannel256()
+    let _vImage_blue  = IMPHistogramAnalyzer._vImage_createChannel256()
+    let _vImage_alpha = IMPHistogramAnalyzer._vImage_createChannel256()
+
+    lazy var _vImage_rgba:[_vImagePointer] = [
+        _vImagePointer(self._vImage_red),
+        _vImagePointer(self._vImage_green),
+        _vImagePointer(self._vImage_blue),
+        _vImagePointer(self._vImage_alpha)]
+    
+    lazy var _vImage_hist:UnsafeMutablePointer<_vImagePointer> = UnsafeMutablePointer<_vImagePointer>(self._vImage_rgba)
     
     public func executeSolverObservers(texture:MTLTexture) {
         for s in solvers {

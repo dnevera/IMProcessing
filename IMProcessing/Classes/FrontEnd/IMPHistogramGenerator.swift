@@ -69,7 +69,9 @@ public class IMPHistogramGenerator: IMPFilter{
     
     public var histogram:IMPHistogram?{
         didSet{
-            update(histogram!)
+            if let h = histogram {
+                update(h)
+            }
         }
     }
     
