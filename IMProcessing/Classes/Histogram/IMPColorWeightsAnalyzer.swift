@@ -133,7 +133,12 @@ public class IMPColorWeightsAnalyzer: IMPHistogramAnalyzer {
     private var clippingBuffer:MTLBuffer?
     
     public required init(context: IMPContext) {
-        super.init(context: context, function: "kernel_impColorWeightsAtomic")
+        if context.hasFastAtomic() {
+            super.init(context: context, function: "kernel_impColorWeightsAtomic")
+        }
+        else {
+            super.init(context: context, function: "kernel_impColorWeightsPartial")
+        }
         super.addSolver(solver)
         defer{
             clipping = IMPColorWeightsAnalyzer.defaultClipping

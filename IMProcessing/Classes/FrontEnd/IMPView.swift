@@ -54,6 +54,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         (texture.height+self.threadGroupCount.height)/self.threadGroupCount.height, 1)
                     
                     self.updateLayerHandler()
+                    
+                    if self.isPaused {
+                        self.refresh()
+                    }
                 }
             })
             
