@@ -37,7 +37,7 @@ public class IMPHistogramView: IMPView {
             }
         }
         
-        public required init(context: IMPContext) {
+        public required init(context: IMPContext, histogramHardware:IMPHistogramAnalyzer.Hardware = .GPU) {
             
             super.init(context: context)
                         
@@ -45,7 +45,7 @@ public class IMPHistogramView: IMPView {
             
             self.addFilter(solver)
             
-            analayzer = IMPHistogramAnalyzer(context: self.context)
+            analayzer = IMPHistogramAnalyzer(context: self.context, hardware: histogramHardware)
             analayzer.addSolver(solver)
             
             self.addSourceObserver{ (source:IMPImageProvider) -> Void in
@@ -55,9 +55,13 @@ public class IMPHistogramView: IMPView {
         
         private var view:IMPHistogramView?
         
-        required convenience public init(context: IMPContext, view:IMPHistogramView) {
-            self.init(context: context)
+        required convenience public init(context: IMPContext, view:IMPHistogramView, histogramHardware:IMPHistogramAnalyzer.Hardware = .GPU) {
+            self.init(context: context, histogramHardware: histogramHardware)
             self.view = view
+        }
+        
+        required public convenience init(context: IMPContext) {
+            self.init(context: context, histogramHardware: .GPU)
         }
         
         override public func apply() -> IMPImageProvider {
@@ -102,11 +106,15 @@ public class IMPHistogramView: IMPView {
         }
     }
     
-    override  public init(context contextIn: IMPContext, frame: NSRect) {
+    public init(context contextIn: IMPContext, frame: NSRect, histogramHardware:IMPHistogramAnalyzer.Hardware) {
         super.init(context: contextIn, frame: frame)
         defer{
-            _filter = histogramLayerFilter(context: self.context, view: self)
+            _filter = histogramLayerFilter(context: self.context, view: self, histogramHardware: histogramHardware)
         }
+    }
+
+    override public convenience init(context contextIn: IMPContext, frame: NSRect) {
+        self.init(context: contextIn, frame: frame, histogramHardware: .GPU)
     }
 
     convenience  public init(context contextIn: IMPContext) {

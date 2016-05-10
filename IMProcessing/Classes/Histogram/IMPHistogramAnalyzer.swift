@@ -22,7 +22,7 @@ public typealias IMPAnalyzerUpdateHandler =  ((histogram:IMPHistogram) -> Void)
 ///
 /// Hardware uses to compute histogram.
 ///
-public enum IMPHistogramAnalizerHardware {
+public enum IMPHistogramAnalyzerHardware {
     case GPU
     case DSP
 }
@@ -32,7 +32,7 @@ public enum IMPHistogramAnalizerHardware {
 ///
 public protocol IMPHistogramAnalyzerProtocol:NSObjectProtocol,IMPFilterProtocol {
     
-    var hardware:IMPHistogramAnalizerHardware {get}
+    var hardware:IMPHistogramAnalyzerHardware {get}
     var histogram:IMPHistogram {get set}
     var downScaleFactor:Float! {get set}
     var region:IMPRegion!  {get set}
@@ -80,15 +80,17 @@ public extension IMPContext {
 /// Histogram analizer uses to create IMPHistogram object from IMPImageProvider source.
 ///
 public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
-    
+
+    public typealias Hardware = IMPHistogramAnalyzerHardware
+
     ///
     /// Defines wich hardware uses to compute final histogram.
     /// DSP is faster but needs memory twice, GPU is slower but doesn't additanal memory.
     ///
-    public var hardware:IMPHistogramAnalizerHardware {
+    public var hardware:IMPHistogramAnalyzer.Hardware {
         return _hardware
     }
-    var _hardware:IMPHistogramAnalizerHardware!
+    var _hardware:IMPHistogramAnalyzer.Hardware!
     
     ///
     /// Histogram
@@ -168,12 +170,11 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
     /// как контейнером данных гистограммы.
     ///
     ///
-    public init(context: IMPContext, function: String, hardware:IMPHistogramAnalizerHardware = .GPU) {
+    public init(context: IMPContext, function: String, hardware:IMPHistogramAnalyzer.Hardware = .GPU) {
         super.init(context: context)
-
+        
         _hardware = hardware
 
-        // инициализируем счетчик
         _kernel = IMPFunction(context: self.context, name:function)
         
         if context.hasFastAtomic() || hardware == .DSP
@@ -191,9 +192,11 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
             downScaleFactor = 1.0
             channelsToCompute = UInt(histogram.channels.count)
         }
+        
+        NSLog("\(self): hardware = \(_hardware)")
     }
     
-    convenience public init(context: IMPContext, hardware:IMPHistogramAnalizerHardware) {
+    convenience public init(context: IMPContext, hardware:IMPHistogramAnalyzer.Hardware) {
         if hardware == .GPU {
             if context.hasFastAtomic() {
                 self.init(context:context, function: "kernel_impHistogramAtomic", hardware: hardware)
@@ -323,6 +326,8 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
                 commandEncoder.setBuffer(self.regionUniformBuffer,    offset:0, atIndex:0)
                 commandEncoder.setBuffer(self.scaleUniformBuffer,     offset:0, atIndex:1)
                 
+                self.configure(self.kernel, command: commandEncoder)
+
                 commandEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup:threadgroupCounts);
                 commandEncoder.endEncoding()
                 
@@ -336,6 +341,8 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
                     
                     let blitEncoder = commandBuffer.blitCommandEncoder()
                     
+                    //NSLog("\(self) downscale: \(self.downScaleFactor) actual = [\(actual.width,actual.height)]")
+
                     blitEncoder.copyFromTexture(actual,
                                                 sourceSlice: 0,
                                                 sourceLevel: 0,

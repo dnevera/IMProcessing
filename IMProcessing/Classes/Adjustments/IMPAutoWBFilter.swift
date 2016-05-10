@@ -31,7 +31,7 @@ public class IMPAutoWBFilter:IMPFilter{
             dirty = true
         }
     }
-    
+        
     ///  @brief Correction preferences
     public struct Preferences{
         /// Neutrals threshold
@@ -103,10 +103,16 @@ public class IMPAutoWBFilter:IMPFilter{
         return self.context.isLazy ? .HIGH : .NORMAL
     }()
     
-    public required init(context: IMPContext, optimization:IMPHSVFilter.optimizationLevel) {
+    var histogramHardware = IMPHistogramAnalyzer.Hardware.GPU
+    
+    public required init(context: IMPContext,
+                         optimization:IMPHSVFilter.optimizationLevel,
+                         histogramHardware:IMPHistogramAnalyzer.Hardware
+        ) {
         
         super.init(context: context)
         
+        self.histogramHardware = histogramHardware
         self.optimization = optimization
 
         defer{
@@ -122,7 +128,7 @@ public class IMPAutoWBFilter:IMPFilter{
             self.colorWeightsAnalyzer.source = source
             self.dominantColorAnalayzer.source = source
         }
-
+        
         dominantColorAnalayzer.addUpdateObserver { (histogram) -> Void in
             self.wbFilter.adjustment.dominantColor = self.dominantColorSolver.color
         }
@@ -134,7 +140,7 @@ public class IMPAutoWBFilter:IMPFilter{
     }
     
     required public convenience init(context: IMPContext) {
-        self.init(context:context, optimization: context.isLazy ? .HIGH : .NORMAL)
+        self.init(context:context, optimization: context.isLazy ? .HIGH : .NORMAL, histogramHardware: .GPU)
     }
     
     private func updateHsvProfile(solver:IMPColorWeightsSolver){
@@ -166,10 +172,10 @@ public class IMPAutoWBFilter:IMPFilter{
     }
     
     private let dominantColorSolver:IMPHistogramDominantColorSolver = IMPHistogramDominantColorSolver()
-    private lazy var dominantColorAnalayzer:IMPHistogramAnalyzer = IMPHistogramAnalyzer(context: self.context, hardware: .GPU)
+    private lazy var dominantColorAnalayzer:IMPHistogramAnalyzer = IMPHistogramAnalyzer(context: self.context, hardware: self.histogramHardware)
     
     private lazy var colorWeightsAnalyzer:IMPColorWeightsAnalyzer =  {
-        let a = IMPColorWeightsAnalyzer(context: self.context)
+        let a = IMPColorWeightsAnalyzer(context: self.context, hardware: self.histogramHardware)
         a.clipping = self.preferences.clipping
         return a
     }()

@@ -16,6 +16,7 @@ import Metal
 public protocol IMPFilterProtocol:IMPContextProvider {
     var source:IMPImageProvider? {get set}
     var destination:IMPImageProvider? {get}
+    var observersEnabled:Bool {get set}
     var dirty:Bool {get set}
     func apply() -> IMPImageProvider
 }
@@ -25,6 +26,14 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     public typealias SourceHandler = ((source:IMPImageProvider) -> Void)
     public typealias DestinationHandler = ((destination:IMPImageProvider) -> Void)
     public typealias DirtyHandler = (() -> Void)
+    
+    public var observersEnabled = true {
+        didSet {
+            for f in filterList {
+                f.observersEnabled = observersEnabled
+            }
+        }
+    }
     
     public var context:IMPContext!
     
@@ -172,17 +181,21 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     }
     
     internal func executeSourceObservers(source:IMPImageProvider?){
-        if let s = source{
-            for o in sourceObservers {
-                o(source: s)
+        if observersEnabled {
+            if let s = source{
+                for o in sourceObservers {
+                    o(source: s)
+                }
             }
         }
     }
     
     internal func executeDestinationObservers(destination:IMPImageProvider?){
-        if let d = destination {
-            for o in destinationObservers {
-                o(destination: d)
+        if observersEnabled {
+            if let d = destination {
+                for o in destinationObservers {
+                    o(destination: d)
+                }
             }
         }
     }

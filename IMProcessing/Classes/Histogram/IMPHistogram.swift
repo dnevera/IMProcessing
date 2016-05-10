@@ -786,10 +786,10 @@ public extension IMPHistogram{
         
         var outcdf = IMPHistogram(size: size, type: .PLANAR, distributionType:.CDF)
         if distributionType == .CDF {
-            matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:1)
+            matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:0)
         }
         else {
-            matchData(&values, target: &cdf().channels[channel.rawValue], outcdf: &outcdf, c:1)
+            matchData(&values, target: &cdf().channels[channel.rawValue], outcdf: &outcdf, c:0)
         }
         return outcdf
     }
@@ -846,12 +846,18 @@ public extension IMPHistogram{
         let denom = (outcdf.size.float-1)
         
         for i in 0 ..< source.count {
+            if j >= target.count {
+                continue
+            }
             if source[i] <= target[j] {
                 outcdf.channels[c][i] = j.float/denom
             }
             else {
                 while source[i] > target[j] {
                     j += 1;
+                    if j >= target.count {
+                        break
+                    }
                     if (target[j] - source[i]) > (source[i] - target[j-1] )  {
                         outcdf.channels[c][i] = j.float/denom
                     }
