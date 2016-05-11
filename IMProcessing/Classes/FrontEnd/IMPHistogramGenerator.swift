@@ -18,10 +18,11 @@ public class IMPHistogramGenerator: IMPFilter{
     
     public var size:IMPSize!{
         didSet{
+            NSLog(" IMPHistogramGenerator size == \(size)")
             if
-                texture?.width.cgfloat != size.width
-                ||
-                texture?.height.cgfloat != size.height
+                texture?.width.cgfloat != size.width 
+                || 
+                texture?.height.cgfloat != size.height 
             {
                 let desc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(.RGBA8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
                 texture = context.device.newTextureWithDescriptor(desc)
@@ -52,15 +53,15 @@ public class IMPHistogramGenerator: IMPFilter{
         
         defer{
             self.size = size
+            layer = IMPHistogramGenerator.defaultLayer
         }
         
         kernel = IMPFunction(context: self.context, name: "kernel_histogramLayer")
         self.addFunction(kernel)
+        
         channelsUniformBuffer = self.context.device.newBufferWithLength(sizeof(UInt), options: .CPUCacheModeDefaultCache)
         histogramUniformBuffer = self.context.device.newBufferWithLength(sizeof(IMPHistogramFloatBuffer), options: .CPUCacheModeDefaultCache)
-        defer{
-            layer = IMPHistogramGenerator.defaultLayer
-        }
+
     }
 
     required public init(context: IMPContext) {

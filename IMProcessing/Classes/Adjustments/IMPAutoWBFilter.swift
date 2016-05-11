@@ -125,8 +125,8 @@ public class IMPAutoWBFilter:IMPFilter{
         dominantColorAnalayzer.addSolver(dominantColorSolver)
 
         addSourceObserver { (source) -> Void in
-            self.colorWeightsAnalyzer.source = source
             self.dominantColorAnalayzer.source = source
+            self.colorWeightsAnalyzer.source = source
         }
         
         dominantColorAnalayzer.addUpdateObserver { (histogram) -> Void in

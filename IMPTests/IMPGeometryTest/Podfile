@@ -5,15 +5,16 @@
 
 use_frameworks!
 
-pod 'SnapKit'
-pod 'IMProcessing', :path => '../../'
-
 target 'IMPGeometryTest' do
     platform :osx, '10.11'
+    pod 'SnapKit'
+    pod 'IMProcessing', :path => '../../'
 end
 
 target 'IMPGeometryTestiOS' do
     platform :ios, '8.0'
+    pod 'SnapKit'
+    pod 'IMProcessing', :path => '../../'
 end
 
 

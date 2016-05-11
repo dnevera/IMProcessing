@@ -39,10 +39,10 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     public var enabled = true {
         didSet{
+            dirty = true
             if enabled == false && oldValue != enabled {
                 executeDestinationObservers(source)
             }
-            dirty = true
         }
     }
     
@@ -133,9 +133,15 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         functionList.removeAll()
         self.dirty = true
     }
+
+    var _root:IMPFilter? = nil 
+    public var root:IMPFilter? {
+        return _root
+    }
     
     public final func addFilter(filter:IMPFilter){
         if filterList.contains(filter) == false {
+            filter._root = self
             filterList.append(filter)
             for o in dirtyHandlers{
                 filter.addDirtyObserver(o)

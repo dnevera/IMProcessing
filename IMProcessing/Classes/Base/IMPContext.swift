@@ -128,7 +128,7 @@ public class IMPContext {
     var commandBuffer:MTLCommandBuffer?  {
         return self.commandQueue?.commandBuffer()
 //        return (self.supportsGPUv2 ?
-//            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
+//            (self.isLazy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
 //            self.commandQueue?.commandBuffer())
     }
     
@@ -148,7 +148,7 @@ public class IMPContext {
                     commandBuffer.waitUntilCompleted()
                 }
             }
-       }
+        }
     }
     
     /// Get the maximum supported devices texture size.

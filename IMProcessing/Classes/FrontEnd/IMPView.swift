@@ -271,15 +271,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
 
 //                            let encoder = commandBuffer.computeCommandEncoder()
 //                            
-//                            encoder.setComputePipelineState(self.pipeline!)
-//                            
-//                            encoder.setTexture(actualImageTexture, atIndex: 0)
-//                            
-//                            encoder.setTexture(drawable.texture, atIndex: 1)
-//                            
-//                            encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-//                            
-//                            encoder.endEncoding()
+//                            if let pipeline = self.pipeline {
+//                                encoder.setComputePipelineState(self.pipeline!)
+//                                
+//                                encoder.setTexture(actualImageTexture, atIndex: 0)
+//                                
+//                                encoder.setTexture(drawable.texture, atIndex: 1)
+//                                
+//                                encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
+//                                
+//                                encoder.endEncoding()
+//                            }
                             
                             let encoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
                             

@@ -249,10 +249,7 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
             blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
             blitEncoder.endEncoding()
         #else
-            let blitEncoder = commandBuffer.blitCommandEncoder()
-            blitEncoder.fillBuffer(buffer, range: NSMakeRange(0, buffer.length), value: 0)
-            blitEncoder.endEncoding()
-            //memset(buffer.contents(), 0, buffer.length)
+            memset(buffer.contents(), 0, buffer.length)
         #endif
         
         let commandEncoder = commandBuffer.computeCommandEncoder()
@@ -341,6 +338,10 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
                     
                     let blitEncoder = commandBuffer.blitCommandEncoder()
                     
+                    #if os(OSX)
+                    blitEncoder.synchronizeResource(actual)    
+                    #endif
+                    
                     //NSLog("\(self) downscale: \(self.downScaleFactor) actual = [\(actual.width,actual.height)]")
 
                     blitEncoder.copyFromTexture(actual,
@@ -353,6 +354,10 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
                                                 destinationBytesPerRow: width*4,
                                                 destinationBytesPerImage: 0)
                     
+                    #if os(OSX)
+                        blitEncoder.synchronizeResource(actual)    
+                    #endif
+
                     blitEncoder.endEncoding()
                     
                     var vImage = vImage_Buffer(

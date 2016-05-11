@@ -22,14 +22,13 @@
 		310AD89D1CDB528000ADB6A8 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 310AD89C1CDB528000ADB6A8 /* IMPMain_metal.metal */; };
 		31E1025D1CD23505005924AF /* IMPMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E1025C1CD23505005924AF /* IMPMatrix.swift */; };
 		31E1025F1CD23576005924AF /* IMPMatrixOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E1025E1CD23576005924AF /* IMPMatrixOperations.swift */; };
-		7B46C908A439C7574BF17205 /* Pods_IMPGeometryTestiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 508787F4AD7136ABC4A1CFD2 /* Pods_IMPGeometryTestiOS.framework */; };
-		CA33488EDC7CD78C9B362C6F /* Pods_IMPGeometryTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 59CBA52DB0C1793F973F5CD8 /* Pods_IMPGeometryTest.framework */; };
+		456FAA5F17CAC565156F9B20 /* Pods_IMPGeometryTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6F42164AFC167C6C3036D9 /* Pods_IMPGeometryTest.framework */; };
+		B4295EF48975139086E84DE5 /* Pods_IMPGeometryTestiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F71C61B385361553F716B647 /* Pods_IMPGeometryTestiOS.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		086264B8E60D4CD6B75435A0 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
-		1A44239A73557D2823AD4A09 /* Pods-IMPGeometryTestiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTestiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS.debug.xcconfig"; sourceTree = "<group>"; };
-		25BCE83745F4EED2BFE549DD /* Pods-IMPGeometryTest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTest.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest.debug.xcconfig"; sourceTree = "<group>"; };
+		0D6F42164AFC167C6C3036D9 /* Pods_IMPGeometryTest.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMPGeometryTest.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F92E5D7C016DBF3A084829C /* Pods-IMPGeometryTest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTest.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest.debug.xcconfig"; sourceTree = "<group>"; };
 		31058D8B1CC639AC0066ED64 /* IMPGeometryTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMPGeometryTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		31058D8E1CC639AC0066ED64 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		31058D901CC639AC0066ED64 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -50,11 +49,10 @@
 		313386D71CCF5EE20065E9A1 /* IMPGeometryTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMPGeometryTest-Bridging-Header.h"; sourceTree = "<group>"; };
 		31E1025C1CD23505005924AF /* IMPMatrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMatrix.swift; path = Classes/IMPMatrix.swift; sourceTree = "<group>"; };
 		31E1025E1CD23576005924AF /* IMPMatrixOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMatrixOperations.swift; path = Classes/IMPMatrixOperations.swift; sourceTree = "<group>"; };
-		508787F4AD7136ABC4A1CFD2 /* Pods_IMPGeometryTestiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMPGeometryTestiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		59CBA52DB0C1793F973F5CD8 /* Pods_IMPGeometryTest.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMPGeometryTest.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		CFECCDF5E6C810C6C86755D8 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
-		D9029AC9106142A4138D8C96 /* Pods-IMPGeometryTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTest.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest.release.xcconfig"; sourceTree = "<group>"; };
-		E05C494987F29C40F982C758 /* Pods-IMPGeometryTestiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTestiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS.release.xcconfig"; sourceTree = "<group>"; };
+		473684C335C93A7AB171F673 /* Pods-IMPGeometryTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTest.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest.release.xcconfig"; sourceTree = "<group>"; };
+		51998591115EBC78CF8F4374 /* Pods-IMPGeometryTestiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTestiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS.debug.xcconfig"; sourceTree = "<group>"; };
+		A7D4B73830E42A0F644DDABA /* Pods-IMPGeometryTestiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTestiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS.release.xcconfig"; sourceTree = "<group>"; };
+		F71C61B385361553F716B647 /* Pods_IMPGeometryTestiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMPGeometryTestiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,7 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA33488EDC7CD78C9B362C6F /* Pods_IMPGeometryTest.framework in Frameworks */,
+				456FAA5F17CAC565156F9B20 /* Pods_IMPGeometryTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7B46C908A439C7574BF17205 /* Pods_IMPGeometryTestiOS.framework in Frameworks */,
+				B4295EF48975139086E84DE5 /* Pods_IMPGeometryTestiOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,8 +81,8 @@
 				31058D8D1CC639AC0066ED64 /* IMPGeometryTest */,
 				310AD88A1CDB526200ADB6A8 /* IMPGeometryTestiOS */,
 				31058D8C1CC639AC0066ED64 /* Products */,
-				5A0286CE266A18E2C4AD44BA /* Pods */,
-				E0F27FC5E7087775A0893185 /* Frameworks */,
+				CE8BBA43E5298AF31EA35EDF /* Pods */,
+				5D908E4A0220C26DA8F063B3 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -154,26 +152,24 @@
 			path = IMPGeometryTest/Shaders;
 			sourceTree = SOURCE_ROOT;
 		};
-		5A0286CE266A18E2C4AD44BA /* Pods */ = {
+		5D908E4A0220C26DA8F063B3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				086264B8E60D4CD6B75435A0 /* Pods.debug.xcconfig */,
-				CFECCDF5E6C810C6C86755D8 /* Pods.release.xcconfig */,
-				25BCE83745F4EED2BFE549DD /* Pods-IMPGeometryTest.debug.xcconfig */,
-				D9029AC9106142A4138D8C96 /* Pods-IMPGeometryTest.release.xcconfig */,
-				1A44239A73557D2823AD4A09 /* Pods-IMPGeometryTestiOS.debug.xcconfig */,
-				E05C494987F29C40F982C758 /* Pods-IMPGeometryTestiOS.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
-		E0F27FC5E7087775A0893185 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				59CBA52DB0C1793F973F5CD8 /* Pods_IMPGeometryTest.framework */,
-				508787F4AD7136ABC4A1CFD2 /* Pods_IMPGeometryTestiOS.framework */,
+				0D6F42164AFC167C6C3036D9 /* Pods_IMPGeometryTest.framework */,
+				F71C61B385361553F716B647 /* Pods_IMPGeometryTestiOS.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CE8BBA43E5298AF31EA35EDF /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				0F92E5D7C016DBF3A084829C /* Pods-IMPGeometryTest.debug.xcconfig */,
+				473684C335C93A7AB171F673 /* Pods-IMPGeometryTest.release.xcconfig */,
+				51998591115EBC78CF8F4374 /* Pods-IMPGeometryTestiOS.debug.xcconfig */,
+				A7D4B73830E42A0F644DDABA /* Pods-IMPGeometryTestiOS.release.xcconfig */,
+			);
+			name = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -183,12 +179,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 31058D9A1CC639AC0066ED64 /* Build configuration list for PBXNativeTarget "IMPGeometryTest" */;
 			buildPhases = (
-				83DC7299555E41E766CF8C35 /* 📦 Check Pods Manifest.lock */,
+				2113BAFBD0471C1FF287B14E /* 📦 Check Pods Manifest.lock */,
 				31058D871CC639AC0066ED64 /* Sources */,
 				31058D881CC639AC0066ED64 /* Frameworks */,
 				31058D891CC639AC0066ED64 /* Resources */,
-				32ECE7C2DD3C048355267F3C /* 📦 Embed Pods Frameworks */,
-				07FF05D21256164823926A82 /* 📦 Copy Pods Resources */,
+				C97475471030329578CDCED2 /* 📦 Embed Pods Frameworks */,
+				733D72BC6173A91A7B098D04 /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -203,12 +199,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 310AD89A1CDB526200ADB6A8 /* Build configuration list for PBXNativeTarget "IMPGeometryTestiOS" */;
 			buildPhases = (
-				154CF495F279C86FDA39CC4D /* 📦 Check Pods Manifest.lock */,
+				DB6C1EE1C8F5ECDDDADCC74C /* 📦 Check Pods Manifest.lock */,
 				310AD8851CDB526200ADB6A8 /* Sources */,
 				310AD8861CDB526200ADB6A8 /* Frameworks */,
 				310AD8871CDB526200ADB6A8 /* Resources */,
-				A24D0B652255F3CD88FB3586 /* 📦 Embed Pods Frameworks */,
-				64D3342D29B91AF9D3F16E40 /* 📦 Copy Pods Resources */,
+				52AA62AC2CCDE8F579C95DD0 /* 📦 Embed Pods Frameworks */,
+				8BA60AED5F4048A4095578DF /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -279,7 +275,37 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		07FF05D21256164823926A82 /* 📦 Copy Pods Resources */ = {
+		2113BAFBD0471C1FF287B14E /* 📦 Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		52AA62AC2CCDE8F579C95DD0 /* 📦 Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		733D72BC6173A91A7B098D04 /* 📦 Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -294,37 +320,7 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		154CF495F279C86FDA39CC4D /* 📦 Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		32ECE7C2DD3C048355267F3C /* 📦 Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		64D3342D29B91AF9D3F16E40 /* 📦 Copy Pods Resources */ = {
+		8BA60AED5F4048A4095578DF /* 📦 Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -339,7 +335,22 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		83DC7299555E41E766CF8C35 /* 📦 Check Pods Manifest.lock */ = {
+		C97475471030329578CDCED2 /* 📦 Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DB6C1EE1C8F5ECDDDADCC74C /* 📦 Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -352,21 +363,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		A24D0B652255F3CD88FB3586 /* 📦 Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMPGeometryTestiOS/Pods-IMPGeometryTestiOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -510,7 +506,7 @@
 		};
 		31058D9B1CC639AC0066ED64 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 25BCE83745F4EED2BFE549DD /* Pods-IMPGeometryTest.debug.xcconfig */;
+			baseConfigurationReference = 0F92E5D7C016DBF3A084829C /* Pods-IMPGeometryTest.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -526,7 +522,7 @@
 		};
 		31058D9C1CC639AC0066ED64 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D9029AC9106142A4138D8C96 /* Pods-IMPGeometryTest.release.xcconfig */;
+			baseConfigurationReference = 473684C335C93A7AB171F673 /* Pods-IMPGeometryTest.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -541,7 +537,7 @@
 		};
 		310AD8981CDB526200ADB6A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A44239A73557D2823AD4A09 /* Pods-IMPGeometryTestiOS.debug.xcconfig */;
+			baseConfigurationReference = 51998591115EBC78CF8F4374 /* Pods-IMPGeometryTestiOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -557,7 +553,7 @@
 		};
 		310AD8991CDB526200ADB6A8 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E05C494987F29C40F982C758 /* Pods-IMPGeometryTestiOS.release.xcconfig */;
+			baseConfigurationReference = A7D4B73830E42A0F644DDABA /* Pods-IMPGeometryTestiOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";

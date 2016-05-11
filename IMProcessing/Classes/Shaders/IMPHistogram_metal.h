@@ -200,7 +200,7 @@ namespace IMProcessing
     {
         float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
         float   Y   = dot(inColor.rgb,kIMP_Y_YCbCr_factor) * inColor.a;
-        float4  rgby(inColor.rgb, Y);
+        float4  rgby = clamp(float4(inColor.rgb, Y),0.0,1.0);
         outTexture.write(rgby,gid);
     }
 
@@ -523,7 +523,9 @@ namespace IMProcessing
         inColor.a = cn.x;
         inColor.b = cn.y;
         
-        outTexture.write(inColor,gid);
+        float4  rgby = clamp(inColor,0.0,1.0);
+
+        outTexture.write(rgby,gid);
     }
     
     

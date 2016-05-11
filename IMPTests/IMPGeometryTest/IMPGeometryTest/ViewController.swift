@@ -199,7 +199,11 @@ class ViewController: NSViewController {
         
         configurePannel()
         
+        let awb = IMPAutoWBFilter(context: context, optimization: .NORMAL, histogramHardware: .DSP)
+        
         filter = IMPFilter(context: context)
+        
+        filter.addFilter(awb)
         
         transformer = IMPPhotoPlateFilter(context: context)
         photoCutter = IMPPhotoPlateFilter(context: context)
@@ -236,7 +240,7 @@ class ViewController: NSViewController {
             
             let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
             
-            self.cutter.region = region
+            // self.cutter.region = region
         }
                 
         view.addSubview(imageView)
@@ -256,7 +260,7 @@ class ViewController: NSViewController {
                     // Загружаем файл и связываем источником фильтра
                     //
                     
-                    self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file)
+                    self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file, maxSize: 1200)
                     
                     
                     self.asyncChanges({ () -> Void in
@@ -688,7 +692,7 @@ class ViewController: NSViewController {
             //
             // самый быстрый вариант
             //
-            self.cutter.region = region
+            // self.cutter.region = region
             
             //
             // устанавливает кроп на все дейтсвие, т.е. прикладывает к странсфорации

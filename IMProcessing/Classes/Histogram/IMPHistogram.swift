@@ -303,8 +303,23 @@ public class IMPHistogram {
         high = high<vDSP_Length(size) ? high+1 : vDSP_Length(size)
         return Float(high)/Float(size)
     }
+        
+    /// 
+    /// Look up interpolated values by indeces in the histogram
+    ///
+    ///
+    public func lookup(values:[Float], channel index:ChannelNo) -> [Float] {
+        var lookup = self[index]
+        var b = values
+        return interpolate(&lookup, b: &b)
+    }
     
-    
+    func interpolate(inout a: [Float], inout b: [Float]) -> [Float] {
+        var c = [Float](count: b.count, repeatedValue: 0)
+        vDSP_vlint(&a, &b, 1, &c, 1, UInt(b.count), UInt(a.count))
+        return c
+    }
+
     ///  Convolve histogram channel with filter presented another histogram distribution with phase-lead and scale.
     ///
     ///  - parameter filter:  filter distribution histogram
