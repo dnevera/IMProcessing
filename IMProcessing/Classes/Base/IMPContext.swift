@@ -138,14 +138,14 @@ public class IMPContext {
     ///
     public final func execute(complete complete :Bool = false, closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
-            
             if let commandBuffer = self.commandBuffer {
-                
-                closure(commandBuffer: commandBuffer)
-                commandBuffer.commit()
-                
-                if !self.isLazy || complete {
-                    commandBuffer.waitUntilCompleted()
+                autoreleasepool { () -> () in
+                    closure(commandBuffer: commandBuffer)
+                    commandBuffer.commit()
+                    
+                    if !self.isLazy || complete {
+                        commandBuffer.waitUntilCompleted()
+                    }
                 }
             }
         }

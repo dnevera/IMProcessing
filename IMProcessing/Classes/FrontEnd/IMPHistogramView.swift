@@ -35,7 +35,11 @@ public class IMPHistogramView: IMPViewBase, IMPContextProvider {
     lazy var imageView:IMPView = { 
         let v = IMPView(filter: self.generator,frame: self.bounds)
         v.autoresizesSubviews = true
+        #if os(OSX)
         v.autoresizingMask = [.ViewHeightSizable, .ViewWidthSizable]
+        #else
+        v.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        #endif
         v.backgroundColor = IMPColor.clearColor()
         return v
     }()

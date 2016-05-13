@@ -674,7 +674,6 @@ class ViewController: NSViewController {
         asyncChanges { () -> Void in
             let scale = (sender.floatValue*2)/100
             self.transformer.scale(float3(scale))
-            self.transformer.dirty = true
         }
     }
     
@@ -692,7 +691,7 @@ class ViewController: NSViewController {
             //
             // самый быстрый вариант
             //
-            // self.cutter.region = region
+            self.cutter.region = region
             
             //
             // устанавливает кроп на все дейтсвие, т.е. прикладывает к странсфорации
@@ -750,7 +749,6 @@ class ViewController: NSViewController {
         else {
             filter?.enabled = true
         }
-        filter.dirty = true
     }
     
     var containerWidthConstraint:Constraint?

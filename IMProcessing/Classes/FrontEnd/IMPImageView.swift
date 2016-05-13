@@ -309,25 +309,25 @@
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
-//                filter?.addNewSourceObserver(source: { (source) in
-//                    if let texture = source.texture{
-//                        self.imageView.frame = CGRect(x: 0, y: 0,
-//                            width:  Int(texture.width.float/self.imageView.scaleFactor),
-//                            height: Int(texture.height.float/self.imageView.scaleFactor))
-//                    }
-//                })
-                                
+                
                 filter?.addDestinationObserver(destination: { (destination) in
+                    
                     if let texture = destination.texture{
+                        
                         let w = (texture.width.float/self.imageView.scaleFactor).cgfloat
                         let h = (texture.height.float/self.imageView.scaleFactor).cgfloat
+                                                
                         if w != self.imageView.frame.size.width || h != self.imageView.frame.size.height {
                             dispatch_async(dispatch_get_main_queue(), {
                                 CATransaction.begin()
                                 CATransaction.setDisableActions(true)
+                                
                                 self.imageView.frame = CGRect(x: 0, y: 0,
                                     width:  w,
                                     height: h)
+                                
+                                self.imageView.updateLayerHandler()
+                                
                                 CATransaction.commit()
                                 
                             })
@@ -352,6 +352,7 @@
         ///  Fite image to current view size
         public func sizeFit(){
             isSizeFit = true
+            imageView.updateLayerHandler()
             scrollView.magnifyToFitRect(imageView.bounds)
             imageView.layerNeedUpdate = true
         }
@@ -359,6 +360,7 @@
         ///  Present image in oroginal size
         public func sizeOriginal(){
             isSizeFit = false
+            imageView.updateLayerHandler()
             scrollView.magnifyToFitRect(bounds)
             imageView.layerNeedUpdate = true
         }

@@ -27,7 +27,7 @@ class IMPTestFilter:IMPFilter {
     var noise:IMPFilmGrainFilter!
     var dither:IMPDitheringFilter!
     
-    required init(context: IMPContext, histogramView:IMPView, histogramCDFView:IMPView) {
+    required init(context: IMPContext, histogramView:IMPHistogramView, histogramCDFView:IMPHistogramView) {
         
         super.init(context: context)
         

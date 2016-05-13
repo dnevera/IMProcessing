@@ -45,16 +45,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var filter:IMPFilter?{
         didSet{
             
-            filter?.addNewSourceObserver(source: { (source) in
-                
+            filter?.addNewSourceObserver(source: { (source) in                
                 if let texture = self.filter?.source?.texture{
-                    
-                    self.threadGroups = MTLSizeMake(
-                        (texture.width+self.threadGroupCount.width)/self.threadGroupCount.width,
-                        (texture.height+self.threadGroupCount.height)/self.threadGroupCount.height, 1)
-                    
-                    self.updateLayerHandler()
-                    
                     if self.isPaused {
                         self.refresh()
                     }
@@ -184,8 +176,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         #endif
     }
     
-    private let threadGroupCount = MTLSizeMake(8, 8, 1)
-    private var threadGroups : MTLSize!
     private let inflightSemaphore = dispatch_semaphore_create(4)
     
     
@@ -238,20 +228,16 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
 
     internal func refresh() {
-                
+        
         if layerNeedUpdate {
             
+            //NSLog(" IMPView:layerNeedUpdate = \(layerNeedUpdate)")
+    
             layerNeedUpdate = false
             
             autoreleasepool({ () -> () in
                 
                 if let actualImageTexture = filter?.destination?.texture {
-                    
-                    if threadGroups == nil {
-                        threadGroups = MTLSizeMake(
-                            (actualImageTexture.width+threadGroupCount.width)/threadGroupCount.width,
-                            (actualImageTexture.height+threadGroupCount.height)/threadGroupCount.height, 1)
-                    }
                     
                     if let drawable = self.metalLayer.nextDrawable(){
 
@@ -268,20 +254,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
                                 self.context.resume()
                             })
-
-//                            let encoder = commandBuffer.computeCommandEncoder()
-//                            
-//                            if let pipeline = self.pipeline {
-//                                encoder.setComputePipelineState(self.pipeline!)
-//                                
-//                                encoder.setTexture(actualImageTexture, atIndex: 0)
-//                                
-//                                encoder.setTexture(drawable.texture, atIndex: 1)
-//                                
-//                                encoder.dispatchThreadgroups(self.threadGroups, threadsPerThreadgroup: self.threadGroupCount)
-//                                
-//                                encoder.endEncoding()
-//                            }
                             
                             let encoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
                             
@@ -326,7 +298,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    internal var layerNeedUpdate:Bool = true
+    internal var layerNeedUpdate:Bool = true 
     
     #if os(iOS)
     
@@ -364,8 +336,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 l.drawableSize = t.size
             }
             l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
-            layerNeedUpdate = true
         }
+        layerNeedUpdate = true
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
