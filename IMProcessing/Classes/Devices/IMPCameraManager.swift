@@ -372,18 +372,11 @@
                                     
                                     if let position = newValue.position {
                                         if self.currentCamera.isFocusModeSupported(.Locked) {
-                                            do {
-                                                if let position = newValue.position {
-                                                    self.currentCamera.setFocusModeLockedWithLensPosition(position, completionHandler: { (time) in
-                                                        if let complete = self.currentFocus.complete {
-                                                            complete(camera: self, point: self.focusPOI)
-                                                        }
-                                                    })
+                                            self.currentCamera.setFocusModeLockedWithLensPosition(position, completionHandler: { (time) in
+                                                if let complete = self.currentFocus.complete {
+                                                    complete(camera: self, point: self.focusPOI)
                                                 }
-                                            }
-                                            catch let error as NSError {
-                                                NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
-                                            }
+                                            })
                                         }
                                     }
                                     else {
@@ -649,6 +642,41 @@
             removeCameraObservers()
         }
         
+        public var frameRate:Int {
+            get {
+                return currentFrameRate
+            }
+            set {
+                resetFrameRate(newValue)
+            }
+        }
+        
+        var  currentFrameRate:Int = 30
+        
+        func resetFrameRate(frameRate:Int){
+            
+            currentFrameRate = frameRate
+            
+            let activeCaptureFormat = self.currentCamera.activeFormat
+            
+            for rate in activeCaptureFormat.videoSupportedFrameRateRanges as! [AVFrameRateRange] {
+                if( frameRate >= rate.minFrameRate.int && frameRate <= rate.maxFrameRate.int ) {
+                    do{
+                        try currentCamera.lockForConfiguration()
+                        
+                        currentCamera.activeVideoMinFrameDuration = CMTimeMake(1, Int32(frameRate))
+                        currentCamera.activeVideoMaxFrameDuration = CMTimeMake(1, Int32(frameRate))
+                        
+                        currentCamera.unlockForConfiguration()
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+        }
+
+        
         //
         // Internal utils and vars
         //
@@ -661,11 +689,12 @@
         var _currentCamera:AVCaptureDevice! {
             willSet{
                 if (_currentCamera != nil) {
-                    self.removeCameraObservers()
+                    removeCameraObservers()
                 }
             }
             didSet{
-                self.addCameraObservers()
+                addCameraObservers()
+                resetFrameRate(currentFrameRate)
             }
         }
 
