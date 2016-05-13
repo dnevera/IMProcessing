@@ -42,7 +42,7 @@ namespace IMProcessing
         float  height            = float(outTexture.get_height());
         float  y_position        = (height-float(gid.y));
         
-        uint   histogramBinIndex = uint(gid.x/width*Im);   // normalize to histogram length
+        uint   histogramBinIndex = clamp(uint(gid.x/width*Im),uint(0),Im);   // normalize to histogram length
         float  delim = height;
         
         float4 result;
@@ -66,7 +66,7 @@ namespace IMProcessing
             result = IMProcessing::blendNormal(result, color);
         }
         
-        outTexture.write(result, gid);
+        outTexture.write(clamp(result,0.0,1.0), gid);
     }
     
     kernel void kernel_paletteLayer(texture2d<float, access::sample>    inTexture   [[texture(0)]],
@@ -96,7 +96,7 @@ namespace IMProcessing
         
         result = IMProcessing::blendNormal(result, component);
         
-        outTexture.write(result, gid);
+        outTexture.write(clamp(result,0.0,1.0), gid);
     }
 }
 

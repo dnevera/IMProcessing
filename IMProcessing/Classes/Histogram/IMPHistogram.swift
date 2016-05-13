@@ -215,10 +215,13 @@ public class IMPHistogram {
 
     public func update(red red:[vImagePixelCount], green:[vImagePixelCount], blue:[vImagePixelCount], alpha:[vImagePixelCount]){
         self.clearHistogram()
-        self.updateChannel(&channels[0], address: UnsafePointer<vImagePixelCount>.init(red),   index: 0)
-        self.updateChannel(&channels[1], address: UnsafePointer<vImagePixelCount>.init(blue),  index: 0)
-        self.updateChannel(&channels[2], address: UnsafePointer<vImagePixelCount>.init(green), index: 0)
-        self.updateChannel(&channels[3], address: UnsafePointer<vImagePixelCount>.init(alpha), index: 0)
+        self.updateChannel(&channels[0], address: red,   index: 0)
+        self.updateChannel(&channels[1], address: green, index: 0)
+        self.updateChannel(&channels[2], address: blue,  index: 0)
+        self.updateChannel(&channels[3], address: alpha, index: 0)
+        for c in 0..<channels.count{
+            updateBinCountForChannel(c)
+        }
     }
     
     ///
@@ -300,8 +303,23 @@ public class IMPHistogram {
         high = high<vDSP_Length(size) ? high+1 : vDSP_Length(size)
         return Float(high)/Float(size)
     }
+        
+    /// 
+    /// Look up interpolated values by indeces in the histogram
+    ///
+    ///
+    public func lookup(values:[Float], channel index:ChannelNo) -> [Float] {
+        var lookup = self[index]
+        var b = values
+        return interpolate(&lookup, b: &b)
+    }
     
-    
+    func interpolate(inout a: [Float], inout b: [Float]) -> [Float] {
+        var c = [Float](count: b.count, repeatedValue: 0)
+        vDSP_vlint(&a, &b, 1, &c, 1, UInt(b.count), UInt(a.count))
+        return c
+    }
+
     ///  Convolve histogram channel with filter presented another histogram distribution with phase-lead and scale.
     ///
     ///  - parameter filter:  filter distribution histogram
@@ -783,10 +801,10 @@ public extension IMPHistogram{
         
         var outcdf = IMPHistogram(size: size, type: .PLANAR, distributionType:.CDF)
         if distributionType == .CDF {
-            matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:1)
+            matchData(&values, target: &channels[channel.rawValue], outcdf: &outcdf, c:0)
         }
         else {
-            matchData(&values, target: &cdf().channels[channel.rawValue], outcdf: &outcdf, c:1)
+            matchData(&values, target: &cdf().channels[channel.rawValue], outcdf: &outcdf, c:0)
         }
         return outcdf
     }
@@ -843,12 +861,18 @@ public extension IMPHistogram{
         let denom = (outcdf.size.float-1)
         
         for i in 0 ..< source.count {
+            if j >= target.count {
+                continue
+            }
             if source[i] <= target[j] {
                 outcdf.channels[c][i] = j.float/denom
             }
             else {
                 while source[i] > target[j] {
                     j += 1;
+                    if j >= target.count {
+                        break
+                    }
                     if (target[j] - source[i]) > (source[i] - target[j-1] )  {
                         outcdf.channels[c][i] = j.float/denom
                     }

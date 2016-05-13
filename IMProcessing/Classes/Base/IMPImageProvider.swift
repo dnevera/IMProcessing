@@ -38,7 +38,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public weak var filter:IMPFilter?
     
     public func completeUpdate(){
+        filter?.executeNewSourceObservers(self)
         filter?.dirty = true
-        //filter?.executeNewSourceObservers(self)
     }
 }

@@ -200,7 +200,7 @@ namespace IMProcessing
     {
         float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
         float   Y   = dot(inColor.rgb,kIMP_Y_YCbCr_factor) * inColor.a;
-        float4  rgby(inColor.rgb, Y);
+        float4  rgby = clamp(float4(inColor.rgb, Y),0.0,1.0);
         outTexture.write(rgby,gid);
     }
 
@@ -428,6 +428,106 @@ namespace IMProcessing
         }
     }
 
+    inline float2 circle_bin_positionVImage(float3 hsv,
+                                            constant IMPColorWeightsClipping   &clipping
+                                            ){
+        float      hue =  hsv.x * 360.0;
+        int        bin = 0;
+        float2     cn(0,0);
+        
+        //
+        // Change REDS
+        //
+        if ((hue>=kIMP_Reds.x && hue<=360.0) || (hue>=0.0 && hue<=kIMP_Reds.w))
+            bin = 0;
+        
+        //
+        // Change YELLOWS
+        //
+        if (hue>=kIMP_Yellows.x && hue<=kIMP_Yellows.w)
+            bin = 1;
+        
+        //
+        // Change GREENS
+        //
+        if (hue>=kIMP_Greens.x && hue<=kIMP_Greens.w)
+            bin = 2;
+        
+        //
+        // Change CYANS
+        //
+        if (hue>=kIMP_Cyans.x && hue<=kIMP_Cyans.w)
+            bin = 3;
+        
+        //
+        // Change BLUES
+        //
+        if (hue>=kIMP_Blues.x && hue<=kIMP_Blues.w)
+            bin = 4;
+        
+        
+        //
+        // Change MAGENTAS
+        //
+        if (hue>=kIMP_Magentas.x && hue<=kIMP_Magentas.w)
+            bin = 5;
+        
+        if (hsv.y > clipping.saturation){
+            cn.x = float(bin);
+        }
+        
+        if (hsv.y <= clipping.saturation){
+            
+            if (hsv.z <= clipping.black)
+                //
+                // Out of black point
+                //
+                bin = 253;
+            else if (hsv.z >= (1.0-clipping.white))
+                bin = 254;
+            else
+                //
+                // GRAYS
+                //
+                bin = 255;
+        }
+        else
+            //
+            // COLORED
+            //
+            bin = 252;
+        
+        cn.y = float(bin);
+        
+        return cn;
+    }
+    
+    ///  @brief Compute color weights
+    ///
+    kernel void kernel_impColorWeightsVImage(
+                                             texture2d<float, access::sample>   inTexture  [[texture(0)]],
+                                             texture2d<float, access::write>  outTexture   [[texture(1)]],
+                                             constant IMPRegion                 &regionIn  [[ buffer(0)]],
+                                             constant float                     &scale     [[ buffer(1)]],
+                                             constant IMPColorWeightsClipping   &clipping  [[ buffer(2)]],
+                                             uint2 gid [[thread_position_in_grid]]
+                                             )
+    {
+        
+        float4 inColor = IMProcessing::histogram::histogramSampledColor(inTexture,regionIn,scale,gid);
+        
+        float3 hsv = IMProcessing::rgb_2_HSV(inColor.rgb);
+        
+        float2 cn = circle_bin_positionVImage(hsv,clipping)/IMProcessing::histogram::Im.x;
+        
+        inColor.a = cn.x;
+        inColor.b = cn.y;
+        
+        float4  rgby = clamp(inColor,0.0,1.0);
+
+        outTexture.write(rgby,gid);
+    }
+    
     
     typedef struct {
         atomic_uint count;

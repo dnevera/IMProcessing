@@ -15,7 +15,7 @@
 import Accelerate
 
 public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
-
+    
     public struct ColorWeights{
         
         public let count = 6
@@ -65,7 +65,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
         }
     }
 
-    private var _colorWeights = ColorWeights(weights: [Float](count: 6, repeatedValue: 0))
+    private var _colorWeights   = ColorWeights(weights: [Float](count: 6, repeatedValue: 0))
     private var _neutralWeights = NeutralWeights(weights: [Float](count: 4, repeatedValue: 0))
 
     public var colorWeights:ColorWeights{
@@ -93,7 +93,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
         //
         // hues placed at start of channel W
         //
-        var huesCircle = [Float](histogram.channels[3][0...5])
+        var huesCircle = [Float](histogram[.W][0...5])
 
         //
         // normalize hues
@@ -104,7 +104,7 @@ public class  IMPColorWeightsSolver: NSObject, IMPHistogramSolver {
         //
         // weights of diferrent classes (neutral) brightness is placed at the and of channel W
         //
-        var weights    = [Float](histogram.channels[3][252...255])
+        var weights    = [Float](histogram[analizer.hardware == .GPU ? .W : .Z][252...255])
         
         //
         // normalize neutral weights
@@ -132,12 +132,28 @@ public class IMPColorWeightsAnalyzer: IMPHistogramAnalyzer {
     
     private var clippingBuffer:MTLBuffer?
     
-    public required init(context: IMPContext) {
-        super.init(context: context, function: "kernel_impColorWeightsAtomic")
+    public required init(context: IMPContext, hardware:IMPHistogramAnalyzer.Hardware) {
+        
+        var function = "kernel_impColorWeightsPartial"
+
+        if hardware == .DSP {
+            function = "kernel_impColorWeightsVImage"
+        }
+        else if context.hasFastAtomic() {
+            function = "kernel_impColorWeightsAtomic"
+        }
+
+        super.init(context: context, function: function, hardware: hardware)
+                
         super.addSolver(solver)
+        
         defer{
             clipping = IMPColorWeightsAnalyzer.defaultClipping
         }
+    }
+    
+    convenience required public init(context: IMPContext) {
+        self.init(context: context, hardware: .GPU)
     }
     
     public override func configure(function: IMPFunction, command: MTLComputeCommandEncoder) {

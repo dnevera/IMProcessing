@@ -12,114 +12,57 @@
     import Cocoa
 #endif
 
-public class IMPHistogramView: IMPView {
+public class IMPHistogramView: IMPViewBase, IMPContextProvider {
     
-    public class histogramLayerFilter: IMPFilter {
+    public var context: IMPContext!
         
-        public var histogram:IMPHistogram?{
-            set{
-                solver.histogram = histogram
-            }
-            get{
-                return solver.histogram
-            }
-        }
-        
-        public var analayzer:IMPHistogramAnalyzer!{
-            didSet{
-                self.dirty = true
-            }
-        }
-        
-        public var solver:IMPHistogramLayerSolver!{
-            didSet{
-                self.dirty = true
-            }
-        }
-        
-        public required init(context: IMPContext) {
-            
-            super.init(context: context)
-                        
-            solver = IMPHistogramLayerSolver(context: self.context)
-            
-            self.addFilter(solver)
-            
-            analayzer = IMPHistogramAnalyzer(context: self.context)
-            analayzer.addSolver(solver)
-            
-            self.addSourceObserver{ (source:IMPImageProvider) -> Void in
-                self.analayzer.source = source
-            }
-        }
-        
-        private var view:IMPHistogramView?
-        
-        required convenience public init(context: IMPContext, view:IMPHistogramView) {
-            self.init(context: context)
-            self.view = view
-        }
-        
-        override public func apply() -> IMPImageProvider {
-            if let v = view{
-                var size = MTLSize(cgsize: v.bounds.size)*(v.scaleFactor,v.scaleFactor,1)
-                size.depth = 1
-                solver.destinationSize = size
-            }
-            return super.apply()
-        }
+    public init(frame: NSRect, context contextIn: IMPContext, histogramHardware:IMPHistogramAnalyzer.Hardware) {
+        super.init(frame: frame)
+        self.context = contextIn
+        self.histogramHardware = histogramHardware 
+        self.autoresizesSubviews = true
+        addSubview(imageView)
+    }
+
+    public convenience init(context contextIn: IMPContext, frame: NSRect) {
+        self.init(frame: frame, context: contextIn, histogramHardware: .GPU)          
+    }
+
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-//    override public var source:IMPImageProvider?{
-//        didSet{
-//            _filter.source = source
-//            _filter.apply()
-//        }
-//    }
+    lazy var imageView:IMPView = { 
+        let v = IMPView(filter: self.generator,frame: self.bounds)
+        v.autoresizesSubviews = true
+        #if os(OSX)
+        v.autoresizingMask = [.ViewHeightSizable, .ViewWidthSizable]
+        #else
+        v.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        #endif
+        v.backgroundColor = IMPColor.clearColor()
+        return v
+    }()
     
-    private var _filter:histogramLayerFilter! {
-        didSet{
-            _filter.addDestinationObserver { (destination) -> Void in
-                //self.currentDestination = destination
-                self.layerNeedUpdate = true
-            }
-            
-            _filter.addNewSourceObserver { (source) in
-                self._filter.apply()
-            }
-        }
-    }
-    override public var filter:IMPFilter?{
+    var histogramHardware = IMPHistogramAnalyzer.Hardware.GPU
+    
+    lazy var analizer:IMPHistogramAnalyzer = { 
+        let a = IMPHistogramAnalyzer(context: self.context, hardware: self.histogramHardware)
+        a.addUpdateObserver({ (histogram) in
+            self.generator.histogram = histogram.pdf()            
+        })       
+        return a
+    }()
+    
+    lazy var generator:IMPHistogramGenerator = { 
+        let f = IMPHistogramGenerator(context: self.context, size: IMPSize(width: self.bounds.width, height: self.bounds.height))          
+        return f
+    }()
+    
+    public var filter:IMPFilter?{
         set(newFiler){
             fatalError("IMPHistogramView does not allow set new filter...")
         }
-        get{ return _filter }
-    }
-    
-    public var histogramLayer:histogramLayerFilter{
-        get{
-            return filter as! histogramLayerFilter
-        }
-    }
-    
-    override  public init(context contextIn: IMPContext, frame: NSRect) {
-        super.init(context: contextIn, frame: frame)
-        defer{
-            _filter = histogramLayerFilter(context: self.context, view: self)
-        }
-    }
-
-    convenience  public init(context contextIn: IMPContext) {
-        self.init(context: contextIn, frame: CGRectZero)
-        defer{
-            _filter = histogramLayerFilter(context: self.context, view: self)
-        }
-    }
-
-    required public init?(coder: NSCoder) {
-        super.init(coder: coder)
-        defer{
-            _filter = histogramLayerFilter(context: self.context, view: self)
-        }
+        get{ return analizer }
     }
 }

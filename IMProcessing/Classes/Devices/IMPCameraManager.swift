@@ -672,6 +672,7 @@
         // Live view
         private lazy var _liveView:IMPView = {
             let view  = IMPView(context: self.context)
+            view.isPaused = true
             view.backgroundColor = IMPColor.clearColor()
             view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
             view.filter = IMPFilter(context: self.context)
@@ -1092,8 +1093,7 @@
                     }
                     else {
                         imageProvider?.update(pixelBuffer: pixelBuffer)
-                    }
-                    
+                    }                    
                     liveView.filter?.source = imageProvider
                 }
             }

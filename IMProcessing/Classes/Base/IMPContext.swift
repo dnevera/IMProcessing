@@ -128,7 +128,7 @@ public class IMPContext {
     var commandBuffer:MTLCommandBuffer?  {
         return self.commandQueue?.commandBuffer()
 //        return (self.supportsGPUv2 ?
-//            (self.isLasy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
+//            (self.isLazy ? self.commandQueue?.commandBufferWithUnretainedReferences() : self.commandQueue?.commandBuffer()) :
 //            self.commandQueue?.commandBuffer())
     }
     
@@ -138,17 +138,17 @@ public class IMPContext {
     ///
     public final func execute(complete complete :Bool = false, closure: IMPContextExecution) {
         dispatch_sync(dispatchQueue) { () -> Void in
-            
             if let commandBuffer = self.commandBuffer {
-                
-                closure(commandBuffer: commandBuffer)
-                commandBuffer.commit()
-                
-                if !self.isLazy || complete {
-                    commandBuffer.waitUntilCompleted()
+                autoreleasepool { () -> () in
+                    closure(commandBuffer: commandBuffer)
+                    commandBuffer.commit()
+                    
+                    if !self.isLazy || complete {
+                        commandBuffer.waitUntilCompleted()
+                    }
                 }
             }
-       }
+        }
     }
     
     /// Get the maximum supported devices texture size.
