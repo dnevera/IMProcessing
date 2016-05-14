@@ -363,21 +363,23 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     func doApply() -> IMPImageProvider {
         
-        if let s = self.source{
-            if dirty {
-                
-                if functionList.count == 0 && filterList.count == 0 {
-                    //
-                    // copy source to destination
-                    //
-                    passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
+        autoreleasepool { 
+            if let s = self.source{
+                if dirty {
                     
-                    addFunction(passThroughKernel!)
+                    if functionList.count == 0 && filterList.count == 0 {
+                        //
+                        // copy source to destination
+                        //
+                        passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
+                        
+                        addFunction(passThroughKernel!)
+                    }
+                    
+                    executeSourceObservers(source)
+                    
+                    executeDestinationObservers(main(source:  s, destination: _destination))
                 }
-                
-                executeSourceObservers(source)
-                
-                executeDestinationObservers(main(source:  s, destination: _destination))
             }
         }
         

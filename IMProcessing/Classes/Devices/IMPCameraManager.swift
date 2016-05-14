@@ -1088,9 +1088,23 @@
             
             return videoConnection;
         }
+        
+        var imageProvider:IMPImageProvider?
+        
+        lazy var previewBufferQueue:CMBufferQueue? = {
+            var queue : CMBufferQueue?
+            var err : OSStatus = CMBufferQueueCreate(kCFAllocatorDefault, 1, CMBufferQueueGetCallbacksForUnsortedSampleBuffers(), &queue)
+            if err != 0 || queue == nil
+            {
+                //let error = NSError(domain: NSOSStatusErrorDomain, code: Int(err), userInfo: nil)
+                return nil
+            }
+            else
+            {
+                return queue
+            }
+        }()
     }
-    
-    var imageProvider:IMPImageProvider?
     
     // MARK: - Capturing API
     public extension IMPCameraManager {
@@ -1106,7 +1120,7 @@
             if isVideoPaused {
                 return
             }
-            
+                        
             if connection == currentConnection {
                 
                 if !isVideoStarted || isVideoSuspended{
@@ -1115,17 +1129,40 @@
                     videoObserversHandle()
                 }
                 
-                if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                if let previewBuffer = previewBufferQueue {
                     
-                    if imageProvider == nil {
-                        imageProvider = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
+                    // This is a shallow queue, so if image
+                    // processing is taking too long, we'll drop this frame for preview (this
+                    // keeps preview latency low).
+                    
+                    let err = CMBufferQueueEnqueue(previewBuffer, sampleBuffer)
+                    
+                    if err == 0 {
+                        dispatch_async(dispatch_get_main_queue(), {
+                            if let  sbuf = CMBufferQueueGetHead(previewBuffer) {
+                                if let pixelBuffer = CMSampleBufferGetImageBuffer(sbuf as! CMSampleBuffer) {
+                                    self.updateProvider(pixelBuffer)
+                                }
+                            }
+                            CMBufferQueueReset(self.previewBufferQueue!)
+                        })
                     }
-                    else {
-                        imageProvider?.update(pixelBuffer: pixelBuffer)
-                    }                    
-                    liveView.filter?.source = imageProvider
+                    
+                }
+                else if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                    updateProvider(pixelBuffer)
                 }
             }
+        }
+        
+        func updateProvider(pixelBuffer: CVImageBuffer)  {
+            if imageProvider == nil {
+                imageProvider = IMPImageProvider(context: liveView.context, pixelBuffer: pixelBuffer)
+            }
+            else {
+                imageProvider?.update(pixelBuffer: pixelBuffer)
+            }
+            liveView.filter?.source = imageProvider
         }
         
         ///  Capture image to file

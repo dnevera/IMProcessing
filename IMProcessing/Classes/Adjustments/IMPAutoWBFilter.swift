@@ -14,7 +14,10 @@ public typealias IMPAutoWBAnalyzeHandler =  ((solver:IMPColorWeightsSolver, opac
 
 ///  @brief AWB adjustment
 public struct IMPAutoWBAdjustment{
-    public var blending:IMPBlending = IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1)
+    public var blending:IMPBlending    
+    public init (blending: IMPBlending = IMPBlending(mode: IMPBlendingMode.NORMAL, opacity: 1)){
+        self.blending = blending
+    }
 }
 
 ///
