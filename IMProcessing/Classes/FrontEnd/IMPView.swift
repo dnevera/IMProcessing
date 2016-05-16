@@ -228,61 +228,63 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
 
     internal func refresh() {
-        
-        if layerNeedUpdate {
-                
-            layerNeedUpdate = false
+        dispatch_async(dispatch_get_main_queue()) {
             
-            autoreleasepool({ () -> () in
+            if self.layerNeedUpdate {
                 
-                if let actualImageTexture = filter?.destination?.texture {
+                self.layerNeedUpdate = false
+                
+                autoreleasepool({ () -> () in
                     
-                    if let drawable = self.metalLayer.nextDrawable(){
-
-                        renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
-                        renderPassDescriptor.colorAttachments[0].loadAction  = .Clear;
-                        renderPassDescriptor.colorAttachments[0].storeAction = .Store;
-                        renderPassDescriptor.colorAttachments[0].clearColor =  MTLClearColorMake(0, 0, 0, 0);
+                    if let actualImageTexture = self.filter?.destination?.texture {
                         
-                        
-                        self.context.execute { (commandBuffer) -> Void in
+                        if let drawable = self.metalLayer.nextDrawable(){
                             
-                            self.context.wait()
+                            self.renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
+                            self.renderPassDescriptor.colorAttachments[0].loadAction  = .Clear;
+                            self.renderPassDescriptor.colorAttachments[0].storeAction = .Store;
+                            self.renderPassDescriptor.colorAttachments[0].clearColor =  MTLClearColorMake(0, 0, 0, 0);
                             
-                            commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
-                                self.context.resume()
-                            })
                             
-                            let encoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
-                            
-                            //
-                            // render current texture
-                            //
-                            
-                            if let pipeline = self.renderPipeline {
+                            self.context.execute { (commandBuffer) -> Void in
                                 
-                                encoder.setRenderPipelineState(pipeline)
+                                self.context.wait()
                                 
-                                encoder.setVertexBuffer(self.vertexBuffer, offset:0, atIndex:0)
-                                encoder.setFragmentTexture(actualImageTexture, atIndex:0)
+                                commandBuffer.addCompletedHandler({ (commandBuffer) -> Void in
+                                    self.context.resume()
+                                })
                                 
-                                encoder.drawPrimitives(.TriangleStrip, vertexStart:0, vertexCount:4, instanceCount:1)
-                                encoder.endEncoding()
-                            }
-                            
-                            commandBuffer.presentDrawable(drawable)
-                            
-                            if self.isFirstFrame && self.viewReadyHandler !=  nil {
-                                self.isFirstFrame = false
-                                self.viewReadyHandler!()
+                                let encoder = commandBuffer.renderCommandEncoderWithDescriptor(self.renderPassDescriptor)
+                                
+                                //
+                                // render current texture
+                                //
+                                
+                                if let pipeline = self.renderPipeline {
+                                    
+                                    encoder.setRenderPipelineState(pipeline)
+                                    
+                                    encoder.setVertexBuffer(self.vertexBuffer, offset:0, atIndex:0)
+                                    encoder.setFragmentTexture(actualImageTexture, atIndex:0)
+                                    
+                                    encoder.drawPrimitives(.TriangleStrip, vertexStart:0, vertexCount:4, instanceCount:1)
+                                    encoder.endEncoding()
+                                }
+                                
+                                commandBuffer.presentDrawable(drawable)
+                                
+                                if self.isFirstFrame && self.viewReadyHandler !=  nil {
+                                    self.isFirstFrame = false
+                                    self.viewReadyHandler!()
+                                }
                             }
                         }
+                        else{
+                            self.context.resume()
+                        }
                     }
-                    else{
-                       self.context.resume()
-                    }
-                }
-            })
+                })
+            }
         }
     }
     

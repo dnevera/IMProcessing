@@ -245,7 +245,7 @@ public class IMPHSVFilter:IMPFilter,IMPAdjustmentProtocol{
             adjustment = IMPHSVFilter.defaultAdjustment
         }
         
-        NSLog("\(self): \(self.optimization )")
+        //NSLog("\(self): \(self.optimization )")
     }
 
     ///  Create HSV adjustment filter with default optimization level .NORMAL

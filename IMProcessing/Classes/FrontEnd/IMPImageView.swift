@@ -338,6 +338,15 @@
         }
         
         
+        public var isPaused:Bool {
+            set{
+                 imageView.isPaused = newValue
+            }
+            get {
+                return imageView.isPaused
+            }
+        }
+        
         ///  Magnify image to fit rectangle
         ///
         ///  - parameter rect: rectangle which is used to magnify the image to fit size an position

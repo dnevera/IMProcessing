@@ -18,7 +18,6 @@ public class IMPHistogramGenerator: IMPFilter{
     
     public var size:IMPSize!{
         didSet{
-            NSLog(" IMPHistogramGenerator size == \(size)")
             if
                 texture?.width.cgfloat != size.width 
                 || 

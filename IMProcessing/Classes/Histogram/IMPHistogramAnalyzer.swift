@@ -192,22 +192,22 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
             downScaleFactor = 1.0
             channelsToCompute = UInt(histogram.channels.count)
         }
-        
-        NSLog("\(self): hardware = \(_hardware)")
     }
     
     convenience public init(context: IMPContext, hardware:IMPHistogramAnalyzer.Hardware) {
+        
+        var function = "kernel_impHistogramPartial"
+        
         if hardware == .GPU {
             if context.hasFastAtomic() {
-                self.init(context:context, function: "kernel_impHistogramAtomic", hardware: hardware)
-            }
-            else {
-                self.init(context:context, function: "kernel_impHistogramPartial", hardware: hardware)
+                function = "kernel_impHistogramAtomic"
             }
         }
         else {
-            self.init(context:context, function: "kernel_impHistogramVImage", hardware: hardware)
+            function = "kernel_impHistogramVImage"
         }
+        
+        self.init(context:context, function: function, hardware: hardware)
     }
     
     convenience required public init(context: IMPContext) {
@@ -352,8 +352,6 @@ public class IMPHistogramAnalyzer: IMPFilter,IMPHistogramAnalyzerProtocol {
                     blitEncoder.synchronizeResource(actual)    
                     #endif
                     
-                    //NSLog("\(self) downscale: \(self.downScaleFactor) actual = [\(actual.width,actual.height)]")
-
                     blitEncoder.copyFromTexture(actual,
                                                 sourceSlice: 0,
                                                 sourceLevel: 0,
