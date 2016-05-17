@@ -140,21 +140,65 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         return _root
     }
     
+    func updateNewFilterHandlers(filter:IMPFilter)  {
+        filter._root = self
+        for o in dirtyHandlers{
+            filter.addDirtyObserver(o)
+        }
+        dirty = true
+    }
+    
+    func removeFilterHandlers(filter:IMPFilter) {
+        filter._root = nil
+        filter.dirtyHandlers.removeAll()
+        dirty = true
+    }
+    
     public final func addFilter(filter:IMPFilter){
         if filterList.contains(filter) == false {
-            filter._root = self
             filterList.append(filter)
-            for o in dirtyHandlers{
-                filter.addDirtyObserver(o)
-            }
-            self.dirty = true
+            updateNewFilterHandlers(filter)
         }
     }
     
     public final func removeFilter(filter:IMPFilter){
         if let index = filterList.indexOf(filter) {
-            filterList.removeAtIndex(index)
-            self.dirty = true
+            removeFilterHandlers(filterList.removeAtIndex(index) as IMPFilter)
+        }
+    }
+    
+    public final func removeFromStack() {
+        if _root != nil {
+            _root?.removeFilter(self)
+        }
+    }
+    
+    public final func insertFilter(filter:IMPFilter, index:Int){
+        if filterList.contains(filter) == false {
+            var i = index
+            if i >= filterList.count {
+                i = filterList.count
+            }
+            filterList.insert(filter, atIndex: i)
+            updateNewFilterHandlers(filter)
+        }
+    }
+    
+    public final func insertFilter(filter:IMPFilter, before:IMPFilter){
+        if filterList.contains(filter) == false {
+            if let index = filterList.indexOf(before) {
+                filterList.insert(filter, atIndex: index)
+                updateNewFilterHandlers(filter)
+            }
+        }
+    }
+    
+    public final func insertFilter(filter:IMPFilter, after:IMPFilter){
+        if filterList.contains(filter) == false {
+            if let index = filterList.indexOf(after) {
+                filterList.insert(filter, atIndex: index+1)
+                updateNewFilterHandlers(filter)
+            }
         }
     }
     
@@ -313,7 +357,7 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     }()
 
     func doApply() -> IMPImageProvider {
-                
+        
         if let s = self.source{
             if dirty {
                 

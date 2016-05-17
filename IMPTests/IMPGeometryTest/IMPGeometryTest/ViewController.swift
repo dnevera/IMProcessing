@@ -206,16 +206,19 @@ class ViewController: NSViewController {
         filter.addFilter(awb)
         
         transformer = IMPPhotoPlateFilter(context: context)
-        photoCutter = IMPPhotoPlateFilter(context: context)
+        
         cutter = IMPCropFilter(context: context)
         warp = IMPWarpFilter(context: context)
         
         filter.addFilter(transformer)
-        
-        filter.addFilter(warp)        
+        filter.insertFilter(cutter, after: transformer)
+        filter.insertFilter(warp,   before:transformer)
 
-        filter.addFilter(photoCutter)        
-        filter.addFilter(cutter)
+        photoCutter = IMPPhotoPlateFilter(context: context)
+        filter.insertFilter(photoCutter, index: 4)
+        
+        photoCutter.removeFromStack()
+        
         
 //        let hist = IMPGHistogramAnalizer(context: context)
 //        
@@ -240,7 +243,7 @@ class ViewController: NSViewController {
             
             let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
             
-            // self.cutter.region = region
+            self.cutter.region = region
         }
                 
         view.addSubview(imageView)

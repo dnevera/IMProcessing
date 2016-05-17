@@ -11,7 +11,7 @@ import IMProcessing
 import CoreMedia
 import SnapKit
 
-let TEST_CAMERA = true
+let TEST_CAMERA = false
 let BLUR_FILTER = false
 
 
@@ -41,7 +41,7 @@ class IMPTestFilter: IMPFilter {
         histogram.addSolver(rangeSolver)
         
         histogram.addUpdateObserver { (histogram) -> Void in
-            NSLog(" --- \(histogram[.W])")
+            //NSLog(" --- \(histogram[.W])")
             self.contrast.adjustment.minimum = self.rangeSolver.minimum
             self.contrast.adjustment.maximum = self.rangeSolver.maximum
         }
@@ -512,19 +512,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func changeValue(sender:UISlider){
-        dispatch_async(cameraManager.context.dispatchQueue) { () -> Void in
-            if BLUR_FILTER {
-                self.blur.radius = (128 * sender.value).int
+        if BLUR_FILTER {
+            self.blur.radius = (128 * sender.value).int
+        }
+        else{
+            
+            if TEST_CAMERA {
+                let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
+                self.cameraManager.exposureCompensation = (sender.value - 0.5) * range/2
             }
-            else{
-                
-                if TEST_CAMERA {
-                    let range = abs(self.cameraManager.exposureCompensationRange.min)+abs(self.cameraManager.exposureCompensationRange.max)
-                    self.cameraManager.exposureCompensation = (sender.value - 0.5) * range/2
-                }
-                else {
-                    self.test.contrast.adjustment.blending.opacity = sender.value
-                }
+            else {
+                self.test.contrast.adjustment.blending.opacity = sender.value
             }
         }
     }

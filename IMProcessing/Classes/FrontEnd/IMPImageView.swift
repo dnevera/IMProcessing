@@ -14,9 +14,26 @@
 #endif
 
 
+extension IMPImageView {
+    func updateFrameSize(texture:MTLTexture)  {
+        let w = (texture.width.float/self.imageView.scaleFactor).cgfloat
+        let h = (texture.height.float/self.imageView.scaleFactor).cgfloat
+        if w != self.imageView.frame.size.width || h != self.imageView.frame.size.height {
+            dispatch_async(dispatch_get_main_queue(), {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.imageView.frame = CGRect(x: 0, y: 0,
+                    width:  w,
+                    height: h)
+                CATransaction.commit()
+            })
+        }
+    }
+}
+
 #if os(iOS)
     
-    class IMPScrollView: UIScrollView {
+    public class IMPScrollView: UIScrollView {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -25,7 +42,7 @@
             self.addGestureRecognizer(doubleTap)
         }
         
-        required init?(coder aDecoder: NSCoder) {
+        required public init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
@@ -85,12 +102,15 @@
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
-                filter?.addNewSourceObserver(source: { (source) in
-                    self.scrollView.zoomScale = 1
+                filter?.addDestinationObserver(destination: { (destination) in
+                    if let texture = destination.texture{
+                        self.updateFrameSize(texture)
+                    }
+                    self.setOrientation(self.currentDeviceOrientation, animate: false)
                 })
             }
         }
-        
+    
         func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
             
             var angle:CGFloat = 0
@@ -128,55 +148,67 @@
         }
         
         public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-            let duration = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+            let duration = animate ? UIApplication.sharedApplication().statusBarOrientationAnimationDuration : 0
             
-            UIView.animateWithDuration(
-                duration,
-                delay: 0,
-                usingSpringWithDamping: 1.0,
-                initialSpringVelocity: 0,
-                options: .CurveEaseIn,
-                animations: { () -> Void in
+            var transform = CATransform3DIdentity
+            
+            func doTransform() {
+                if let layer = self.imageView.metalLayer {
                     
-                    if let layer = self.imageView.metalLayer {
+                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                    
+                    var angle:CGFloat = 0
+                    
+                    switch (orientation) {
                         
-                        var transform = CATransform3DIdentity
+                    case .LandscapeLeft:
+                        angle = Float(-90.0).radians.cgfloat
+                        self.currentDeviceOrientation = orientation
                         
-                        transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                    case .LandscapeRight:
+                        angle = Float(90.0).radians.cgfloat
+                        self.currentDeviceOrientation = orientation
                         
-                        var angle:CGFloat = 0
+                    case .PortraitUpsideDown:
+                        angle = Float(180.0).radians.cgfloat
+                        self.currentDeviceOrientation = orientation
                         
-                        switch (orientation) {
-                            
-                        case .LandscapeLeft:
-                            angle = Float(-90.0).radians.cgfloat
-                            self.currentDeviceOrientation = orientation
-
-                        case .LandscapeRight:
-                            angle = Float(90.0).radians.cgfloat
-                            self.currentDeviceOrientation = orientation
-
-                        case .PortraitUpsideDown:
-                            angle = Float(180.0).radians.cgfloat
-                            self.currentDeviceOrientation = orientation
-
-                        case .Portrait:
-                            self.currentDeviceOrientation = orientation
-                            
-                        default:
-                            break
-                        }
+                    case .Portrait:
+                        self.currentDeviceOrientation = orientation
                         
-                        transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-                        
-                        layer.transform = self.correctImageOrientation(transform);
-                        
-                        self.updateLayer()
+                    default:
+                        break
                     }
                     
-                },
-                completion:  nil
-            )
+                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                    
+                    layer.transform = self.correctImageOrientation(transform);
+                    
+                    self.updateLayer()
+                }
+            }
+            
+            if animate {
+                
+                UIView.animateWithDuration(
+                    duration,
+                    delay: 0,
+                    usingSpringWithDamping: 1.0,
+                    initialSpringVelocity: 0,
+                    options: .CurveEaseIn,
+                    animations: { () -> Void in
+                        doTransform()
+                    },
+                    completion:  nil
+                )
+                
+            }
+            else {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                doTransform()
+                CATransaction.commit()
+            }
         }
         
         internal func updateLayer(){
@@ -254,6 +286,12 @@
             }
         }
         
+        public func sizeFit(){
+        }
+        
+        ///  Present image in oroginal size
+        public func sizeOriginal(){
+        }
         
         public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
             return imageView
@@ -273,8 +311,9 @@
         }
         
         private var imageView:IMPView!
-        private var scrollView:IMPScrollView!
+        public var scrollView:IMPScrollView!
     }
+    
 #else
     
     /// Image preview window
@@ -302,37 +341,13 @@
         
         /// View filter
         
-        func updateFrameSize()  {
-            
-        }
-        
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
-                
                 filter?.addDestinationObserver(destination: { (destination) in
-                    
                     if let texture = destination.texture{
-                        
-                        let w = (texture.width.float/self.imageView.scaleFactor).cgfloat
-                        let h = (texture.height.float/self.imageView.scaleFactor).cgfloat
-                                                
-                        if w != self.imageView.frame.size.width || h != self.imageView.frame.size.height {
-                            dispatch_async(dispatch_get_main_queue(), {
-                                CATransaction.begin()
-                                CATransaction.setDisableActions(true)
-                                
-                                self.imageView.frame = CGRect(x: 0, y: 0,
-                                    width:  w,
-                                    height: h)
-                                
-                                self.imageView.updateLayerHandler()
-                                
-                                CATransaction.commit()
-                                
-                            })
-                        }
-                    }
+                        self.updateFrameSize(texture)
+                   }
                 })
             }
         }

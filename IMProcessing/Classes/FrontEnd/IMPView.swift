@@ -228,7 +228,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
 
     internal func refresh() {
-        dispatch_async(dispatch_get_main_queue()) {
+        //dispatch_async(dispatch_get_main_queue()) {
             
             if self.layerNeedUpdate {
                 
@@ -285,7 +285,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     }
                 })
             }
-        }
+        //}
     }
     
     #if os(iOS)

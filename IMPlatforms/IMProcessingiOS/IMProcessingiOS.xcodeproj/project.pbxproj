@@ -14,12 +14,10 @@
 		3172A14C1C2C2C6800B99091 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3172A14A1C2C2C6800B99091 /* LaunchScreen.storyboard */; };
 		3172A1551C2C3D8400B99091 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 3172A1541C2C3D8400B99091 /* IMPMain_metal.metal */; };
 		31897DCF1C8A185200D0AAB4 /* A25_B&W.cube in Resources */ = {isa = PBXBuildFile; fileRef = 31897DCE1C8A185200D0AAB4 /* A25_B&W.cube */; };
-		647B405DAF8F902F5D6748D7 /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 312B7D1BAE2DD7DD3736E2EE /* Pods.framework */; };
-		BD85E57B98EFDA5947B6E7B8 /* Pods_IMProcessingiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */; };
+		BEC4B3B9EA33A889F6F386BC /* Pods_IMProcessingiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D824F453B79D064F6A550C0D /* Pods_IMProcessingiOS.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMProcessingiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		312B7D1BAE2DD7DD3736E2EE /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3172A13E1C2C2C6800B99091 /* IMProcessingiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessingiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3172A1411C2C2C6800B99091 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -30,10 +28,9 @@
 		3172A14D1C2C2C6800B99091 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3172A1541C2C3D8400B99091 /* IMPMain_metal.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = IMPMain_metal.metal; sourceTree = "<group>"; };
 		31897DCE1C8A185200D0AAB4 /* A25_B&W.cube */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "A25_B&W.cube"; path = "Luts/A25_B&W.cube"; sourceTree = "<group>"; };
-		A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
-		AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
-		B9A5A4EFA727ACA490B98073 /* Pods-IMProcessingiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.release.xcconfig"; sourceTree = "<group>"; };
-		D2BE4AC8520FAFC040981FD1 /* Pods-IMProcessingiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.debug.xcconfig"; sourceTree = "<group>"; };
+		40DDD7E137730D27446898BF /* Pods-IMProcessingiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.release.xcconfig"; sourceTree = "<group>"; };
+		72EA07057D45044C61BED3CE /* Pods-IMProcessingiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMProcessingiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS.debug.xcconfig"; sourceTree = "<group>"; };
+		D824F453B79D064F6A550C0D /* Pods_IMProcessingiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IMProcessingiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,8 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BD85E57B98EFDA5947B6E7B8 /* Pods_IMProcessingiOS.framework in Frameworks */,
-				647B405DAF8F902F5D6748D7 /* Pods.framework in Frameworks */,
+				BEC4B3B9EA33A889F6F386BC /* Pods_IMProcessingiOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,8 +50,8 @@
 			children = (
 				3172A1401C2C2C6800B99091 /* IMProcessingiOS */,
 				3172A13F1C2C2C6800B99091 /* Products */,
-				5FF4B29EDCE3A7A45CDB0DAB /* Pods */,
 				A953D0B2A77E4F6E5889777C /* Frameworks */,
+				58BD9C45B60C6D6EDC2124BC /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -98,13 +94,11 @@
 			name = Luts;
 			sourceTree = "<group>";
 		};
-		5FF4B29EDCE3A7A45CDB0DAB /* Pods */ = {
+		58BD9C45B60C6D6EDC2124BC /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				D2BE4AC8520FAFC040981FD1 /* Pods-IMProcessingiOS.debug.xcconfig */,
-				B9A5A4EFA727ACA490B98073 /* Pods-IMProcessingiOS.release.xcconfig */,
-				AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */,
-				A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */,
+				72EA07057D45044C61BED3CE /* Pods-IMProcessingiOS.debug.xcconfig */,
+				40DDD7E137730D27446898BF /* Pods-IMProcessingiOS.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -112,8 +106,8 @@
 		A953D0B2A77E4F6E5889777C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				03404F47F346CCAA5D625280 /* Pods_IMProcessingiOS.framework */,
 				312B7D1BAE2DD7DD3736E2EE /* Pods.framework */,
+				D824F453B79D064F6A550C0D /* Pods_IMProcessingiOS.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -125,12 +119,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3172A1501C2C2C6800B99091 /* Build configuration list for PBXNativeTarget "IMProcessingiOS" */;
 			buildPhases = (
-				1EC0F7C21F94BD12A79A279B /* Check Pods Manifest.lock */,
+				74C33021A8C0651B97A0EC2F /* 📦 Check Pods Manifest.lock */,
 				3172A13A1C2C2C6800B99091 /* Sources */,
 				3172A13B1C2C2C6800B99091 /* Frameworks */,
 				3172A13C1C2C2C6800B99091 /* Resources */,
-				90A98B72137FF4046B6FF859 /* Embed Pods Frameworks */,
-				BB95B55A18E626F786F293B7 /* Copy Pods Resources */,
+				6BD4CF4BE94E8A355E5CED0C /* 📦 Embed Pods Frameworks */,
+				ABC8A2BF0DDD2E0ADCC1B4F4 /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -189,14 +183,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1EC0F7C21F94BD12A79A279B /* Check Pods Manifest.lock */ = {
+		6BD4CF4BE94E8A355E5CED0C /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Check Pods Manifest.lock";
+			name = "📦 Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		74C33021A8C0651B97A0EC2F /* 📦 Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -204,34 +213,19 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		90A98B72137FF4046B6FF859 /* Embed Pods Frameworks */ = {
+		ABC8A2BF0DDD2E0ADCC1B4F4 /* 📦 Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Embed Pods Frameworks";
+			name = "📦 Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BB95B55A18E626F786F293B7 /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-IMProcessingiOS/Pods-IMProcessingiOS-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -368,7 +362,7 @@
 		};
 		3172A1511C2C2C6800B99091 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AEA78C38F4D13B0522E81003 /* Pods.debug.xcconfig */;
+			baseConfigurationReference = 72EA07057D45044C61BED3CE /* Pods-IMProcessingiOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
@@ -377,7 +371,6 @@
 				INFOPLIST_FILE = IMProcessingiOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
-				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				MTL_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -387,7 +380,7 @@
 		};
 		3172A1521C2C2C6800B99091 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A5F5BF3B183E7563670B45E9 /* Pods.release.xcconfig */;
+			baseConfigurationReference = 40DDD7E137730D27446898BF /* Pods-IMProcessingiOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
@@ -396,7 +389,6 @@
 				INFOPLIST_FILE = IMProcessingiOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
-				MTL_HEADER_SEARCH_PATHS = "$(inherited)";
 				MTL_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
