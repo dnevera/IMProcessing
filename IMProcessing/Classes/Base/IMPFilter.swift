@@ -54,7 +54,10 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
     
     public var source:IMPImageProvider?{
         didSet{
-            source?.filter=self
+            if let s = source{
+                s.filter=self
+                _destination.orientation =  s.orientation
+            }
             executeNewSourceObservers(source)
             dirty = true
         }

@@ -57,14 +57,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         view.backgroundColor = UIColor.blackColor()
         
         transformFilter.addMatrixModelObserver { (destination, model, aspect) in
-            var offset = (1-IMPPlate().scaleFactorFor(model: model))
-            offset = offset > 0.49 ? 0.49 : offset
-            self.cropFilter.region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+            //var offset = (1-IMPPlate().scaleFactorFor(model: model))
+            //offset = offset > 0.49 ? 0.49 : offset
+            //self.cropFilter.region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
         }
         
         filter.addFilter(transformFilter)
         filter.addFilter(warpFilter)
         filter.addFilter(cropFilter)
+        
+        //transformFilter.scale(factor: 0.5)
         
         imageView = IMPImageView(context: (filter.context)!,  frame: CGRectMake( 0, 20,
             self.view.bounds.size.width,
@@ -332,7 +334,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     func rotate(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
-            self.transformFilter.rotate(IMPMatrixModel.right * (sender.value - 0.5))
+            self.transformFilter.rotate(IMPMatrixModel.right * (sender.value - 0.5) * 2)
         }
     }
 

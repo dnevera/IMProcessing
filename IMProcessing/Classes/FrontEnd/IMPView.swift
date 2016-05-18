@@ -34,6 +34,22 @@ let viewVertexData:[Float] = [
 ]
 
 
+extension IMPView {
+    func updateFrameSize(texture:MTLTexture)  {
+        let w = (texture.width.float/self.scaleFactor).cgfloat
+        let h = (texture.height.float/self.scaleFactor).cgfloat
+        if w != self.frame.size.width || h != self.frame.size.height {
+            dispatch_async(dispatch_get_main_queue(), {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.frame = CGRect(x: 0, y: 0,
+                    width:  w,
+                    height: h)
+                CATransaction.commit()
+            })
+        }
+    }
+}
 
 /// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
@@ -46,16 +62,23 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         didSet{
             
             filter?.addNewSourceObserver(source: { (source) in                
-                if let texture = self.filter?.source?.texture{
-                    if self.isPaused {
-                        self.refresh()
-                    }
+                if self.isPaused {
+                    self.refresh()
                 }
             })
             
             filter?.addDirtyObserver({ () -> Void in
                 self.layerNeedUpdate = true
             })
+            
+            #if os(iOS)
+            filter?.addDestinationObserver(destination: { (destination) in
+                if let texture = destination.texture{
+                    self.updateFrameSize(texture)
+                }
+                self.setOrientation(self.currentDeviceOrientation, animate: false)
+            })
+            #endif
         }
     }
     
@@ -105,7 +128,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    internal var originalBounds:CGRect?
+    internal lazy var originalBounds:CGRect = self.bounds
     private var pipeline:MTLComputePipelineState?
     private func configure(){
         
@@ -143,7 +166,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             metalLayer.pixelFormat = .BGRA8Unorm
             
             originalBounds = self.bounds
-            metalLayer.bounds = originalBounds!
+            metalLayer.bounds = originalBounds
             
             #if os(iOS)
                 metalLayer.backgroundColor = self.backgroundColor?.CGColor
@@ -225,10 +248,115 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }()
     
+    #if os(iOS)
+
+    func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
+        
+        var angle:CGFloat = 0
+        
+        if let orientation = filter?.source?.orientation{
+            
+            switch orientation {
+                
+            case .Left, .LeftMirrored:
+                angle = Float(90.0).radians.cgfloat
+                
+            case .Right, .RightMirrored:
+                angle = Float(-90.0).radians.cgfloat
+                
+            case .Down, .DownMirrored:
+                angle = Float(180.0).radians.cgfloat
+                
+            default: break
+                
+            }
+        }
+        
+        return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
+    }
+    
+
+    private var currentDeviceOrientation = UIDeviceOrientation.Portrait
+    
+    public var orientation:UIDeviceOrientation{
+        get{
+            return currentDeviceOrientation
+        }
+        set{
+            setOrientation(orientation, animate: false)
+        }
+    }
+    
+    public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
+        let duration = animate ? UIApplication.sharedApplication().statusBarOrientationAnimationDuration : 0
+        
+        var transform = CATransform3DIdentity
+        
+        func doTransform() {
+            if let layer = self.metalLayer {
+                
+                transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
+                
+                var angle:CGFloat = 0
+                
+                switch (orientation) {
+                    
+                case .LandscapeLeft:
+                    angle = Float(-90.0).radians.cgfloat
+                    self.currentDeviceOrientation = orientation
+                    
+                case .LandscapeRight:
+                    angle = Float(90.0).radians.cgfloat
+                    self.currentDeviceOrientation = orientation
+                    
+                case .PortraitUpsideDown:
+                    angle = Float(180.0).radians.cgfloat
+                    self.currentDeviceOrientation = orientation
+                    
+                case .Portrait:
+                    self.currentDeviceOrientation = orientation
+                    
+                default:
+                    break
+                }
+                
+                transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
+                
+                layer.transform = self.correctImageOrientation(transform);
+                
+                self.updateLayer()
+            }
+        }
+        
+        if animate {
+            
+            UIView.animateWithDuration(
+                duration,
+                delay: 0,
+                usingSpringWithDamping: 1.0,
+                initialSpringVelocity: 0,
+                options: .CurveEaseIn,
+                animations: { () -> Void in
+                    doTransform()
+                },
+                completion:  nil
+            )
+            
+        }
+        else {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            doTransform()
+            CATransaction.commit()
+        }
+    }
+    
+    #endif
+    
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
 
     internal func refresh() {
-        //dispatch_async(dispatch_get_main_queue()) {
+        dispatch_async(dispatch_get_main_queue()) {
             
             if self.layerNeedUpdate {
                 
@@ -285,7 +413,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     }
                 })
             }
-        //}
+        }
     }
     
     #if os(iOS)
@@ -301,6 +429,46 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     internal var layerNeedUpdate:Bool = true 
     
     #if os(iOS)
+    
+    internal func updateLayer_2(){
+        if let l = metalLayer {
+            
+            var adjustedSize = bounds.size
+            
+            if let t = filter?.destination?.texture {
+                
+                l.drawableSize = t.size
+                
+                var size:CGFloat = min(originalBounds.width,originalBounds.height)
+                
+                if UIDeviceOrientationIsLandscape(self.orientation)  {
+                    
+                    size = t.width == t.height ? size : t.width < t.height ? originalBounds.width : originalBounds.height
+                    
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: size.float)
+                }
+                else{
+                    
+                    size = t.width == t.height ? size : t.width > t.height ? originalBounds.width : originalBounds.height
+                
+                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: size.float)
+                }
+            }
+            
+            var origin = CGPointZero
+            
+            if adjustedSize.height < bounds.height {
+                origin.y = ( bounds.height - adjustedSize.height ) / 2
+            }
+            if adjustedSize.width < bounds.width {
+                origin.x = ( bounds.width - adjustedSize.width ) / 2
+            }
+            
+            l.frame = CGRect(origin: origin, size: adjustedSize)
+            layerNeedUpdate = true
+        }
+    }
+
     
     internal func updateLayer(){
         if let l = metalLayer {

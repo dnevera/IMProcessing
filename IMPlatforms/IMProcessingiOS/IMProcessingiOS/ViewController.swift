@@ -11,7 +11,7 @@ import IMProcessing
 import CoreMedia
 import SnapKit
 
-let TEST_CAMERA = false
+let TEST_CAMERA = true
 let BLUR_FILTER = false
 
 

@@ -77,6 +77,7 @@ public extension IMPMatrixModel {
             [0,              0,    (farZ + nearZ) / (nearZ - farZ),    -1],
             [0,              0,    (2 * farZ * nearZ) / (nearZ - farZ), 0]
         ]
+                
         projection = matrix_float4x4(columns:m)
-    }    
+    }
 }

@@ -58,7 +58,7 @@ public extension IMPVertices{
             
             let xyzw = float4(v.position.x,v.position.y,v.position.z,1)
             
-            let result = float4x4(model.projection) * float4x4(model.transform) * xyzw
+            let result = float4x4(model.projection) * float4x4(model.transform) * xyzw * float4x4(model.transition)
             let t = (1+result.z)/2
             let xy = result.xy/t
             
@@ -121,7 +121,7 @@ public extension IMPVertices{
 }
 
 /// Photo plate model
-public class IMPPlate:IMPVertices{
+public class IMPPlate: IMPVertices{
     
     /// Plate vertices
     public let vertices:[IMPVertex]
@@ -132,34 +132,20 @@ public class IMPPlate:IMPVertices{
     /// Processing region
     public let region:IMPRegion
     
-    public init(aspect a:Float=1,region r:IMPRegion=IMPRegion()){
+    public func quad(model model:IMPMatrixModel) -> IMPQuad {
+        let v = self.xyProjection(model: model)
+        return IMPQuad(left_bottom: v[1], left_top: v[0], right_bottom: v[2], right_top: v[5])
+    }
+    
+    public init(aspect a:Float = 1, region r:IMPRegion = IMPRegion()){
         aspect = a
         region = r
+        
         // Front
-        let A = IMPVertex(x: -a, y:   1, z:  0, tx: region.left,    ty: region.top)      // left-top
-        let B = IMPVertex(x: -a, y:  -1, z:  0, tx: region.left,    ty: 1-region.bottom) // left-bottom
-        let C = IMPVertex(x:  a, y:  -1, z:  0, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
-        let D = IMPVertex(x:  a, y:   1, z:  0, tx: 1-region.right, ty: region.top)      // right-top
-//        let A = IMPVertex(x: -a, y:   1, z:  1, tx: region.left,    ty: region.top)      // left-top
-//        let B = IMPVertex(x: -a, y:  -1, z:  1, tx: region.left,    ty: 1-region.bottom) // left-bottom
-//        let C = IMPVertex(x:  a, y:  -1, z:  1, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
-//        let D = IMPVertex(x:  a, y:   1, z:  1, tx: 1-region.right, ty: region.top)      // right-top
-//        
-//        let Q = IMPVertex(x: -1.0*a, y:   1.0, z:  -1, tx: 0, ty: 0) // virtual depth = 0
-//        let R = IMPVertex(x:  1.0*a, y:   1.0, z:  -1, tx: 0, ty: 0)
-//        let S = IMPVertex(x: -1.0*a, y:  -1.0, z:  -1, tx: 0, ty: 0)
-//        let T = IMPVertex(x:  1.0*a, y:  -1.0, z:  -1, tx: 0, ty: 0)
-//        
-//        vertices = [
-//            A,B,C ,A,C,D,   // The main front plate. Here we put image.
-//            R,T,S ,Q,R,S,   // Back
-//            
-//            Q,S,B ,Q,B,A,   //Left
-//            D,C,T ,D,T,R,   //Right
-//            
-//            Q,A,D ,Q,D,R,   //Top
-//            B,S,T ,B,T,C    //Bot
-//        ]
+        let A = IMPVertex(x: -1*aspect, y:   1, z:  0, tx: region.left,    ty: region.top)      // left-top
+        let B = IMPVertex(x: -1*aspect, y:  -1, z:  0, tx: region.left,    ty: 1-region.bottom) // left-bottom
+        let C = IMPVertex(x:  1*aspect, y:  -1, z:  0, tx: 1-region.right, ty: 1-region.bottom) // right-bottom
+        let D = IMPVertex(x:  1*aspect, y:   1, z:  0, tx: 1-region.right, ty: region.top)      // right-top
 
         vertices = [
             A,B,C, A,C,D,   // The main front plate. Here we put image.
