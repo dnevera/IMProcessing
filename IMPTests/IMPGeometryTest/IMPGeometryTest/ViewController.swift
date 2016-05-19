@@ -211,8 +211,9 @@ class ViewController: NSViewController {
         warp = IMPWarpFilter(context: context)
         
         filter.addFilter(transformer)
-        filter.insertFilter(cutter, after: transformer)
-        filter.insertFilter(warp,   before:transformer)
+        filter.addFilter(cutter)
+        //filter.insertFilter(cutter, after: transformer)
+        filter.insertFilter(warp,   after: transformer)
 
         photoCutter = IMPPhotoPlateFilter(context: context)
         filter.insertFilter(photoCutter, index: 4)
@@ -237,13 +238,17 @@ class ViewController: NSViewController {
             
             let plate = IMPPlate(aspect: aspect)
             
+            let coords = plate.quad(model: model)
+            
             var offset = (1-plate.scaleFactorFor(model: model))/2
+
+            //NSLog("coords = \(coords)")
 
             offset = offset > 0.49 ? 0.49 : offset
             
-            let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
-            
-            self.cutter.region = region
+            //let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+            //
+            //self.cutter.region = region
         }
                 
         view.addSubview(imageView)

@@ -20,6 +20,12 @@ public class IMPRenderNode: IMPContextProvider {
     
     public var context:IMPContext!
     
+    public var aspect = Float(1) {
+        didSet{
+            updateMatrixModel(currentDestinationSize)
+        }
+    }
+    
     /// Angle in radians which node rotation in scene
     public var angle = float3(0) {
         didSet{
@@ -173,10 +179,7 @@ public class IMPRenderNode: IMPContextProvider {
         
         var matrix = matrixIdentityModel
         
-        let width = currentDestinationSize.width.float
-        let height = currentDestinationSize.height.float
-        
-        matrix.setPerspective(radians: fovy, aspect: width/height, nearZ: 0, farZ: 1)
+        matrix.setPerspective(radians: fovy, aspect: aspect, nearZ: 0, farZ: 1)
 
         matrix.scale(x: scale.x, y: scale.y, z: scale.z)
         matrix.rotateAround(x: angle.x, y: angle.y, z: angle.z)
@@ -188,7 +191,7 @@ public class IMPRenderNode: IMPContextProvider {
             let width = currentDestinationSize.width.float
             let height = currentDestinationSize.height.float
             for o in matrixModelObservers {
-                o(destination: destination, model: matrix, aspect: width/height)
+                o(destination: destination, model: matrix, aspect: aspect)
             }
         }
         

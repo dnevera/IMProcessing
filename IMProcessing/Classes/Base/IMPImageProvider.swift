@@ -8,16 +8,32 @@
 
 #if os(iOS)
     import UIKit
+        
+    public typealias IMPImageOrientation = UIImageOrientation
+    
 #else
     import Cocoa
+    
+    public enum IMPImageOrientation : Int {
+        
+        case Up // default orientation
+        case Down // 180 deg rotation
+        case Left // 90 deg CCW
+        case Right // 90 deg CW
+        case UpMirrored // as above but image mirrored along other axis. horizontal flip
+        case DownMirrored // horizontal flip
+        case LeftMirrored // vertical flip
+        case RightMirrored // vertical flip
+    }
+
+    public typealias UIImageOrientation = IMPImageOrientation
+
 #endif
 import Metal
 
 public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
 
-    #if os(iOS)
-    public var orientation = UIImageOrientation.Up
-    #endif
+    public var orientation = IMPImageOrientation.Up
     
     public var context:IMPContext!
     public var texture:MTLTexture?
@@ -29,10 +45,16 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public required init(context: IMPContext) {
         self.context = context
     }
-    
-    public convenience init(context: IMPContext, texture:MTLTexture){
+
+    public required init(context: IMPContext, orientation:IMPImageOrientation) {
+        self.context = context
+        self.orientation = orientation
+    }
+
+    public convenience init(context: IMPContext, texture:MTLTexture, orientation:IMPImageOrientation = .Up){
         self.init(context: context)
         self.texture = texture
+        self.orientation = orientation
     }
     
     public weak var filter:IMPFilter?

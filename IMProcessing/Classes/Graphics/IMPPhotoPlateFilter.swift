@@ -20,16 +20,19 @@ public class IMPPlateNode: IMPRenderNode {
                     region.top != oldValue.top ||
                     region.bottom != oldValue.bottom
             {
-                vertices = IMPPlate(aspect: aspectRatio, region: self.region)
+                vertices = IMPPlate(aspect: self.aspect, region: self.region)
             }
         }
     }
     
-    /// Aspect ration the plate sides
-    public var aspectRatio:Float! = 4/3 {
+    var resetAspect:Bool = true
+    
+    override public var aspect:Float {
         didSet{
-            if oldValue != aspectRatio {
-                vertices = IMPPlate(aspect: aspectRatio, region: self.region)
+            if super.aspect != oldValue || resetAspect {
+                super.aspect = aspect
+                resetAspect = false
+                vertices = IMPPlate(aspect: aspect, region: self.region)
             }
         }
     }
@@ -53,8 +56,8 @@ public class IMPPhotoPlateFilter: IMPFilter {
     
     convenience public required init(context: IMPContext) {
         self.init(context: context, vertex: "vertex_transformation", fragment: "fragment_transformation")
-    }
-
+    }    
+    
     public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider {
         self.context.execute { (commandBuffer) -> Void in
 
@@ -72,16 +75,17 @@ public class IMPPhotoPlateFilter: IMPFilter {
                         inputTexture.pixelFormat,
                         width: width.int, height: height.int,
                         mipmapped: false)
-                    
-                    if provider.texture != nil {
-                        //provider.texture?.setPurgeableState(MTLPurgeableState.Empty)
-                    }
-                    
+                                        
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
                 
-                self.aspectRatio = self.keepAspectRatio ? width/height : 1
-                
+                switch provider.orientation {
+                case .Left, .Right, .LeftMirrored, .RightMirrored:
+                    self.plate.aspect = self.keepAspectRatio ? height/width : 1
+                default:
+                    self.plate.aspect = self.keepAspectRatio ? width/height : 1
+                }
+                                                
                 self.plate.render(commandBuffer, pipelineState: self.graphics.pipeline!, source: source, destination: provider)
             }
         }
@@ -148,18 +152,9 @@ public class IMPPhotoPlateFilter: IMPFilter {
     }
     
     lazy var plate:Plate = {
-        return Plate(context: self.context, aspectRatio:self.aspectRatio)
+        return Plate(context: self.context, aspectRatio:4/3)
     }()
     
-    
-    var aspectRatio:Float = 4/3 {
-        didSet {
-            if oldValue != aspectRatio{
-                plate.aspectRatio = aspectRatio
-                dirty = true
-            }
-        }
-    }
     
     // Plate is a cube with virtual depth == 0
     class Plate: IMPPlateNode {}

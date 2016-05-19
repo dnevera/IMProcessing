@@ -1,3 +1,4 @@
+
 //
 //  IMPScrollView.swift
 //  IMProcessing
@@ -102,146 +103,25 @@ extension IMPImageView {
         public var filter:IMPFilter?{
             didSet{
                 imageView?.filter = filter
-                filter?.addDestinationObserver(destination: { (destination) in
-                    if let texture = destination.texture{
-                        self.updateFrameSize(texture)
-                    }
-                    self.setOrientation(self.currentDeviceOrientation, animate: false)
-                })
             }
         }
-    
-        func correctImageOrientation(inTransform:CATransform3D) -> CATransform3D {
-            
-            var angle:CGFloat = 0
-            
-            if let orientation = filter?.source?.orientation{
-                
-                switch orientation {
-                    
-                case .Left, .LeftMirrored:
-                    angle = Float(90.0).radians.cgfloat
-                    
-                case .Right, .RightMirrored:
-                    angle = Float(-90.0).radians.cgfloat
-                    
-                case .Down, .DownMirrored:
-                    angle = Float(180.0).radians.cgfloat
-                    
-                default: break
-                    
-                }
-            }
-            
-            return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
-        }
-        
-        private var currentDeviceOrientation = UIDeviceOrientation.Portrait
-        
+
         public var orientation:UIDeviceOrientation{
             get{
-                return currentDeviceOrientation
+                return imageView.orientation
             }
             set{
-                setOrientation(orientation, animate: false)
+                imageView.orientation = orientation
             }
         }
         
-        public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
-            let duration = animate ? UIApplication.sharedApplication().statusBarOrientationAnimationDuration : 0
-            
-            var transform = CATransform3DIdentity
-            
-            func doTransform() {
-                if let layer = self.imageView.metalLayer {
-                    
-                    transform = CATransform3DScale(transform, 1.0, 1.0, 1.0)
-                    
-                    var angle:CGFloat = 0
-                    
-                    switch (orientation) {
-                        
-                    case .LandscapeLeft:
-                        angle = Float(-90.0).radians.cgfloat
-                        self.currentDeviceOrientation = orientation
-                        
-                    case .LandscapeRight:
-                        angle = Float(90.0).radians.cgfloat
-                        self.currentDeviceOrientation = orientation
-                        
-                    case .PortraitUpsideDown:
-                        angle = Float(180.0).radians.cgfloat
-                        self.currentDeviceOrientation = orientation
-                        
-                    case .Portrait:
-                        self.currentDeviceOrientation = orientation
-                        
-                    default:
-                        break
-                    }
-                    
-                    transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-                    
-                    layer.transform = self.correctImageOrientation(transform);
-                    
-                    self.updateLayer()
-                }
-            }
-            
-            if animate {
-                
-                UIView.animateWithDuration(
-                    duration,
-                    delay: 0,
-                    usingSpringWithDamping: 1.0,
-                    initialSpringVelocity: 0,
-                    options: .CurveEaseIn,
-                    animations: { () -> Void in
-                        doTransform()
-                    },
-                    completion:  nil
-                )
-                
-            }
-            else {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                doTransform()
-                CATransaction.commit()
-            }
+        public func setOrientation(orientation:UIDeviceOrientation, animate:Bool) {
+            imageView.setOrientation(orientation, animate: animate)
         }
         
-        internal func updateLayer(){
-            if let l = imageView.metalLayer {
-                var adjustedSize = bounds.size
-                
-                if let t = filter?.destination?.texture {
-                    
-                    l.drawableSize = t.size
-                    
-                    var size:CGFloat!
-                    if UIDeviceOrientationIsLandscape(self.orientation)  {
-                        size = t.width < t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
-                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: (size?.float)!)
-                    }
-                    else{
-                        size = t.width > t.height ? imageView.originalBounds?.width : imageView.originalBounds?.height
-                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: (size?.float)!)
-                    }
-                }
-                
-                var origin = CGPointZero
-                if adjustedSize.height < bounds.height {
-                    origin.y = ( bounds.height - adjustedSize.height ) / 2
-                }
-                if adjustedSize.width < bounds.width {
-                    origin.x = ( bounds.width - adjustedSize.width ) / 2
-                }
-                
-                l.frame = CGRect(origin: origin, size: adjustedSize)
-                imageView.layerNeedUpdate = true                
-            }
-        }
+//        internal func updateLayer(){
+//            imageView.updateLayer()
+//        }
         
         private func configure(){
             
@@ -259,7 +139,7 @@ extension IMPImageView {
             self.addSubview(scrollView)
             
             imageView = IMPView(context: self.context, frame: self.bounds)
-            imageView.updateLayerHandler = updateLayer
+            //imageView.updateLayerHandler = updateLayer
             imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             imageView.backgroundColor = IMPColor.clearColor()
             
