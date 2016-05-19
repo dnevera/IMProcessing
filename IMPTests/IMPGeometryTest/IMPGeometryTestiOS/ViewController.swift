@@ -31,7 +31,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     var context = IMPContext()
     
-    var imageView:IMPImageView!
+    var imageView:IMPView!
     
     lazy var filter:IMPFilter = {
         return IMPFilter(context:self.context)
@@ -68,7 +68,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         //transformFilter.scale(factor: 0.5)
         
-        imageView = IMPImageView(context: (filter.context)!,  frame: CGRectMake( 0, 20,
+        imageView = IMPView(context: (filter.context)!,  frame: CGRectMake( 0, 20,
             self.view.bounds.size.width,
             self.view.bounds.size.height*3/4
             ))

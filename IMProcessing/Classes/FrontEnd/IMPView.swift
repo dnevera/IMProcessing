@@ -23,37 +23,16 @@ import Metal
 import GLKit.GLKMath
 import QuartzCore
 
-
-typealias __IMPViewLayerUpdate = (()->Void)
-
-let viewVertexData:[Float] = [
-    -1.0,  -1.0,  0.0,  1.0,
-     1.0,  -1.0,  1.0,  1.0,
-    -1.0,   1.0,  0.0,  0.0,
-     1.0,   1.0,  1.0,  0.0,
-]
-
-
-extension IMPView {
-    func updateFrameSize(texture:MTLTexture)  {
-        let w = (texture.width.float/self.scaleFactor).cgfloat
-        let h = (texture.height.float/self.scaleFactor).cgfloat
-        if w != self.frame.size.width || h != self.frame.size.height {
-            dispatch_async(dispatch_get_main_queue(), {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                self.frame = CGRect(x: 0, y: 0,
-                    width:  w,
-                    height: h)
-                CATransaction.commit()
-            })
-        }
-    }
-}
-
 /// Image Metal View presentation
 public class IMPView: IMPViewBase, IMPContextProvider {
     
+    static private let viewVertexData:[Float] = [
+        -1.0,  -1.0,  0.0,  1.0,
+        1.0,  -1.0,  1.0,  1.0,
+        -1.0,   1.0,  0.0,  0.0,
+        1.0,   1.0,  1.0,  0.0,
+        ]
+
     /// Current Metal device context
     public var context:IMPContext!
     
@@ -61,7 +40,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var filter:IMPFilter?{
         didSet{
             
-            filter?.addNewSourceObserver(source: { (source) in                
+            filter?.addNewSourceObserver(source: { (source) in
                 if self.isPaused {
                     self.refresh()
                 }
@@ -73,16 +52,15 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             #if os(iOS)
             filter?.addDestinationObserver(destination: { (destination) in
-                if let texture = destination.texture{
-                    self.updateFrameSize(texture)
+                if self.orientation != .Unknown {
+                    self.setOrientation(UIDevice.currentDevice().orientation, animate: false)
                 }
-                self.setOrientation(self.currentDeviceOrientation, animate: false)
             })
             #endif
         }
     }
     
-    lazy internal var updateLayerHandler:__IMPViewLayerUpdate = {
+    lazy internal var updateLayerHandler:(()->Void) = {
         return self.updateLayer
     }()
     
@@ -276,7 +254,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
 
-    private var currentDeviceOrientation = UIDeviceOrientation.Portrait
+    private var currentDeviceOrientation = UIDeviceOrientation.Unknown
     
     public var orientation:UIDeviceOrientation{
         get{
@@ -288,6 +266,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
+        
         let duration = animate ? UIApplication.sharedApplication().statusBarOrientationAnimationDuration : 0
         
         var transform = CATransform3DIdentity
@@ -324,7 +303,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 
                 layer.transform = self.correctImageOrientation(transform);
                 
-                self.updateLayer()
+                self.updateLayerHandler()
             }
         }
         
@@ -430,9 +409,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     #if os(iOS)
     
-    internal func updateLayer_2(){
+    internal func updateLayer(){
+
         if let l = metalLayer {
-            
+                        
             var adjustedSize = bounds.size
             
             if let t = filter?.destination?.texture {
@@ -465,28 +445,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             }
             
             l.frame = CGRect(origin: origin, size: adjustedSize)
-            layerNeedUpdate = true
-        }
-    }
-
-    
-    internal func updateLayer(){
-        if let l = metalLayer {
-            let adjustedSize = bounds.size
             
-            if let t = filter?.destination?.texture{
-                l.drawableSize = t.size
-            }
-            
-            var origin = CGPointZero
-            if adjustedSize.height < bounds.height {
-                origin.y = ( bounds.height - adjustedSize.height ) / 2
-            }
-            if adjustedSize.width < bounds.width {
-                origin.x = ( bounds.width - adjustedSize.width ) / 2
-            }
-            
-            l.frame = CGRect(origin: origin, size: adjustedSize)
             layerNeedUpdate = true
         }
     }

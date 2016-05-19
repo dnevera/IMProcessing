@@ -119,9 +119,9 @@ extension IMPImageView {
             imageView.setOrientation(orientation, animate: animate)
         }
         
-        internal func updateLayer(){
-            imageView.updateLayer()
-        }
+//        internal func updateLayer(){
+//            imageView.updateLayer()
+//        }
         
         private func configure(){
             
@@ -139,7 +139,7 @@ extension IMPImageView {
             self.addSubview(scrollView)
             
             imageView = IMPView(context: self.context, frame: self.bounds)
-            imageView.updateLayerHandler = updateLayer
+            //imageView.updateLayerHandler = updateLayer
             imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             imageView.backgroundColor = IMPColor.clearColor()
             
