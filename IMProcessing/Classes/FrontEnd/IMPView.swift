@@ -113,8 +113,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             if let c = backgroundColor?.CGColor{
                 metalLayer.backgroundColor = c
             }
-            
-            //NSLog(" IMPView::backgroundColor = \(backgroundColor?.rgba)")
         }
     }
     #endif
@@ -456,19 +454,22 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 
                 l.drawableSize = t.size
                 
-                var size:CGFloat = min(originalBounds.width,originalBounds.height)
-                
-                if UIDeviceOrientationIsLandscape(self.orientation)  {
+                if !ignoreDeviceOrientation{
                     
-                    size = t.width == t.height ? size : t.width < t.height ? originalBounds.width : originalBounds.height
+                    var size:CGFloat = min(originalBounds.width,originalBounds.height)
                     
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: size.float)
-                }
-                else{
-                    
-                    size = t.width == t.height ? size : t.width > t.height ? originalBounds.width : originalBounds.height
-                
-                    adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: size.float)
+                    if UIDeviceOrientationIsLandscape(self.orientation)  {
+                        
+                        size = t.width == t.height ? size : t.width < t.height ? originalBounds.width : originalBounds.height
+                        
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: size.float)
+                    }
+                    else{
+                        
+                        size = t.width == t.height ? size : t.width > t.height ? originalBounds.width : originalBounds.height
+                        
+                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: size.float)
+                    }
                 }
             }
             
