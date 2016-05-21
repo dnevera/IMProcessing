@@ -537,12 +537,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         //
         // Capturing to Camera Roll
         //
+        let imageOrientationKey = IMProcessing.meta.imageOrientationKey
+        let deviceOrientationKey = IMProcessing.meta.deviceOrientationKey
+        
         cameraManager.capturePhoto { (camera, finished, file, metadata, error) in
+            let imageOrientation = metadata![imageOrientationKey]
+            let deviceOrientation = metadata![deviceOrientationKey]
             if let file = file {
-                NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) meta = \(metadata) error = \(error)")
+                NSLog("... captured : finished = \(finished) file = \(NSURL(fileURLWithPath: file).pathComponents?.last) image orientation = \(imageOrientation) device orientation =\(deviceOrientation) error = \(error)")
             }
             else {
-                NSLog("... captured : finished = \(finished) meta = \(metadata) error = \(error)")
+                NSLog("... captured : finished = \(finished) image orientation = \(imageOrientation) device orientation =\(deviceOrientation) error = \(error)")
             }
         }
     }

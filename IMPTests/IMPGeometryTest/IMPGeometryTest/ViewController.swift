@@ -268,7 +268,8 @@ class ViewController: NSViewController {
                     // Загружаем файл и связываем источником фильтра
                     //
                     
-                    self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file, maxSize: 1200)
+                    //self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file, maxSize: 1200)
+                    self.imageView.filter?.source = try IMPJpegProvider(context: self.context, file: file, maxSize: 1200)
                     
                     
                     self.asyncChanges({ () -> Void in

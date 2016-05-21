@@ -375,6 +375,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DISABLE_SAFETY_CHECKS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -393,6 +394,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "image-metalling.IMProcessingiOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DISABLE_SAFETY_CHECKS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

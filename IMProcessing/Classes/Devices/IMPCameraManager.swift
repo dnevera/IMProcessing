@@ -14,6 +14,39 @@
     import CoreMedia.CMBufferQueue
     
     
+    public extension AVCaptureVideoOrientation {
+                
+//
+//  AVCaptureVideoOrientation
+//        case Portrait            // Indicates that video should be oriented vertically, home button on the bottom.
+//        case PortraitUpsideDown  // Indicates that video should be oriented vertically, home button on the top.
+//        case LandscapeRight      // Indicates that video should be oriented horizontally, home button on the right.
+//        case LandscapeLeft       // Indicates that video should be oriented horizontally, home button on the left.
+//
+//  UIDeviceOrientation
+//        case Unknown            -> Portrait
+//        case Portrait           -> Portrait            // Device oriented vertically, home button on the bottom
+//        case PortraitUpsideDown -> PortraitUpsideDown  // Device oriented vertically, home button on the top
+//        case LandscapeLeft      -> LandscapeRight      // Device oriented horizontally, home button on the right !!!
+//        case LandscapeRight     -> LandscapeLeft       // Device oriented horizontally, home button on the left !!!
+//        case FaceUp             -> Portrait            // Device oriented flat, face up
+//        case FaceDown           -> Portrait            // Device oriented flat, face down
+
+        
+        init?(deviceOrientation:UIDeviceOrientation) {
+            switch deviceOrientation {
+            case .PortraitUpsideDown:
+                self.init(rawValue: AVCaptureVideoOrientation.PortraitUpsideDown.rawValue)
+            case .LandscapeLeft:
+                self.init(rawValue: AVCaptureVideoOrientation.LandscapeRight.rawValue)
+            case .LandscapeRight:
+                self.init(rawValue: AVCaptureVideoOrientation.LandscapeLeft.rawValue)
+            default:
+                self.init(rawValue: AVCaptureVideoOrientation.Portrait.rawValue)
+            }
+        }
+    }
+    
     public extension CMTime {
   
         /// Get exposure duration
@@ -705,7 +738,7 @@
             view.backgroundColor = IMPColor.clearColor()
             view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
             view.filter = IMPFilter(context: self.context)
-            
+            view.ignoreDeviceOrientation = true
             view.viewReadyHandler = {
                 self.liveViewReadyObserversHandle()
             }
@@ -914,7 +947,9 @@
             // Current capture connection
             //
             currentConnection = liveViewOutput.connectionWithMediaType(AVMediaTypeVideo)
+            
             currentConnection.automaticallyAdjustsVideoMirroring = false
+            
             if (currentConnection.supportsVideoOrientation){
                 currentConnection.videoOrientation = AVCaptureVideoOrientation.Portrait
             }
@@ -922,6 +957,7 @@
             if (currentConnection.supportsVideoMirroring) {
                 currentConnection.videoMirrored = currentCamera == frontCamera
             }
+            
         }
         
         func initSession() {
@@ -1180,10 +1216,21 @@
                 return
             }
             
+            let deviceOrientation = UIDevice.currentDevice().orientation
+            var isConnectionSupportsOrientation = false
+
             if let complete = complete {
+                
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                     
                     if let connection = IMPCameraManager.connection(AVMediaTypeVideo, connections: self.stillImageOutput.connections) {
+                        
+                        connection.automaticallyAdjustsVideoMirroring = false
+                        
+                        if (connection.supportsVideoOrientation){
+                            connection.videoOrientation =  AVCaptureVideoOrientation(deviceOrientation: deviceOrientation)!
+                            isConnectionSupportsOrientation = true
+                        }
                         
                         self.capturingPhotoInProgress = true
                         
@@ -1202,22 +1249,15 @@
                                     var meta = attachments as NSDictionary?
                                     
                                     if let d = meta {
+                                        
                                         let newMeta = d.mutableCopy() as! NSMutableDictionary
                                         
-                                        var imageOrientation  = UIImageOrientation.Right
-                                        
-                                        switch (UIDevice.currentDevice().orientation) {
-                                        case .LandscapeLeft:
-                                            imageOrientation = self.cameraPosition == .Front ? .Down : .Up
-                                        case .LandscapeRight:
-                                            imageOrientation = self.cameraPosition == .Front ? .Up : .Down
-                                        case .PortraitUpsideDown:
-                                            imageOrientation = .Left
-                                        default: break
+                                        newMeta[IMProcessing.meta.versionKey]           = IMProcessing.meta.version
+                                        newMeta[IMProcessing.meta.deviceOrientationKey] = deviceOrientation.rawValue
+                                        if isConnectionSupportsOrientation {
+                                            //newMeta[IMProcessing.meta.imageOrientationKey]  = 1
                                         }
                                         
-                                        newMeta[IMProcessing.meta.versionKey]          = IMProcessing.meta.version
-                                        newMeta[IMProcessing.meta.imageOrientationKey] = imageOrientation.rawValue
                                         newMeta[IMProcessing.meta.imageSourceExposureMode] = self.currentCamera.exposureMode.rawValue
                                         newMeta[IMProcessing.meta.imageSourceFocusMode] = self.currentCamera.focusMode.rawValue
                                         

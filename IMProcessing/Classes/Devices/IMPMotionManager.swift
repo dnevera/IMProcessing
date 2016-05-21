@@ -12,9 +12,6 @@
     import QuartzCore
     import CoreMotion
     
-    public typealias IMPMotionRotationHandler = ((orientation:UIDeviceOrientation) -> Void)
-    public typealias IMPMotionPositionHandler = ((position:IMPMotionManager.Position) -> Void)
-    
     public class IMPMotionManager {
     
         public struct Position{
@@ -23,21 +20,25 @@
             let z:Float
             let distance:Float
         }
-        
+    
+        public typealias RotationHandler = ((orientation:UIDeviceOrientation) -> Void)
+        public typealias PositionHandler = ((position:IMPMotionManager.Position) -> Void)
+
         public static let sharedInstance = IMPMotionManager()
         
         public var isPaused = false
         
-        private var motionRotationHandlers = [IMPMotionRotationHandler]()
-        public func addRotationObserver(observer:IMPMotionRotationHandler){
+        private var motionRotationHandlers = [RotationHandler]()
+        
+        public func addRotationObserver(observer:RotationHandler){
             if _motionHandler == nil {
-                self.startMotionHandler()
+                self.startMotion()
             }
             motionRotationHandlers.append(observer)
         }
         
-        private var motionPositionHandlers = [IMPMotionPositionHandler]()
-        public func addPositionObserver(observer:IMPMotionPositionHandler){
+        private var motionPositionHandlers = [PositionHandler]()
+        public func addPositionObserver(observer:PositionHandler){
             motionPositionHandlers.append(observer)
         }
 
@@ -48,6 +49,19 @@
             }
             else{
                 deviceOrientationDidChangeTo(.FaceDown)
+            }
+        }
+        
+        public func start(){
+            if _motionHandler == nil {
+                self.startMotion()
+            }
+        }
+        
+        public func stop(){
+            if  _motionHandler != nil {
+                motionManager.stopAccelerometerUpdates()
+                _motionHandler = nil
             }
         }
         
@@ -62,7 +76,7 @@
         
         var _motionHandler:CMAccelerometerHandler?
         
-        func startMotionHandler () {
+        func startMotion () {
             weak var weakSelf = self
             
             _motionHandler =   { (data, error) in
@@ -138,7 +152,7 @@
             }
             
             if let h  = _motionHandler{
-                self.motionManager.startAccelerometerUpdatesToQueue(NSOperationQueue.currentQueue()!, withHandler: h)
+                motionManager.startAccelerometerUpdatesToQueue(NSOperationQueue.currentQueue()!, withHandler: h)
             }
         }
         

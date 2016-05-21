@@ -31,17 +31,6 @@ public class IMPGraphics: NSObject, IMPContextProvider {
             renderPipelineDescription.vertexDescriptor = self.vertexDescriptor 
             
             renderPipelineDescription.colorAttachments[0].pixelFormat = IMProcessing.colors.pixelFormat
-            
-            //renderPipelineDescription.colorAttachments[0].blendingEnabled = true
-            //renderPipelineDescription.colorAttachments[0].rgbBlendOperation = .Add
-            //renderPipelineDescription.colorAttachments[0].alphaBlendOperation = .Add
-
-            //renderPipelineDescription.colorAttachments[0].sourceRGBBlendFactor = .SourceColor
-            //renderPipelineDescription.colorAttachments[0].sourceAlphaBlendFactor = .SourceAlpha
-
-            //renderPipelineDescription.colorAttachments[0].destinationRGBBlendFactor = .OneMinusBlendAlpha
-            //renderPipelineDescription.colorAttachments[0].destinationAlphaBlendFactor = .OneMinusBlendAlpha
-            
             renderPipelineDescription.vertexFunction   = self.context.defaultLibrary.newFunctionWithName(self.vertexName)
             renderPipelineDescription.fragmentFunction = self.context.defaultLibrary.newFunctionWithName(self.fragmentName)
             
@@ -60,15 +49,6 @@ public class IMPGraphics: NSObject, IMPContextProvider {
     }
     
     lazy var _defaultVertexDescriptor:MTLVertexDescriptor = {
-        // 
-        // By default  
-        //
-        // typedef struct {
-        //    float3 position;
-        //    float3 texcoord;
-        // } IMPVertex;
-        //
-        //
         var v = MTLVertexDescriptor()
         v.attributes[0].format = .Float3;
         v.attributes[0].bufferIndex = 0;

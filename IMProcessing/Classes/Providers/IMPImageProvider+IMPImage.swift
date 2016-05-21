@@ -9,6 +9,12 @@
 import Foundation
 import Metal
 
+public extension IMPExifOrientation{
+    init(rawValue:Int){
+        self.rawValue = UInt32(rawValue)
+    }
+}
+
 public extension IMPImageProvider{
     
     public convenience init(context: IMPContext, image: IMPImage, maxSize: Float = 0) {
@@ -16,21 +22,11 @@ public extension IMPImageProvider{
         self.update(image: image, maxSize: maxSize)
     }
     
-    public convenience init(context: IMPContext, file: String, maxSize: Float = 0) throws {
-        self.init(context: context)
-        try self.updateFromJpeg(file: file, maxSize: maxSize)
-    }
-    
     public func update(image image:IMPImage, maxSize: Float = 0){
         texture = image.newTexture(context, maxSize: maxSize)
         #if os(iOS)
             self.orientation = image.imageOrientation
         #endif
-        completeUpdate()
-    }
-    
-    public func updateFromJpeg(file file:String, maxSize: Float = 0) throws {
-        texture = try IMPJpegturbo.updateMTLTexture(texture, withPixelFormat: IMProcessing.colors.pixelFormat, withDevice: context.device, fromFile: file, maxSize: maxSize.cgfloat)
         completeUpdate()
     }
     
