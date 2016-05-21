@@ -13,6 +13,7 @@
 
 #ifndef __METAL_VERSION__
 
+#include "IMPExif.h"
 #include "IMPJpegturbo.h"
 
 #endif

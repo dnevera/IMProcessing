@@ -36,6 +36,7 @@ public enum IMProcessing{
         public static let version                  = 1.0
         public static let versionKey               = "IMProcessingVersion"
         public static let imageOrientationKey      = "Orientation"
+        public static let deviceOrientationKey     = "DeviceOrientation"
         public static let imageSourceExposureMode  = "SourceExposureMode"
         public static let imageSourceFocusMode     = "SourceFocusMode"
     }
@@ -54,7 +55,12 @@ public enum IMProcessing{
     }
 }
 
+#if os(OSX)
+let impColorSpace = NSColorSpace.sRGBColorSpace()
+#endif
+    
 public extension IMPColor{
+
     public convenience init(color:float4) {
         self.init(red: CGFloat(color.x), green: CGFloat(color.y), blue: CGFloat(color.z), alpha: CGFloat(color.w))
     }
@@ -87,13 +93,19 @@ public extension IMPColor{
     #else
     public var rgb:float3{
         get{
-            return float3(redComponent.float,greenComponent.float,blueComponent.float)
+            guard let rgba = self.colorUsingColorSpace(impColorSpace) else {
+                return float3(0)
+            }
+            return float3(rgba.redComponent.float,rgba.greenComponent.float,rgba.blueComponent.float)
         }
     }
     
     public var rgba:float4{
         get{
-            return float4(redComponent.float,greenComponent.float,blueComponent.float,alphaComponent.float)
+            guard let rgba = self.colorUsingColorSpace(impColorSpace) else {
+                return float4(0)
+            }
+            return float4(rgba.redComponent.float,rgba.greenComponent.float,rgba.blueComponent.float,rgba.alphaComponent.float)
         }
     }
     #endif

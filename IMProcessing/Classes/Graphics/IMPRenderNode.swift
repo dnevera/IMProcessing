@@ -16,6 +16,8 @@ public class IMPRenderNode: IMPContextProvider {
         case None
     }    
     
+    public var backgroundColor:IMPColor = IMPColor.whiteColor()    
+    
     public typealias MatrixModelHandler =  ((destination:IMPImageProvider, model:IMPMatrixModel, aspect:Float) -> Void)
     
     public var context:IMPContext!
@@ -95,37 +97,48 @@ public class IMPRenderNode: IMPContextProvider {
                        source: IMPImageProvider,
                        destination: IMPImageProvider
         ) {
-        
-        if let texture = destination.texture {
-            
-            let width  = texture.width
-            let height = texture.height
-            let depth  = texture.depth
-            
-            currentDestination = destination
-            currentDestinationSize = MTLSize(width: width,height: height,depth:depth)
-            
-            renderPassDescriptor.colorAttachments[0].texture = destination.texture
-            renderPassDescriptor.colorAttachments[0].loadAction = .Clear
-            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 0)
-            renderPassDescriptor.colorAttachments[0].storeAction = .Store
-                        
-            let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
-            
-            renderEncoder.setCullMode(.Front)
-            
-            renderEncoder.setRenderPipelineState(pipelineState)            
-            
-            renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, atIndex: 0)
-            renderEncoder.setVertexBuffer(matrixBuffer, offset: 0, atIndex: 1)
-            
-            renderEncoder.setFragmentBuffer(flipVectorBuffer, offset: 0, atIndex: 0)
-            renderEncoder.setFragmentTexture(source.texture, atIndex:0)
-            
-            renderEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: vertices.count, instanceCount: vertices.count/3)
-            renderEncoder.endEncoding()
+        currentDestination = destination
+        if let input = source.texture {
+            if let texture = destination.texture {
+                render(commandBuffer, pipelineState: pipelineState, source: input, destination: texture)
+            }
         }
+     }
+    
+    public func render(commandBuffer:  MTLCommandBuffer,
+                       pipelineState: MTLRenderPipelineState,
+                       source: MTLTexture,
+                       destination: MTLTexture
+        ) {
+        
+        
+        let width  = destination.width
+        let height = destination.height
+        let depth  = destination.depth
+        
+        currentDestinationSize = MTLSize(width: width,height: height,depth:depth)
+        
+        renderPassDescriptor.colorAttachments[0].texture = destination
+        renderPassDescriptor.colorAttachments[0].loadAction = .Clear
+        renderPassDescriptor.colorAttachments[0].clearColor = clearColor
+        renderPassDescriptor.colorAttachments[0].storeAction = .Store
+        
+        let renderEncoder = commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
+        
+        renderEncoder.setCullMode(.Front)
+        
+        renderEncoder.setRenderPipelineState(pipelineState)
+        
+        renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, atIndex: 0)
+        renderEncoder.setVertexBuffer(matrixBuffer, offset: 0, atIndex: 1)
+        
+        renderEncoder.setFragmentBuffer(flipVectorBuffer, offset: 0, atIndex: 0)
+        renderEncoder.setFragmentTexture(source, atIndex:0)
+        
+        renderEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: vertices.count, instanceCount: vertices.count/3)
+        renderEncoder.endEncoding()
     }
+    
     
     public var vertices:IMPVertices! {
         didSet{
@@ -141,6 +154,17 @@ public class IMPRenderNode: IMPContextProvider {
         return MTLRenderPassDescriptor()                
     }()
     
+    
+    var clearColor:MTLClearColor {
+        get {
+            let rgba = backgroundColor.rgba
+            let color = MTLClearColor(red:   rgba.r.double,
+                                 green: rgba.g.double,
+                                 blue:  rgba.b.double,
+                                 alpha: rgba.a.double)
+            return color
+        }
+    }
     
     var vertexBuffer: MTLBuffer!
     
@@ -188,8 +212,6 @@ public class IMPRenderNode: IMPContextProvider {
         memcpy(matrixBuffer.contents(), &matrix, matrixBuffer.length)
         
         if let destination = currentDestination {
-            let width = currentDestinationSize.width.float
-            let height = currentDestinationSize.height.float
             for o in matrixModelObservers {
                 o(destination: destination, model: matrix, aspect: aspect)
             }

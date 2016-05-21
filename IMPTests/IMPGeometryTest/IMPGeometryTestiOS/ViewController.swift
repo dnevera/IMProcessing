@@ -9,7 +9,77 @@
 import UIKit
 import IMProcessing
 import SnapKit
-//import GLKit
+import AssetsLibrary
+import ImageIO
+
+extension String{
+    static func uniqString() -> String{
+        return CFUUIDCreateString(nil, CFUUIDCreate(nil)) as String;
+    }
+}
+
+extension IMPImage {
+    var metaData:[String: AnyObject]? {
+        get{
+            let imgdata = NSData(data: UIImageJPEGRepresentation(self, 0.5)!)
+            var meta:NSDictionary? = nil
+            if let source = CGImageSourceCreateWithData(imgdata, nil) {
+                meta = CGImageSourceCopyPropertiesAtIndex(source,0,nil)
+            }
+            return meta as! [String: AnyObject]?
+        }
+    }
+    
+
+}
+
+class IMPFileManager{
+    
+    init(defaultFolder:String){
+        self.current = defaultFolder
+        self.createDefaultFolder(self.current!)
+    }
+    
+    var documentsDirectory:NSString{
+        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+        return paths [0] as NSString
+    }
+    
+    var current:String?{
+        didSet{
+            self.createDefaultFolder(self.current!)
+        }
+    }
+    
+    internal
+    func createDefaultFolder(folder:String) {
+        
+        let cacheDirectory = self.documentsDirectory.stringByAppendingPathComponent(folder);
+        
+        if NSFileManager.defaultManager().fileExistsAtPath(cacheDirectory) == false{
+            do{
+                try NSFileManager.defaultManager().createDirectoryAtPath(cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+            }
+            catch  {
+                NSLog(" *** %@ cloud no be created...", cacheDirectory)
+            }
+        }
+    }
+    
+    func filePathForKey(fileKey: String?) ->String {
+        
+        var file:String?
+        
+        if fileKey == nil {
+            file = String.uniqString()
+        }
+        else{
+            file = fileKey
+        }
+        return String(format: "%@/%@/%@.jpeg", self.documentsDirectory, self.current!, file!)
+    }
+}
+
 
 public func == (left:NSPoint, right:NSPoint) -> Bool{
     return left.x==right.x && left.y==right.y
@@ -49,6 +119,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPWarpFilter(context:self.context)
     }()
 
+    var workingFolder = IMPFileManager(defaultFolder: "images")
+
     let slider = UISlider()
 
     override func viewDidLoad() {
@@ -61,6 +133,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             //offset = offset > 0.49 ? 0.49 : offset
             //self.cropFilter.region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
         }
+        
+        transformFilter.backgroundColor = view.backgroundColor!
         
         filter.addFilter(transformFilter)
         filter.addFilter(warpFilter)
@@ -352,7 +426,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
         }
     }
-    
+
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
         
         picker.dismissViewControllerAnimated(true, completion: nil)
@@ -361,8 +435,33 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         if let actualImage = chosenImage{
             
-            let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1500)
-            imageView?.filter?.source = image
+            guard let orientation = actualImage.metaData?[IMProcessing.meta.imageOrientationKey] else {
+                return
+            }
+            
+            let exifOrientation:Int = Int(orientation as! NSNumber)
+            
+            NSLog("image exif orientation = \(orientation) image.imageOrientation = \(actualImage.imageOrientation.rawValue)")
+            
+            let data = UIImageJPEGRepresentation(actualImage, 1.0)
+            
+            let path = workingFolder.filePathForKey(nil)
+            
+            data?.writeToFile(path, atomically: true)
+            
+            // let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1500)
+            
+            do{
+                let image = try IMPJpegProvider(context: context, file: path, maxSize: 1500, orientation: IMPExifOrientation(rawValue: exifOrientation))
+                
+                imageView?.filter?.source = image
+            }
+            catch let error as NSError {
+                NSLog("Load image: \(error))")
+            }
+            catch {
+                NSLog("Load image error ... )")
+            }
         }
     }
 }

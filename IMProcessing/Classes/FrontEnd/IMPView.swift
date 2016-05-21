@@ -36,6 +36,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     /// Current Metal device context
     public var context:IMPContext!
     
+    var ignoreDeviceOrientation:Bool = false
+    
     /// Current image filter
     public var filter:IMPFilter?{
         didSet{
@@ -52,7 +54,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             #if os(iOS)
             filter?.addDestinationObserver(destination: { (destination) in
-                if self.orientation != .Unknown {
+                if /*self.orientation != .Unknown */ !self.ignoreDeviceOrientation {
                     self.setOrientation(UIDevice.currentDevice().orientation, animate: false)
                 }
             })
@@ -102,6 +104,17 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     public var backgroundColor:IMPColor = IMPColor.clearColor(){
         didSet{
             metalLayer.backgroundColor = backgroundColor.CGColor
+        }
+    }
+    #else
+    override public var backgroundColor:UIColor? {
+        didSet{
+            super.backgroundColor = backgroundColor
+            if let c = backgroundColor?.CGColor{
+                metalLayer.backgroundColor = c
+            }
+            
+            //NSLog(" IMPView::backgroundColor = \(backgroundColor?.rgba)")
         }
     }
     #endif
@@ -334,6 +347,28 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = MTLRenderPassDescriptor()
 
+    var clearColor:MTLClearColor {
+        get {
+            #if os(OSX)
+                let rgba = backgroundColor.rgba
+                return MTLClearColor(red: rgba.r.double,
+                                     green: rgba.g.double,
+                                     blue: rgba.b.double,
+                                     alpha: rgba.a.double)
+            #else
+            if let rgba = backgroundColor?.rgba {
+            return MTLClearColor(red: rgba.r.double,
+                                 green: rgba.g.double,
+                                 blue: rgba.b.double,
+                                 alpha: rgba.a.double)
+            }
+            else {
+                return MTLClearColorMake(0, 0, 0, 0)
+            }
+            #endif
+        }
+    }
+    
     internal func refresh() {
         dispatch_async(dispatch_get_main_queue()) {
             
@@ -347,10 +382,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         
                         if let drawable = self.metalLayer.nextDrawable(){
                             
-                            self.renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
-                            self.renderPassDescriptor.colorAttachments[0].loadAction  = .Clear;
-                            self.renderPassDescriptor.colorAttachments[0].storeAction = .Store;
-                            self.renderPassDescriptor.colorAttachments[0].clearColor =  MTLClearColorMake(0, 0, 0, 0);
+                            self.renderPassDescriptor.colorAttachments[0].texture     = drawable.texture
+                            self.renderPassDescriptor.colorAttachments[0].loadAction  = .Clear
+                            self.renderPassDescriptor.colorAttachments[0].storeAction = .Store
+                            self.renderPassDescriptor.colorAttachments[0].clearColor =  self.clearColor
+                            
+                           // NSLog(" view color = \(self.clearColor)")
                             
                             
                             self.context.execute { (commandBuffer) -> Void in

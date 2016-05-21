@@ -45,6 +45,15 @@ public class IMPPlateNode: IMPRenderNode {
 /// Photo plate transoration filter
 public class IMPPhotoPlateFilter: IMPFilter {
 
+    public var backgroundColor:IMPColor {
+        get {
+            return plate.backgroundColor
+        }
+        set {
+            plate.backgroundColor = newValue
+        }
+    }
+
     public var keepAspectRatio = true
     
     public var graphics:IMPGraphics!
@@ -112,7 +121,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///
     ///  - parameter factor:
     public func scale(factor f:Float){
-        plate.scale = float3(f)
+        plate.scale = float3(f,f,1)
         dirty = true
     }
     
