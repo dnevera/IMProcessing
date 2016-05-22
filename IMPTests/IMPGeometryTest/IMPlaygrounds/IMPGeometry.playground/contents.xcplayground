@@ -3,6 +3,6 @@
     <pages>
         <page name='MatrixSolver'/>
         <page name='Transform2d'/>
-        <page name='Untitled Page'/>
+        <page name='QuadSolver'/>
     </pages>
 </playground>

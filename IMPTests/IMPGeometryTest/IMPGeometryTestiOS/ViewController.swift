@@ -132,6 +132,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             //var offset = (1-IMPPlate().scaleFactorFor(model: model))
             //offset = offset > 0.49 ? 0.49 : offset
             //self.cropFilter.region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+            let quad = IMPPlate(aspect: aspect).quad(model: model)
+            NSLog(" model quad = \(quad)")
         }
         
         transformFilter.backgroundColor = view.backgroundColor!

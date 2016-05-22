@@ -55,6 +55,7 @@ class ViewController: NSViewController {
     var transformer: IMPPhotoPlateFilter!
     var photoCutter: IMPPhotoPlateFilter!
     var cutter: IMPCropFilter!
+    var zoomCutter: IMPCropFilter!
     var warp: IMPWarpFilter!
     
     var mouse_point_offset = NSPoint()
@@ -211,8 +212,8 @@ class ViewController: NSViewController {
         warp = IMPWarpFilter(context: context)
         
         filter.addFilter(transformer)
-        filter.addFilter(cutter)
-        //filter.insertFilter(cutter, after: transformer)
+        //filter.addFilter(cutter)
+        filter.insertFilter(cutter, after: transformer)
         filter.insertFilter(warp,   after: transformer)
 
         photoCutter = IMPPhotoPlateFilter(context: context)
@@ -220,6 +221,9 @@ class ViewController: NSViewController {
         
         photoCutter.removeFromStack()
         
+        zoomCutter = IMPCropFilter(context: context)
+        filter.addFilter(zoomCutter)
+
         
 //        let hist = IMPGHistogramAnalizer(context: context)
 //        
@@ -238,17 +242,25 @@ class ViewController: NSViewController {
             
             let plate = IMPPlate(aspect: aspect)
             
-            let coords = plate.quad(model: model)
+            let transformedQuad = plate.quad(model: model)
             
-            var offset = (1-plate.scaleFactorFor(model: model))/2
+            let cropQuad = IMPQuad(region:self.currentCropRegion)
+            
+            let cornersDistance  = transformedQuad.insetsDistance(quad: cropQuad)
+            
+            print("\ncropQuad        = \(cropQuad)")
+            print("transformedQuad = \(transformedQuad)")
+            print("cornersDistance = \(cornersDistance)")
 
-            //NSLog("coords = \(coords)")
+            var offset = (1-plate.scaleFactorFor(model: model) * self.currentScale)/2
 
             offset = offset > 0.49 ? 0.49 : offset
             
-            //let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
-            //
-            //self.cutter.region = region
+            let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+            
+            self.currentCropRegion = region
+            
+            self.zoomCutter.region = region
         }
                 
         view.addSubview(imageView)
@@ -268,10 +280,8 @@ class ViewController: NSViewController {
                     // Загружаем файл и связываем источником фильтра
                     //
                     
-                    //self.imageView.filter?.source = try IMPImageProvider(context: self.context, file: file, maxSize: 1200)
                     self.imageView.filter?.source = try IMPJpegProvider(context: self.context, file: file, maxSize: 1200)
-                    
-                    
+                                        
                     self.asyncChanges({ () -> Void in
                         self.zoomFit()
                     })
@@ -671,18 +681,20 @@ class ViewController: NSViewController {
     
     func rotate(sender:NSSlider){
         asyncChanges { () -> Void in
-            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float
-            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float
-            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float
+            let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float/2
+            let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float/2
+            let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float/2
             let a = float3(anglex,angley,anglez)
             self.transformer.rotate(a)
         }
     }
     
+    var currentScale:Float = 1
     func scale(sender:NSSlider){
         asyncChanges { () -> Void in
             let scale = (sender.floatValue*2)/100
-            self.transformer.scale(float3(scale))
+            self.currentScale = scale
+            self.transformer.scale(factor: scale)
         }
     }
     
@@ -693,10 +705,15 @@ class ViewController: NSViewController {
         }
     }
     
+    var currentCropRegion = IMPRegion()
+    
     func crop(sender:NSSlider){
         asyncChanges { () -> Void in
             let crop = sender.floatValue/300
             let region = IMPRegion(left: crop, right: crop, top: crop, bottom: crop)
+            
+            self.currentCropRegion = region
+            
             //
             // самый быстрый вариант
             //

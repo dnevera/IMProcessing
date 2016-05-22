@@ -1,13 +1,19 @@
-//
-//  IMPQuad.swift
-//  IMPGeometryTest
-//
-//  Created by denis svinarchuk on 04.05.16.
-//  Copyright © 2016 ImageMetalling. All rights reserved.
-//
+//: [Previous](@previous)
 
 import Foundation
 import simd
+
+extension float2 {
+    mutating func limitInifint() -> float2 {
+        if x.isInfinite {
+            x = 1000
+        }
+        if y.isInfinite {
+            y = 1000
+        }
+        return self
+    }
+}
 
 ///  @brief Base quadrangle
 public struct IMPQuad {
@@ -27,20 +33,6 @@ public struct IMPQuad {
         self.left_top = left_top
         self.right_bottom = right_bottom
         self.right_top = right_top
-    }
-    
-    public init(region:IMPRegion){
-        left_bottom.x = left_bottom.x * (1-2*region.left)
-        left_bottom.y = left_bottom.y * (1-2*region.bottom)
-        
-        left_top.x = left_top.x * (1-2*region.left)
-        left_top.y = left_top.y * (1-2*region.top)
-        
-        right_bottom.x = right_bottom.x * (1-2*region.right)
-        right_bottom.y = right_bottom.y * (1-2*region.bottom)
-        
-        right_top.x = right_top.x * (1-2*region.right)
-        right_top.y = right_top.y * (1-2*region.top)
     }
     
     /// Basis matrix
@@ -75,12 +67,12 @@ public struct IMPQuad {
     }
     
     ///  Find distance between corner points of the quad and points of another quad.
-    ///  Angle between base lines must be less then 90º.
-    ///  To solve in general you can translate quad points.
+    ///  Angle between base lines must be less then 90º. 
+    ///  To solve in general you can transpose quad points.
     ///
     ///  - parameter quad: inset quad
     ///
-    ///  - returns: points distance
+    ///  - returns: points distance 
     ///
     public func insetsDistance(quad quad:IMPQuad) -> IMPQuad {
         
@@ -97,7 +89,7 @@ public struct IMPQuad {
                 y:[left_top,    right_top, right_bottom]),
             destination: quad.left_top
         )
-        
+
         let rt = IMPQuad.cornerDistances(
             source: (
                 x:[right_top, right_bottom, left_bottom],
@@ -111,11 +103,8 @@ public struct IMPQuad {
                 y:[left_top,  left_bottom,  right_bottom]),
             destination: quad.right_bottom
         )
-        
-        return IMPQuad(left_bottom:  float2( lb.x, lb.y),
-                       left_top:     float2( lt.x, lt.y),
-                       right_bottom: float2( rb.x, rb.y),
-                       right_top:    float2( rt.x, rt.y))
+
+        return IMPQuad(left_bottom: lb, left_top: lt, right_bottom: rb, right_top: rt)
     }
     
     static func cornerDistances(source source: (x:[float2],y:[float2]), destination: float2) -> float2 {
@@ -145,6 +134,8 @@ public struct IMPQuad {
             p1 = float2(destination.x,py1.y)
         }
         
+        //print("pppp = \(px0,px1,py0,py1) p = \(p0,p1) destination =\(destination)")
+        
         return float2(destination.x-p0.x,destination.y-p1.y)
     }
     
@@ -162,3 +153,64 @@ public struct IMPQuad {
         return float2(x,y)
     }
 }
+
+var s = IMPQuad()
+s.right_top.y = Float(1.333)
+
+let py = IMPQuad.findPointY(p0: s.left_bottom, p1: s.right_top, x: 0.7)
+let px = IMPQuad.findPointX(p0: s.left_bottom, p1: s.right_top, y: py.y)
+
+//var vs = IMPQuad(left_bottom: float2(-0.995385, -1.16069), left_top: float2(-1.59054, 0.782171), right_bottom: float2(0.947479, -0.782171), right_top: float2(0.352324, 1.16069))
+
+var vs  = IMPQuad(left_bottom: float2(-0.899626, -0.899626), left_top: float2(-0.899626, 0.899626), right_bottom: float2(0.899626, -0.899626), right_top: float2(0.899626, 0.899626))
+
+var d = IMPQuad()
+//d.left_bottom.x  = -0.5
+//d.left_bottom.y  = -0.5
+//d.right_bottom.x = -0.5
+//d.right_bottom.y  = -0.5
+
+var dt = vs.insetsDistance(quad: d)
+
+print(dt)
+
+//let lb = IMPQuad.cornerDistances(
+//    source: (
+//        x:[vs.left_bottom, vs.left_top,    vs.right_top],
+//        y:[vs.left_top,    vs.left_bottom, vs.right_bottom]),
+//    destination: d.left_bottom
+//    )
+//
+//
+//print("corner = \(lb)")
+
+
+//let lt = IMPQuad.cornerDistances(
+//    source: (
+//        x:[vs.left_bottom, vs.left_top,  vs.right_top],
+//        y:[vs.left_top,    vs.right_top, vs.right_bottom]),
+//    destination: d.left_top
+//)
+//
+//print("corner = \(lt)")
+
+
+//let rt = IMPQuad.cornerDistances(
+//    source: (
+//        x:[vs.right_top, vs.right_bottom, vs.left_bottom],
+//        y:[vs.left_top,  vs.right_top,    vs.right_bottom]),
+//    destination: d.right_top
+//)
+//
+//print("corner = \(rt)")
+
+
+//let rb = IMPQuad.cornerDistances(
+//    source: (
+//        x:[vs.right_top, vs.right_bottom, vs.left_bottom],
+//        y:[vs.left_top,  vs.left_bottom,  vs.right_bottom]),
+//    destination: d.right_bottom
+//)
+//
+//print("corner = \(rb)")
+//
