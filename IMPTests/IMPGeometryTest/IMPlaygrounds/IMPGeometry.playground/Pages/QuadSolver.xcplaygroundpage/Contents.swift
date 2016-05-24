@@ -15,6 +15,72 @@ extension float2 {
     }
 }
 
+extension float3x3 {
+    var determinant:Float {
+        get {
+            let t  = self.transpose
+            let a1 = t.cmatrix.columns.0
+            let a2 = t.cmatrix.columns.1
+            let a3 = t.cmatrix.columns.2
+            return a1.x*a2.y*a3.z - a1.x*a2.z*a3.y - a1.y*a2.x*a3.z + a1.y*a2.z*a3.x + a1.z*a2.x*a3.y - a1.z*a2.y*a3.x
+        }
+    }
+}
+
+public struct IMPLine {
+    public let p0:float2
+    public let p1:float2
+    public init(p0:float2,p1:float2){
+        self.p0 = p0
+        self.p1 = p1
+    }
+    
+    public func contains(point point:float2) -> Bool {
+        return float3x3(rows: [
+            float3(point.x,point.y,1),
+            float3(p0.x,p0.y,1),
+            float3(p1.x,p1.y,1)
+            ]).determinant == 0
+    }
+    
+    public func distanceTo(point point:float2) -> float2 {
+        
+        if self.contains(point:point) { return float2(0,0) }
+        
+        let k  = (p1.x-p0.x)/(p1.y-p0.y)
+        let k2 = pow(k,2)
+        let m  = k2+1
+        let l  = point.y + k * (point.x - p0.x) + k2 * p0.y
+        
+        let y = l/m
+        let x = l * (k/m) - k * p0.y + p0.x
+        
+        return float2(x,y) - point
+    }
+}
+
+public struct IMPCorner {
+    public let p0:float2
+    public let pc:float2
+    public let p1:float2
+    public init(p0:float2,pc:float2,p1:float2){
+        self.p0 = p0
+        self.pc = pc
+        self.p1 = p1
+    }
+    
+    public func contains(point:float2) -> Bool {
+        return IMPLine(p0: p0, p1: pc).contains(point: point) || IMPLine(p0: pc, p1: p1).contains(point: point)
+    }
+    
+    public func distancesTo(point point:float2) -> [float2] {
+        let line0 = IMPLine(p0: p0, p1: pc)
+        let line1 = IMPLine(p0: p1, p1: pc)
+        return [line0.distanceTo(point: point),line1.distanceTo(point: point)]
+    }
+}
+
+
 ///  @brief Base quadrangle
 public struct IMPQuad {
     
@@ -74,7 +140,7 @@ public struct IMPQuad {
     ///
     ///  - returns: points distance 
     ///
-    public func insetsDistance(quad quad:IMPQuad) -> IMPQuad {
+    public func insetDistances(quad quad:IMPQuad) -> IMPQuad {
         
         let lb = IMPQuad.cornerDistances(
             source: (
@@ -104,9 +170,43 @@ public struct IMPQuad {
             destination: quad.right_bottom
         )
 
-        return IMPQuad(left_bottom: lb, left_top: lt, right_bottom: rb, right_top: rt)
+        //return IMPQuad(left_bottom: lb, left_top: lt, right_bottom: rb, right_top: rt)
+        return IMPQuad(left_bottom:  IMPQuad.normalVector(lb),
+                       left_top:     IMPQuad.normalVector(lt),
+                       right_bottom: IMPQuad.normalVector(rb),
+                       right_top:    IMPQuad.normalVector(rt))
     }
     
+    static func normalVector(distance: float2) -> float2 {
+        
+        if distance.x == 0 {
+            return distance
+        }
+        
+        if distance.y == 0 {
+            return distance
+        }
+        
+        let x = distance.x
+        let y = distance.y
+        
+        let d = sqrt( 1 / (1/(x*x) + 1/(y*y)))
+        
+        let f = float2(d,0)
+        
+        let angle = Float(M_PI/2) - atan(y/x)
+
+        let rotation = float2x2(rows:[
+            float2(cosf(angle), -sinf(angle)),
+            float2(-sinf(angle), cosf(angle))
+            ])
+        
+        print(180*angle/Float(M_PI))
+        
+        return rotation * f
+    }
+    
+   
     static func cornerDistances(source source: (x:[float2],y:[float2]), destination: float2) -> float2 {
         
         let px0 = IMPQuad.findPointX(p0: source.x[0], p1: source.x[1], y: destination.y)
@@ -134,8 +234,6 @@ public struct IMPQuad {
             p1 = float2(destination.x,py1.y)
         }
         
-        //print("pppp = \(px0,px1,py0,py1) p = \(p0,p1) destination =\(destination)")
-        
         return float2(destination.x-p0.x,destination.y-p1.y)
     }
     
@@ -152,27 +250,62 @@ public struct IMPQuad {
         let x =  A == 0 ? p0.x : (B == 0 ? p0.y : A/B)
         return float2(x,y)
     }
+    
+    
+    public func contains(point point:float2) -> Bool {
+        if point.x>=left_bottom.x && point.y>=left_bottom.y {
+            if point.x>=left_top.x && point.y<=left_top.y {
+                if point.x<=right_top.x && point.y<=right_top.y {
+                    if point.x<=right_bottom.x && point.y>=right_bottom.y {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
 }
 
+var p0 = float2(-0.5, 1)
+var p1 = float2(-2,  -1)
+var p2 = float2( 2,  -1)
+
+
+//print(IMPQuad.distancesFrom(point: float2(-1,-1), toCorner: IMPCorner(p0: p0, pc: p1, p1: p3)))
+//print(IMPQuad.distanceFrom(point: float2(-1,-1), toLine: IMPQuad.Line(p0: p0, p1: p1)))
+
+//print(IMPLine(p0: p0, p1: p1).distanceTo(point: float2(-1,-1)))
+//print(IMPCorner(p0: p0, pc: p1, p1: p2).distancesTo(point: float2(-1,-1)))
+
+
+//print(IMPLine(p0: p1, p1: p2).contains(point: float2(-1,-1)))
+
+//print(IMPQuad.normalVector(p0))
+
 var s = IMPQuad()
-s.right_top.y = Float(1.333)
 
-let py = IMPQuad.findPointY(p0: s.left_bottom, p1: s.right_top, x: 0.7)
-let px = IMPQuad.findPointX(p0: s.left_bottom, p1: s.right_top, y: py.y)
+s.contains(point: float2(0,0))
+s.contains(point: float2(0,-1))
+s.contains(point: float2(-1.2,-1))
 
-//var vs = IMPQuad(left_bottom: float2(-0.995385, -1.16069), left_top: float2(-1.59054, 0.782171), right_bottom: float2(0.947479, -0.782171), right_top: float2(0.352324, 1.16069))
-
-var vs  = IMPQuad(left_bottom: float2(-0.899626, -0.899626), left_top: float2(-0.899626, 0.899626), right_bottom: float2(0.899626, -0.899626), right_top: float2(0.899626, 0.899626))
-
-var d = IMPQuad()
+//s.right_top.y = Float(1.333)
+//
+//let py = IMPQuad.findPointY(p0: s.left_bottom, p1: s.right_top, x: 0.7)
+//let px = IMPQuad.findPointX(p0: s.left_bottom, p1: s.right_top, y: py.y)
+//
+////var vs = IMPQuad(left_bottom: float2(-0.995385, -1.16069), left_top: float2(-1.59054, 0.782171), right_bottom: float2(0.947479, -0.782171), right_top: float2(0.352324, 1.16069))
+//
+//var vs  = IMPQuad(left_bottom: float2(-0.899626, -0.899626), left_top: float2(-0.899626, 0.899626), right_bottom: float2(0.899626, -0.899626), right_top: float2(0.899626, 0.899626))
+//
+//var d = IMPQuad()
 //d.left_bottom.x  = -0.5
 //d.left_bottom.y  = -0.5
 //d.right_bottom.x = -0.5
 //d.right_bottom.y  = -0.5
 
-var dt = vs.insetsDistance(quad: d)
-
-print(dt)
+//var dt = vs.insetDistances(quad: d)
+//
+//print(dt)
 
 //let lb = IMPQuad.cornerDistances(
 //    source: (

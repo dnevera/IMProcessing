@@ -246,7 +246,7 @@ class ViewController: NSViewController {
             
             let cropQuad = IMPQuad(region:self.currentCropRegion)
             
-            let cornersDistance  = transformedQuad.insetsDistance(quad: cropQuad)
+            let cornersDistance  = transformedQuad.insetDistances(quad: cropQuad)
             
             print("\ncropQuad        = \(cropQuad)")
             print("transformedQuad = \(transformedQuad)")
@@ -684,8 +684,7 @@ class ViewController: NSViewController {
             let anglex = (self.rotationXSlider.floatValue-50)/100 * M_PI.float/2
             let angley = (self.rotationYSlider.floatValue-50)/100 * M_PI.float/2
             let anglez = (self.rotationZSlider.floatValue-50)/100 * M_PI.float/2
-            let a = float3(anglex,angley,anglez)
-            self.transformer.rotate(a)
+            self.transformer.angle = float3(anglex,angley,anglez)
         }
     }
     
@@ -700,8 +699,8 @@ class ViewController: NSViewController {
     
     func move(sender:NSSlider){
         asyncChanges { () -> Void in
-            let transition = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
-            self.transformer.move(transition)
+            let translation = float2(x:(self.moveXSlider.floatValue-50)/100*4,y:(self.moveYSlider.floatValue-50)/100*4)
+            self.transformer.translation = translation
         }
     }
     
@@ -764,7 +763,7 @@ class ViewController: NSViewController {
     
     func  left(sender:NSButton) {
         asyncChanges { () -> Void in
-            self.transformer.rotate(sender.state == 1 ? IMPMatrixModel.left : IMPMatrixModel.flat)
+            self.transformer.angle = (sender.state == 1 ? IMPMatrixModel.left : IMPMatrixModel.flat)
         }
     }
 

@@ -17,7 +17,7 @@ public class IMPJpegProvider:IMPImageProvider{
     
     
     public func updateFromJpeg(file file:String, maxSize: Float = 0, orientation:IMPExifOrientation = IMPExifOrientationUp) throws {
-        var source = try IMPJpegturbo.updateMTLTexture(texture,
+        let source = try IMPJpegturbo.updateMTLTexture(texture,
                                                     withPixelFormat: IMProcessing.colors.pixelFormat,
                                                     withDevice: context.device,
                                                     fromFile: file,

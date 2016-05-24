@@ -147,12 +147,37 @@ public extension matrix_float4x4 {
     }
     
     public mutating func move(x x:Float, y: Float){
-        self = matrix_float4x4(columns:[
-            float4(1, 0, 0, x),
-            float4(0, 1, 0, y),
-            float4(0, 0, 1, 0),
-            float4(0, 0, 0, 1)])
-    }        
+        self = matrix_multiply(self,
+                               matrix_float4x4(columns:[
+                                float4(1, 0, 0, x),
+                                float4(0, 1, 0, y),
+                                float4(0, 0, 1, 0),
+                                float4(0, 0, 0, 1)]))
+    }
+}
+
+public func == (left:float2,right:float2) -> Bool {
+    return (left.x == right.x) && (left.y == right.y)
+}
+
+public func != (left:float2,right:float2) -> Bool {
+    return !(left == right)
+}
+
+public func == (left:float3,right:float3) -> Bool {
+    return (left.x == right.x) && (left.y == right.y) && (left.z == right.z)
+}
+
+public func != (left:float3,right:float3) -> Bool {
+    return !(left == right)
+}
+
+public func == (left:float4,right:float4) -> Bool {
+    return (left.x == right.x) && (left.y == right.y) && (left.z == right.z) && (left.w == right.w)
+}
+
+public func != (left:float4,right:float4) -> Bool {
+    return !(left == right)
 }
 
 public func / (left:float2,right:Float) -> float2 {

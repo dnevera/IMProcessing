@@ -31,7 +31,7 @@ namespace IMProcessing
         float3 position = float3(in.position);
         
         IMPVertexOut out;
-        out.position = matrix_model.projection * matrix_model.transform * float4(position,1) * matrix_model.transition ;
+        out.position = matrix_model.projection * matrix_model.transform * float4(position,1) * matrix_model.translation ;
         out.texcoord = float2(float3(in.texcoord).xy);
         
         return out;
