@@ -59,7 +59,7 @@ public struct IMPLine {
     }
 }
 
-public struct IMPCorner {
+public struct IMPTriangle {
     public let p0:float2
     public let pc:float2
     public let p1:float2
@@ -271,11 +271,11 @@ var p1 = float2(-2,  -1)
 var p2 = float2( 2,  -1)
 
 
-//print(IMPQuad.distancesFrom(point: float2(-1,-1), toCorner: IMPCorner(p0: p0, pc: p1, p1: p3)))
+//print(IMPQuad.distancesFrom(point: float2(-1,-1), toCorner: IMPTriangle(p0: p0, pc: p1, p1: p3)))
 //print(IMPQuad.distanceFrom(point: float2(-1,-1), toLine: IMPQuad.Line(p0: p0, p1: p1)))
 
 //print(IMPLine(p0: p0, p1: p1).distanceTo(point: float2(-1,-1)))
-//print(IMPCorner(p0: p0, pc: p1, p1: p2).distancesTo(point: float2(-1,-1)))
+//print(IMPTriangle(p0: p0, pc: p1, p1: p2).distancesTo(point: float2(-1,-1)))
 
 
 //print(IMPLine(p0: p1, p1: p2).contains(point: float2(-1,-1)))

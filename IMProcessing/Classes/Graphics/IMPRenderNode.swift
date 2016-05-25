@@ -23,14 +23,22 @@ public class IMPRenderNode: IMPContextProvider {
     public var context:IMPContext!
     
     public var model:IMPMatrixModel {
-//        set {
-//            currentMatrixModel = newValue
-//        }
         get{
             return currentMatrixModel
         }
     }
-    
+
+    public var identityModel:IMPMatrixModel {
+        get{
+            var matrix = matrixIdentityModel
+            matrix.setPerspective(radians: fovy, aspect: aspect, nearZ: 0, farZ: 1)
+            matrix.scale(x: 1, y: 1, z: 1)
+            matrix.rotateAround(x: 0, y: 0, z: 0)
+            matrix.move(x: 0, y: 0)
+            return matrix
+        }
+    }
+
     public var aspect = Float(1) {
         didSet{
             updateMatrixModel(currentDestinationSize)

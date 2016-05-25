@@ -9,7 +9,6 @@
 import Foundation
 import simd
 
-
 // MARK: - Matrix constructors
 public extension float3x3 {
     public init(rows: [[Float]]){
@@ -153,6 +152,28 @@ public extension matrix_float4x4 {
                                 float4(0, 1, 0, y),
                                 float4(0, 0, 1, 0),
                                 float4(0, 0, 0, 1)]))
+    }
+}
+
+// MARK: - Basic algebra
+public extension float2x2 {
+    var determinant:Float {
+        get {
+            let t = cmatrix.columns
+            return t.0.x*t.1.y - t.0.y*t.1.x
+        }
+    }
+}
+
+public extension float3x3 {
+    var determinant:Float {
+        get {
+            let t  = self.transpose
+            let a1 = t.cmatrix.columns.0
+            let a2 = t.cmatrix.columns.1
+            let a3 = t.cmatrix.columns.2
+            return a1.x*a2.y*a3.z - a1.x*a2.z*a3.y - a1.y*a2.x*a3.z + a1.y*a2.z*a3.x + a1.z*a2.x*a3.y - a1.z*a2.y*a3.x
+        }
     }
 }
 

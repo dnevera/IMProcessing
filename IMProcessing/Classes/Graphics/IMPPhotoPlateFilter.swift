@@ -106,23 +106,17 @@ public class IMPPhotoPlateFilter: IMPFilter {
     }
     
     public var model:IMPMatrixModel {
-//        set {
-//            plate.model = newValue
-//            dirty = true
-//        }
-        get {
             return plate.model
-        }
     }
+
+    public var identityModel:IMPMatrixModel {
+        return plate.identityModel
+    }
+    
     
     ///  Rotate plate on angle in radians arround axis
     ///
     ///  - parameter vector: angle in radians for x,y,z axis
-//    public func rotate(vector:float3){
-//        plate.angle = vector
-//        dirty = true
-//    }
-    
     public var angle:float3 {
         set {
             plate.angle = newValue
@@ -136,11 +130,6 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  Scale plate
     ///
     ///  - parameter vector: x,y,z scale factor
-//    public func scale(vector:float3){
-//        plate.scale = vector
-//        dirty = true
-//    }
-    
     public var scale:float3 {
         set {
             plate.scale = newValue
@@ -163,12 +152,6 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  Move plate with vector
     ///
     ///  - parameter vector: vector
-//    public func move(vector:float2){
-//        plate.transition = vector
-//        dirty = true
-//    }
-//    
-    
     public var translation:float2 {
         set{
             plate.translation = newValue
@@ -182,11 +165,6 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  Cut the plate with crop region
     ///
     ///  - parameter region: crop region
-    //public func crop(region:IMPRegion){
-    //    plate.region = region
-    //    dirty = true
-    //}
-    
     public var cropRegion:IMPRegion {
         set {
             plate.region = newValue
@@ -208,10 +186,6 @@ public class IMPPhotoPlateFilter: IMPFilter {
         }
     }
     
-    //public var region:IMPRegion {
-    //return plate.region
-    //}
-        
     public final func addMatrixModelObserver(model observer:IMPRenderNode.MatrixModelHandler){
         plate.addMatrixModelObserver(model: observer)
     }

@@ -8,22 +8,27 @@
 
 import Foundation
 import simd
-
-extension float3x3 {
-    var determinant:Float {
-        get {
-            let t  = self.transpose
-            let a1 = t.cmatrix.columns.0
-            let a2 = t.cmatrix.columns.1
-            let a3 = t.cmatrix.columns.2
-            return a1.x*a2.y*a3.z - a1.x*a2.z*a3.y - a1.y*a2.x*a3.z + a1.y*a2.z*a3.x + a1.z*a2.x*a3.y - a1.z*a2.y*a3.x
-        }
-    }
-}
+import Accelerate
 
 public struct IMPLine {
+    
     public let p0:float2
     public let p1:float2
+    
+    /// Standard form of line equation: Ax + By = C
+    /// float3.x = A
+    /// float3.y = B
+    /// float3.z = C
+    public var standardForm:float3 {
+        get {
+            var f = float3()
+            f.x = p1.y-p0.y
+            f.y = p0.x-p1.x
+            f.z = -((p0.x*(p0.y-p1.y) + p0.y*(p1.x-p0.x)))
+            return f
+        }
+    }
+
     public init(p0:float2,p1:float2){
         self.p0 = float2(p0.x,p0.y)
         self.p1 = float2(p1.x,p1.y)
@@ -57,12 +62,47 @@ public struct IMPLine {
     public func distanceTo(point point:float2) -> float2 {
         return normalIntersection(point: point) - point
     }
+    
+    public func crossPoint(line line:IMPLine) -> float2 {
+        //
+        // a1*x + b1*y = c1 - self line
+        // a2*x + b2*y = c2 - another line
+        //
+        
+        let form1 = self.standardForm
+        let form2 = line.standardForm
+        
+        let a1 = form1.x
+        let b1 = form1.y
+        let c1 = form1.z
+        
+        let a2 = form2.x
+        let b2 = form2.y
+        let c2 = form2.z
+        
+        let D = float2x2(rows: [
+            float2(a1,b1),
+            float2(a2,b2)
+            ]).determinant
+        
+        let Dx = float2x2(rows: [
+            float2(c1,b1),
+            float2(c2,b2)
+            ]).determinant
+        
+        let Dy = float2x2(rows: [
+            float2(a1,c1),
+            float2(a2,c2)
+            ]).determinant
+        
+        return float2(Dx/D,Dy/D)
+    }
 }
 
-public struct IMPCorner {
+public struct IMPTriangle {
     
     public let p0:float2
-    public let pc:float2
+    public let pc:float2 // base vertex, center of transformation
     public let p1:float2
     
     public let aspect:Float
@@ -89,6 +129,14 @@ public struct IMPCorner {
         let line1 = IMPLine(p0: p1, p1: pc)
         return [line0.distanceTo(point: point),line1.distanceTo(point: point)]
     }
+    
+    /// Vector of distance from base vertex to opposite side
+    public var heightVector:float2 {
+        get{
+            let line1 = IMPLine(p0: p0, p1: p1)
+            return line1.normalIntersection(point: pc) - pc
+        }
+    }
 }
 
 
@@ -104,6 +152,23 @@ public struct IMPQuad {
     /// Right top point of the quad
     public var right_top    = float2(  1,  1)
     
+    subscript(index: Int) -> float2 {
+        get {
+            let i = index < 0 ? (4-abs(index))%4 : index%4
+            
+            if i == 0 {
+                return left_bottom
+            }
+            else if i == 1 {
+                return left_top
+            }
+            else if i == 2 {
+                return right_top
+            }
+            return right_bottom
+        }
+    }
+    
     public init(){}
     public init(left_bottom:float2,left_top:float2, right_bottom:float2, right_top:float2){
         self.left_bottom = left_bottom
@@ -112,7 +177,12 @@ public struct IMPQuad {
         self.right_top = right_top
     }
     
-    public init(region:IMPRegion){
+    public init(region:IMPRegion, aspect:Float = 1){
+        crop(region: region)
+        setAspect(ratio: aspect)
+    }
+    
+    public mutating func crop(region region:IMPRegion){
         left_bottom.x = left_bottom.x * (1-2*region.left)
         left_bottom.y = left_bottom.y * (1-2*region.bottom)
         
@@ -124,6 +194,13 @@ public struct IMPQuad {
         
         right_top.x = right_top.x * (1-2*region.right)
         right_top.y = right_top.y * (1-2*region.top)
+    }
+    
+    public mutating func setAspect(ratio ratio:Float){
+        left_bottom.x *= ratio
+        left_top.x *= ratio
+        right_top.x *= ratio
+        right_bottom.x *= ratio
     }
     
     /// Basis matrix
@@ -158,16 +235,55 @@ public struct IMPQuad {
     }
     
     public func contains(point point:float2) -> Bool {
-        if point.x>left_bottom.x && point.y>left_bottom.y {
-            if point.x>left_top.x && point.y<left_top.y {
-                if point.x<right_top.x && point.y<right_top.y {
-                    if point.x<right_bottom.x && point.y>right_bottom.y {
+        if point.x>=left_bottom.x && point.y>=left_bottom.y {
+            if point.x>=left_top.x && point.y<=left_top.y {
+                if point.x<=right_top.x && point.y<=right_top.y {
+                    if point.x<=right_bottom.x && point.y>=right_bottom.y {
                         return true
                     }
                 }
             }
         }
         return false
+    }
+    
+    public func insetTriangles(quad quad:IMPQuad) -> [IMPTriangle] {
+      
+        var triangles = [IMPTriangle]()
+        
+        for i in 0..<4 {
+            let p0 = quad[i-1]
+            let pc = quad[i+0]
+            let p1 = quad[i+1]
+            
+            let cp0 = self[i-1]
+            let cpc = self[i+0]
+            let cp1 = self[i+1]
+            
+
+            let cornerLine1 = IMPLine(p0: cpc, p1: cp0)
+            let cornerLine2 = IMPLine(p0: cpc, p1: cp1)
+            
+            var baseline1 = IMPLine(p0: pc, p1:  p0)
+            var baseline2 = IMPLine(p0: pc, p1:  p1)
+            
+            let crossPoint1 = cornerLine1.crossPoint(line: baseline1)
+            let crossPoint2 = cornerLine2.crossPoint(line: baseline1)
+            
+            let crossPoint12 = cornerLine1.crossPoint(line: baseline2)
+            let crossPoint22 = cornerLine2.crossPoint(line: baseline2)
+
+            if contains(point: crossPoint1) && contains(point: crossPoint2){
+                let t = IMPTriangle(p0: crossPoint1, pc: cpc, p1: crossPoint2)
+                triangles.append(t)
+            }
+
+            if contains(point: crossPoint12) && contains(point: crossPoint22){
+                let t = IMPTriangle(p0: crossPoint12, pc: cpc, p1: crossPoint22)
+                triangles.append(t)
+            }
+        }
+        return triangles
     }
     
     func getInPlaceDistance(points:[float2], base:float2) -> [float2] {
@@ -177,16 +293,9 @@ public struct IMPQuad {
         for p in points {
             outp = p
             if contains(point: p) {
-                print(" \(base) contains = \(p)")
                 var d = p-base
                 a.append(d)
             }
-        }
-        //print("\(base) <<< \(outp)")
-        //return [float2(0,0)]
-        //return [points[0]-base, points[1]-base]
-        if a.isEmpty {
-            //a.append(float2(0))
         }
         return a
     }
@@ -194,29 +303,20 @@ public struct IMPQuad {
     public func insetCornerDistances(quad quad:IMPQuad) -> [float2] {
         var a = [float2]()
         
-        //a += IMPCorner(p0: right_bottom, pc: left_bottom,  p1: left_top    ).distancesTo(point: quad.left_bottom)
-        //a += IMPCorner(p0: left_bottom,  pc: left_top,     p1: right_top   ).distancesTo(point: quad.left_top)
-        //a += IMPCorner(p0: left_top,     pc: right_top,    p1: right_bottom).distancesTo(point: quad.right_top)
-        //a += IMPCorner(p0: right_top,    pc: right_bottom, p1: left_bottom ).distancesTo(point: quad.right_bottom)
-        
-        print("")
-        print("lb")
-        var p = IMPCorner(p0: right_bottom, pc: left_bottom,  p1: left_top    ).normalIntersections(point: quad.left_bottom)
-        a += quad.getInPlaceDistance(p, base: quad.left_bottom)
-       
-        print("lt")
-        p = IMPCorner(p0: left_bottom,  pc: left_top,     p1: right_top   ).normalIntersections(point: quad.left_top)
-        a += quad.getInPlaceDistance(p, base: quad.left_top)
-        
-        print("rt")
-        p = IMPCorner(p0: left_top,     pc: right_top,    p1: right_bottom).normalIntersections(point: quad.right_top)
-        a += quad.getInPlaceDistance(p, base: quad.right_top)
-        
-        print("rb")
-        p = IMPCorner(p0: right_top,    pc: right_bottom, p1: left_bottom ).normalIntersections(point: quad.right_bottom)
-        a += quad.getInPlaceDistance(p, base: quad.right_bottom)
-        print("--")
+        for i in 0..<4 {
+            //let p0 = quad[i-1]
+            let pc = quad[i+0]
+            //let p1 = quad[i+1]
+            
+            let cp0 = self[i-1]
+            let cpc = self[i+0]
+            let cp1 = self[i+1]
 
+            var p = IMPTriangle(p0: cp0, pc: cpc,  p1: cp1    ).normalIntersections(point: pc)
+            a += quad.getInPlaceDistance(p, base: pc)
+
+        }
+        
         return a
     }
     
@@ -262,11 +362,6 @@ public struct IMPQuad {
                        left_top:     float2( lt.x, lt.y),
                        right_bottom: float2( rb.x, rb.y),
                        right_top:    float2( rt.x, rt.y))
-        
-//        return IMPQuad(left_bottom:  IMPQuad.normalVector(lb),
-//                       left_top:     IMPQuad.normalVector(lt),
-//                       right_bottom: IMPQuad.normalVector(rb),
-//                       right_top:    IMPQuad.normalVector(rt))
     }
     
     static func normalVector(distance: float2) -> float2 {
@@ -292,8 +387,6 @@ public struct IMPQuad {
             float2(cosf(angle), sinf(angle)),
             float2(sinf(angle), cosf(angle))
             ])
-        
-        print(" angle = \(180*angle/Float(M_PI))")
         
         return rotation * f
     }
