@@ -125,15 +125,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     let scaleSlider = UISlider()
     
     
+    var currentScaleFactor:Float {
+        return IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+    }
+    
+    
+    ///
     ///  Current crop region with the transformation model
     ///
-    ///  - parameter model: transformation model
-    ///
-    ///  - returns: gropped region
-    ///
-    func currentCropRegion(model model: IMPMatrixModel) -> IMPRegion {
-        let scale = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
-        let offset = (1 - scale * transformFilter.scale.x ) / 2
+    var currentCropRegion:IMPRegion {
+        let offset = (1 - currentScaleFactor * transformFilter.scale.x ) / 2
         return IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
     }
     
@@ -141,9 +142,27 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     ///  Check bounds of inscribed Rectangular
     func checkBounds() {
         
+        let aspect   = transformFilter.aspect
         let model    = transformFilter.model
-        let cropQuad = IMPQuad(region:currentCropRegion(model: model), aspect: transformFilter.aspect)
-        let offset   = IMPPlate(aspect: transformFilter.aspect).quad(model: model).translation(quad: cropQuad)
+        //
+        // Model of Cropped Quad
+        //
+        let cropQuad = IMPQuad(region:currentCropRegion, aspect: aspect)
+        
+        //
+        // Model of
+        //
+        let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
+        
+        //
+        // Offset for transformed quad which should be inscribed croped quad
+        //
+        // NOTE: 
+        // 1. quads should be rectangle
+        // 2. scale of transformed quad should be greate then of equal scaleFactorFor for the transformed model:
+        //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
+        //
+        let offset   = transformedQuad.translation(quad: cropQuad)
         
         animateTranslation(-offset)
     }
@@ -176,7 +195,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func updateCrop()  {
-        self.cropFilter.region = currentCropRegion(model: transformFilter.model)
+        self.cropFilter.region = currentCropRegion
     }
     
     override func viewDidLoad() {
@@ -249,7 +268,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
         
-        scaleSlider.value = 0.0
+        scaleSlider.value = 0.5
         scaleSlider.addTarget(self, action: #selector(ViewController.scale(_:)), forControlEvents: .ValueChanged)
         view.addSubview(scaleSlider)
         
@@ -504,6 +523,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         slider.value = 0.5
         rotate(slider)
         
+        scaleSlider.value = 0.5
+        scale(scaleSlider)
+        
         transformFilter.translation = float2(0)
         
         warpFilter.sourceQuad = IMPQuad()
@@ -538,16 +560,32 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    func checkBoundsAfterScale()  {
+        dispatch_async(dispatch_get_main_queue()) {
+            self.checkBounds()
+        }
+    }
+
     func scale(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
-            self.transformFilter.scale(factor: sender.value + 1 )
+            
+            var scale = sender.value * 2
+            
+            if scale < 1 {
+                //
+                // scale can't be less then 1 while we try to crop 
+                //
+                scale = 1
+            }
+            
+            self.transformFilter.scale(factor: scale)
             self.updateCrop()
             
             dispatch_async(dispatch_get_main_queue(), {
                 if self.timer != nil {
                     self.timer?.invalidate()
                 }
-                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterRotation), userInfo: nil, repeats: false)
+                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterScale), userInfo: nil, repeats: false)
             })
         }
     }
