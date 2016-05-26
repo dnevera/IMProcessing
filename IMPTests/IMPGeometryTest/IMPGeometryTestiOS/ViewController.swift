@@ -155,7 +155,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
         
         //
-        // Offset for transformed quad which should be inscribed croped quad
+        // Offset for transformed quad which should contain inscribed croped quad
         //
         // NOTE: 
         // 1. quads should be rectangle
@@ -573,7 +573,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             if scale < 1 {
                 //
-                // scale can't be less then 1 while we try to crop 
+                // scale can't be less then 1 while we try to crop
                 //
                 scale = 1
             }
