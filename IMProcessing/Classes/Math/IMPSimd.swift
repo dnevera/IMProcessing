@@ -9,7 +9,6 @@
 import Foundation
 import simd
 
-
 // MARK: - Matrix constructors
 public extension float3x3 {
     public init(rows: [[Float]]){
@@ -147,12 +146,63 @@ public extension matrix_float4x4 {
     }
     
     public mutating func move(x x:Float, y: Float){
-        self = matrix_float4x4(columns:[
-            float4(1, 0, 0, x),
-            float4(0, 1, 0, y),
-            float4(0, 0, 1, 0),
-            float4(0, 0, 0, 1)])
-    }        
+        self = matrix_multiply(self,
+                               matrix_float4x4(columns:[
+                                float4(1, 0, 0, x),
+                                float4(0, 1, 0, y),
+                                float4(0, 0, 1, 0),
+                                float4(0, 0, 0, 1)]))
+    }
+}
+
+// MARK: - Basic algebra
+public extension float2x2 {
+    var determinant:Float {
+        get {
+            let t = cmatrix.columns
+            return t.0.x*t.1.y - t.0.y*t.1.x
+        }
+    }
+}
+
+public extension float3x3 {
+    var determinant:Float {
+        get {
+            let t  = self.transpose
+            let a1 = t.cmatrix.columns.0
+            let a2 = t.cmatrix.columns.1
+            let a3 = t.cmatrix.columns.2
+            return a1.x*a2.y*a3.z - a1.x*a2.z*a3.y - a1.y*a2.x*a3.z + a1.y*a2.z*a3.x + a1.z*a2.x*a3.y - a1.z*a2.y*a3.x
+        }
+    }
+}
+
+extension float2: Equatable {}
+extension float3: Equatable {}
+extension float4: Equatable {}
+
+public func == (left:float2,right:float2) -> Bool {
+    return (left.x == right.x) && (left.y == right.y)
+}
+
+public func != (left:float2,right:float2) -> Bool {
+    return !(left == right)
+}
+
+public func == (left:float3,right:float3) -> Bool {
+    return (left.x == right.x) && (left.y == right.y) && (left.z == right.z)
+}
+
+public func != (left:float3,right:float3) -> Bool {
+    return !(left == right)
+}
+
+public func == (left:float4,right:float4) -> Bool {
+    return (left.x == right.x) && (left.y == right.y) && (left.z == right.z) && (left.w == right.w)
+}
+
+public func != (left:float4,right:float4) -> Bool {
+    return !(left == right)
 }
 
 public func / (left:float2,right:Float) -> float2 {

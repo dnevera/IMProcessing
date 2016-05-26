@@ -58,7 +58,7 @@ public extension IMPVertices{
             
             let xyzw = float4(v.position.x,v.position.y,v.position.z,1)
             
-            let result = float4x4(model.projection) * float4x4(model.transform) * xyzw * float4x4(model.transition)
+            let result = float4x4(model.projection) * float4x4(model.transform) * xyzw * float4x4(model.translation)
             let t = (1+result.z)/2
             let xy = result.xy/t
             
@@ -134,7 +134,9 @@ public class IMPPlate: IMPVertices{
     
     public func quad(model model:IMPMatrixModel) -> IMPQuad {
         let v = self.xyProjection(model: model)
-        return IMPQuad(left_bottom: v[1], left_top: v[0], right_bottom: v[2], right_top: v[5])
+        var q = IMPQuad(left_bottom: v[1], left_top: v[0], right_bottom: v[2], right_top: v[5])
+        q.aspect = aspect
+        return q
     }
     
     public init(aspect a:Float = 1, region r:IMPRegion = IMPRegion()){

@@ -22,7 +22,7 @@ public extension IMPMatrixModel {
     public static let identity = IMPMatrixModel.init(
         projection: matrix_identity_float4x4,
         transform:  matrix_identity_float4x4,
-        transition: matrix_identity_float4x4)
+        translation: matrix_identity_float4x4)
     
     /// Scale operation
     public mutating func scale(x x:Float, y:Float, z:Float)  {
@@ -59,12 +59,12 @@ public extension IMPMatrixModel {
 
     /// Transition on xy-plane
     public mutating func move(x x:Float, y:Float){
-        transition.move(x: x, y: y)
+        translation.move(x: x, y: y)
     }
  
     /// Transition on xy-plane
     public mutating func move(vector vector:float2){
-        transition.move(x: vector.x, y: vector.y)
+        translation.move(x: vector.x, y: vector.y)
     }
     
     /// Set new perspective model

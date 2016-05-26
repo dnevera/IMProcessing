@@ -22,6 +22,23 @@ public class IMPRenderNode: IMPContextProvider {
     
     public var context:IMPContext!
     
+    public var model:IMPMatrixModel {
+        get{
+            return currentMatrixModel
+        }
+    }
+
+    public var identityModel:IMPMatrixModel {
+        get{
+            var matrix = matrixIdentityModel
+            matrix.setPerspective(radians: fovy, aspect: aspect, nearZ: 0, farZ: 1)
+            matrix.scale(x: 1, y: 1, z: 1)
+            matrix.rotateAround(x: 0, y: 0, z: 0)
+            matrix.move(x: 0, y: 0)
+            return matrix
+        }
+    }
+
     public var aspect = Float(1) {
         didSet{
             updateMatrixModel(currentDestinationSize)
@@ -42,8 +59,8 @@ public class IMPRenderNode: IMPContextProvider {
         }
     }
     
-    /// Node transition
-    public var transition = float2(0){
+    /// Node translation
+    public var translation = float2(0){
         didSet{
             updateMatrixModel(currentDestinationSize)
         }
@@ -83,6 +100,7 @@ public class IMPRenderNode: IMPContextProvider {
         self.context = context
         defer{
             self.vertices = vertices
+            self.currentMatrixModel = matrixIdentityModel
         }
     }
     
@@ -97,10 +115,21 @@ public class IMPRenderNode: IMPContextProvider {
                        source: IMPImageProvider,
                        destination: IMPImageProvider
         ) {
+        
         currentDestination = destination
+        
         if let input = source.texture {
             if let texture = destination.texture {
                 render(commandBuffer, pipelineState: pipelineState, source: input, destination: texture)
+                
+                if let destination = currentDestination {
+                    if currentMatrixModelIsUpdated {
+                        for o in matrixModelObservers {
+                            o(destination: destination, model: model, aspect: aspect)
+                        }
+                        currentMatrixModelIsUpdated = false
+                    }
+                }
             }
         }
      }
@@ -199,6 +228,15 @@ public class IMPRenderNode: IMPContextProvider {
     
     var currentDestination:IMPImageProvider?
     
+    var currentMatrixModel:IMPMatrixModel! {
+        didSet {
+            currentMatrixModelIsUpdated = true
+            memcpy(matrixBuffer.contents(), &currentMatrixModel, matrixBuffer.length)
+        }
+    }
+    
+    var currentMatrixModelIsUpdated = true
+    
     func updateMatrixModel(size:MTLSize) -> IMPMatrixModel  {
         
         var matrix = matrixIdentityModel
@@ -207,17 +245,17 @@ public class IMPRenderNode: IMPContextProvider {
 
         matrix.scale(x: scale.x, y: scale.y, z: scale.z)
         matrix.rotateAround(x: angle.x, y: angle.y, z: angle.z)
-        matrix.move(x: transition.x, y: transition.y)
-                
-        memcpy(matrixBuffer.contents(), &matrix, matrixBuffer.length)
+        matrix.move(x: translation.x, y: translation.y)
         
-        if let destination = currentDestination {
-            for o in matrixModelObservers {
-                o(destination: destination, model: matrix, aspect: aspect)
-            }
-        }
+//        if let destination = currentDestination {
+//            for o in matrixModelObservers {
+//                o(destination: destination, model: matrix, aspect: aspect)
+//            }
+//        }
         
-        return matrix
+        currentMatrixModel = matrix
+        
+        return currentMatrixModel
     }
     
     lazy var matrixBuffer: MTLBuffer = {

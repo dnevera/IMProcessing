@@ -30,7 +30,7 @@ extension IMPImage {
         }
     }
     
-
+    
 }
 
 class IMPFileManager{
@@ -98,7 +98,7 @@ public func + (left:NSPoint, right:NSPoint) -> NSPoint {
 }
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
-
+    
     var context = IMPContext()
     
     var imageView:IMPView!
@@ -112,37 +112,83 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }()
     
     lazy var cropFilter: IMPCropFilter = {
-    return IMPCropFilter(context:self.context)
+        return IMPCropFilter(context:self.context)
     }()
     
     lazy var warpFilter: IMPWarpFilter = {
         return IMPWarpFilter(context:self.context)
     }()
-
+    
     var workingFolder = IMPFileManager(defaultFolder: "images")
-
+    
     let slider = UISlider()
-
+    let scaleSlider = UISlider()
+    
+    
+    ///  Current crop region with the transformation model
+    ///
+    ///  - parameter model: transformation model
+    ///
+    ///  - returns: gropped region
+    ///
+    func currentCropRegion(model model: IMPMatrixModel) -> IMPRegion {
+        let scale = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
+        let offset = (1 - scale * transformFilter.scale.x ) / 2
+        return IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
+    }
+    
+    
+    ///  Check bounds of inscribed Rectangular
+    func checkBounds() {
+        
+        let model    = transformFilter.model
+        let cropQuad = IMPQuad(region:currentCropRegion(model: model), aspect: transformFilter.aspect)
+        let offset   = IMPPlate(aspect: transformFilter.aspect).quad(model: model).translation(quad: cropQuad)
+        
+        animateTranslation(-offset)
+    }
+    
+    //
+    // Just trivial example! In real app we should implement some based on RT-timer
+    //
+    let animatorQ = dispatch_queue_create("animator", DISPATCH_QUEUE_CONCURRENT)
+    func animateTranslation(offset:float2)  {
+        
+        let cicles = 200
+        let shift = offset / cicles.float
+        let duration:UInt32 = 50000
+        
+        let final_translation = transformFilter.translation + offset
+        
+        dispatch_async(animatorQ) {
+            
+            for _ in 0..<cicles {
+                dispatch_async(dispatch_get_main_queue() , {
+                    self.transformFilter.translation += shift
+                })
+                usleep(duration / UInt32(cicles))
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), {
+                self.transformFilter.translation = final_translation
+            })
+        }
+    }
+    
+    func updateCrop()  {
+        self.cropFilter.region = currentCropRegion(model: transformFilter.model)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.blackColor()
         
-        transformFilter.addMatrixModelObserver { (destination, model, aspect) in
-            //var offset = (1-IMPPlate().scaleFactorFor(model: model))
-            //offset = offset > 0.49 ? 0.49 : offset
-            //self.cropFilter.region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
-            let quad = IMPPlate(aspect: aspect).quad(model: model)
-            NSLog(" model quad = \(quad)")
-        }
-        
-        transformFilter.backgroundColor = view.backgroundColor!
+        transformFilter.backgroundColor = IMPColor.grayColor()
         
         filter.addFilter(transformFilter)
         filter.addFilter(warpFilter)
         filter.addFilter(cropFilter)
-        
-        //transformFilter.scale(factor: 0.5)
         
         imageView = IMPView(context: (filter.context)!,  frame: CGRectMake( 0, 20,
             self.view.bounds.size.width,
@@ -164,7 +210,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             make.bottom.equalTo(view).offset(-40)
             make.left.equalTo(view).offset(40)
         }
-
+        
         let resetButton = UIButton(type: .System)
         
         resetButton.setTitle("Reset", forState: .Normal)
@@ -177,26 +223,38 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             make.top.equalTo(imageView.snp_bottom).offset(10)
             make.left.equalTo(view).offset(40)
         }
-
+        
         
         let enableButton = UISwitch()
-        enableButton.on = true
+        enableButton.on = enableWarpFilter
         enableButton.backgroundColor = IMPColor.clearColor()
         enableButton.tintColor = IMPColor.whiteColor()
-        enableButton.addTarget(self, action: #selector(self.disable(_:)), forControlEvents: .TouchUpInside)
+        enableButton.addTarget(self, action: #selector(self.toggleWarpFilter(_:)), forControlEvents: .TouchUpInside)
         view.addSubview(enableButton)
         
         enableButton.snp_makeConstraints { (make) -> Void in
             make.top.equalTo(imageView.snp_bottom).offset(10)
             make.right.equalTo(view).offset(-40)
         }
-
+        
+        
         slider.value = 0.5
         slider.addTarget(self, action: #selector(ViewController.rotate(_:)), forControlEvents: .ValueChanged)
         view.addSubview(slider)
         
         slider.snp_makeConstraints { (make) -> Void in
-            make.bottom.equalTo(view).offset(-40)
+            make.bottom.equalTo(view).offset(-60)
+            make.left.equalTo(albumButton.snp_right).offset(20)
+            make.right.equalTo(view).offset(-20)
+        }
+        
+        
+        scaleSlider.value = 0.0
+        scaleSlider.addTarget(self, action: #selector(ViewController.scale(_:)), forControlEvents: .ValueChanged)
+        view.addSubview(scaleSlider)
+        
+        scaleSlider.snp_makeConstraints { (make) -> Void in
+            make.bottom.equalTo(view).offset(-20)
             make.left.equalTo(albumButton.snp_right).offset(20)
             make.right.equalTo(view).offset(-20)
         }
@@ -207,10 +265,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panHandler(_:)))
         imageView.addGestureRecognizer(pan)
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
+        longPress.minimumPressDuration = 0.1
+        imageView.addGestureRecognizer(longPress)
     }
     
     var finger_point_offset = NSPoint()
     var finger_point_before = NSPoint()
+    
     var finger_point = NSPoint() {
         didSet{
             finger_point_before = oldValue
@@ -239,7 +302,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             tapDown(gesture)
         }
         else if gesture.state == .Changed {
-            panning(gesture)
+            if enableWarpFilter{
+                panningWarp(gesture)
+            }
+            else {
+                translateImage(gesture)
+            }
         }
         else if gesture.state == .Ended{
             tapUp()
@@ -264,10 +332,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let w = imageView.bounds.size.width.float
         let h = imageView.bounds.size.height.float
-
+        
         new_point.x = new_point.x/w.cgfloat * 2 - 1
         new_point.y = new_point.y/h.cgfloat * 2 - 1
-
+        
         // make relative point
         var p = float4(new_point.x.float,new_point.y.float,0,1)
         
@@ -340,77 +408,147 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         else if finger_point.x > w/3 && finger_point.y > h*2/3 {
             pointerPlace = .RightBottom
         }
-            
+        
     }
     
     func tapUp() {
         tuoched = false
+        if !enableWarpFilter {
+            checkBounds()
+        }
     }
     
-    func panning(gesture:UIPanGestureRecognizer)  {
+    func panningDistance() -> float2 {
+        
+        let w = self.imageView.frame.size.width.float
+        let h = self.imageView.frame.size.height.float
+        
+        let x = 1/w * finger_point_offset.x.float
+        let y = -1/h * finger_point_offset.y.float
+        
+        let f = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+        
+        return float2(x,y) * f * transformFilter.scale.x
+    }
+    
+    func translateImage(gesture:UIPanGestureRecognizer)  {
+        
         if !tuoched {
             return
         }
         
         finger_point = convertOrientation(gesture.locationInView(imageView))
-
-        let w = self.imageView.frame.size.width.float
-        let h = self.imageView.frame.size.height.float
         
-        let distancex = 1/w * finger_point_offset.x.float
-        let distancey = -1/h * finger_point_offset.y.float
+        let distance = panningDistance()
+        
+        transformFilter.translation -= distance
+    }
+    
+    func panningWarp(gesture:UIPanGestureRecognizer)  {
+        
+        if !tuoched {
+            return
+        }
+        
+        finger_point = convertOrientation(gesture.locationInView(imageView))
+        
+        let distance = panningDistance()
         
         if pointerPlace == .Left {
-            warpFilter.sourceQuad.left_bottom.x = warpFilter.sourceQuad.left_bottom.x + distancex
-            warpFilter.sourceQuad.left_top.x = warpFilter.sourceQuad.left_top.x + distancex
+            warpFilter.sourceQuad.left_bottom.x = warpFilter.sourceQuad.left_bottom.x + distance.x
+            warpFilter.sourceQuad.left_top.x = warpFilter.sourceQuad.left_top.x + distance.x
         }
         else if pointerPlace == .Bottom {
-            warpFilter.sourceQuad.left_bottom.y = warpFilter.sourceQuad.left_bottom.y + distancey
-            warpFilter.sourceQuad.right_bottom.y = warpFilter.sourceQuad.right_bottom.y + distancey
+            warpFilter.sourceQuad.left_bottom.y = warpFilter.sourceQuad.left_bottom.y + distance.y
+            warpFilter.sourceQuad.right_bottom.y = warpFilter.sourceQuad.right_bottom.y + distance.y
         }
         else if pointerPlace == .LeftBottom {
-            warpFilter.sourceQuad.left_bottom.x = warpFilter.sourceQuad.left_bottom.x + distancex
-            warpFilter.sourceQuad.left_bottom.y = warpFilter.sourceQuad.left_bottom.y + distancey
+            warpFilter.sourceQuad.left_bottom.x = warpFilter.sourceQuad.left_bottom.x + distance.x
+            warpFilter.sourceQuad.left_bottom.y = warpFilter.sourceQuad.left_bottom.y + distance.y
         }
         else if pointerPlace == .LeftTop {
-            warpFilter.sourceQuad.left_top.x = warpFilter.sourceQuad.left_top.x + distancex
-            warpFilter.sourceQuad.left_top.y = warpFilter.sourceQuad.left_top.y + distancey
+            warpFilter.sourceQuad.left_top.x = warpFilter.sourceQuad.left_top.x + distance.x
+            warpFilter.sourceQuad.left_top.y = warpFilter.sourceQuad.left_top.y + distance.y
         }
             
         else if pointerPlace == .Right {
-            warpFilter.sourceQuad.right_bottom.x = warpFilter.sourceQuad.right_bottom.x + distancex
-            warpFilter.sourceQuad.right_top.x = warpFilter.sourceQuad.right_top.x + distancex
+            warpFilter.sourceQuad.right_bottom.x = warpFilter.sourceQuad.right_bottom.x + distance.x
+            warpFilter.sourceQuad.right_top.x = warpFilter.sourceQuad.right_top.x + distance.x
         }
         else if pointerPlace == .Top {
-            warpFilter.sourceQuad.left_top.y = warpFilter.sourceQuad.left_top.y + distancey
-            warpFilter.sourceQuad.right_top.y = warpFilter.sourceQuad.right_top.y + distancey
+            warpFilter.sourceQuad.left_top.y = warpFilter.sourceQuad.left_top.y + distance.y
+            warpFilter.sourceQuad.right_top.y = warpFilter.sourceQuad.right_top.y + distance.y
         }
         else if pointerPlace == .RightBottom {
-            warpFilter.sourceQuad.right_bottom.x = warpFilter.sourceQuad.right_bottom.x + distancex
-            warpFilter.sourceQuad.right_bottom.y = warpFilter.sourceQuad.right_bottom.y + distancey
+            warpFilter.sourceQuad.right_bottom.x = warpFilter.sourceQuad.right_bottom.x + distance.x
+            warpFilter.sourceQuad.right_bottom.y = warpFilter.sourceQuad.right_bottom.y + distance.y
         }
         else if pointerPlace == .RightTop {
-            warpFilter.sourceQuad.right_top.x = warpFilter.sourceQuad.right_top.x + distancex
-            warpFilter.sourceQuad.right_top.y = warpFilter.sourceQuad.right_top.y + distancey
+            warpFilter.sourceQuad.right_top.x = warpFilter.sourceQuad.right_top.x + distance.x
+            warpFilter.sourceQuad.right_top.y = warpFilter.sourceQuad.right_top.y + distance.y
         }
         
     }
-
+    
+    func longPress(gesture:UIPanGestureRecognizer)  {
+        if gesture.state == .Began {
+            filter.enabled = false
+        }
+        else if gesture.state == .Ended {
+            filter.enabled = true
+        }
+    }
+    
     func reset(sender:UIButton){
         
         slider.value = 0.5
         rotate(slider)
+        
+        transformFilter.translation = float2(0)
+        
         warpFilter.sourceQuad = IMPQuad()
         warpFilter.destinationQuad = IMPQuad()
     }
-
-    func disable(sender:UISwitch){
-        filter.enabled = sender.on
+    
+    var enableWarpFilter = false
+    
+    func toggleWarpFilter(sender:UISwitch){
+        enableWarpFilter = sender.on
     }
-
+    
+    var timer:NSTimer?
+    
+    func checkBoundsAfterRotation()  {
+        dispatch_async(dispatch_get_main_queue()) {
+            self.checkBounds()
+        }
+    }
+    
     func rotate(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
-            self.transformFilter.rotate(IMPMatrixModel.right * (sender.value - 0.5) * 2)
+            self.transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
+            self.updateCrop()
+            
+            dispatch_async(dispatch_get_main_queue(), {
+                if self.timer != nil {
+                    self.timer?.invalidate()
+                }
+                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterRotation), userInfo: nil, repeats: false)
+            })
+        }
+    }
+    
+    func scale(sender:UISlider){
+        dispatch_async(context.dispatchQueue) { () -> Void in
+            self.transformFilter.scale(factor: sender.value + 1 )
+            self.updateCrop()
+            
+            dispatch_async(dispatch_get_main_queue(), {
+                if self.timer != nil {
+                    self.timer?.invalidate()
+                }
+                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterRotation), userInfo: nil, repeats: false)
+            })
         }
     }
 
@@ -428,7 +566,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
         }
     }
-
+    
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
         
         picker.dismissViewControllerAnimated(true, completion: nil)
@@ -451,11 +589,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             data?.writeToFile(path, atomically: true)
             
-            // let image = IMPImageProvider(context: imageView.context, image: actualImage, maxSize: 1500)
-            
             do{
                 let image = try IMPJpegProvider(context: context, file: path, maxSize: 1500, orientation: IMPExifOrientation(rawValue: exifOrientation))
-                
                 imageView?.filter?.source = image
             }
             catch let error as NSError {

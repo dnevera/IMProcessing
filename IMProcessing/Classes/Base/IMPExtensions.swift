@@ -165,3 +165,11 @@ public extension MTLTexture{
         }
     }
 }
+
+public extension Array where Element : Equatable {
+    public mutating func removeObject(object : Generator.Element) {
+        if let index = self.indexOf(object) {
+            self.removeAtIndex(index)
+        }
+    }
+}
