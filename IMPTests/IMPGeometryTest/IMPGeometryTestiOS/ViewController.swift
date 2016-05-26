@@ -160,7 +160,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         //
         // NOTE: 
         // 1. quads should be rectangle
-        // 2. scale of transformed quad should be greate then of equal scaleFactorFor for the transformed model:
+        // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
         //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
         //
         let offset   = transformedQuad.translation(quad: cropQuad)
