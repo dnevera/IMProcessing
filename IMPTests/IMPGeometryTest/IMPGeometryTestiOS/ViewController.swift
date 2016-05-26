@@ -150,7 +150,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let cropQuad = IMPQuad(region:currentCropRegion, aspect: aspect)
         
         //
-        // Model of
+        // Model of transformed Quad
+        // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
         //
         let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
         
