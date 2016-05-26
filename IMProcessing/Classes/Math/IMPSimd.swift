@@ -177,6 +177,10 @@ public extension float3x3 {
     }
 }
 
+extension float2: Equatable {}
+extension float3: Equatable {}
+extension float4: Equatable {}
+
 public func == (left:float2,right:float2) -> Bool {
     return (left.x == right.x) && (left.y == right.y)
 }

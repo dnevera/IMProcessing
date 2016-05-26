@@ -246,11 +246,11 @@ class ViewController: NSViewController {
             
             let cropQuad = IMPQuad(region:self.currentCropRegion)
             
-            let cornersDistance  = transformedQuad.insetDistances(quad: cropQuad)
+            let qoffset  = transformedQuad.translation(quad: cropQuad)
             
             print("\ncropQuad        = \(cropQuad)")
-            print("transformedQuad = \(transformedQuad)")
-            print("cornersDistance = \(cornersDistance)")
+            print("transformedQuad   = \(transformedQuad)")
+            print("qoffset           = \(qoffset)")
 
             var offset = (1-plate.scaleFactorFor(model: model) * self.currentScale)/2
 

@@ -114,6 +114,24 @@ public struct IMPLine {
         
         return float2(Dx/D,Dy/D)
     }
+    
+    public func isParallel(toLine line:IMPLine) -> Bool {
+        let form1 = self.standardForm
+        let form2 = line.standardForm
+        
+        let a1 = form1.x
+        let b1 = form1.y
+        
+        let a2 = form2.x
+        let b2 = form2.y
+        
+        return float2x2(rows: [
+            float2(a1,b1),
+            float2(a2,b2)
+            ]).determinant == 0
+        
+    }
+
 }
 
 

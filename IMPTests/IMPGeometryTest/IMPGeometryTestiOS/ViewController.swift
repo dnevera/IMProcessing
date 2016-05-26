@@ -137,58 +137,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
     }
     
-    ///  Current transformed quad with the transformation model
-    ///
-    ///  - parameter model: transformation model
-    ///
-    ///  - returns: transformed quad
-    ///
-    func currentTransformedQuad(model model:IMPMatrixModel) -> IMPQuad {
-        //
-        // Create with real aspect
-        //
-        return IMPPlate(aspect: transformFilter.aspect).quad(model: model)
-    }
-    
-    ///  Current distances from corner of Crop Rectangular to inscribed transformed Quad
-    ///
-    ///  - parameter model: transformation model
-    ///
-    ///  - returns: vetors of distances
-    ///
-    func currentCornerDistances(model model: IMPMatrixModel) -> [float2] {
-        //
-        // Create with real aspect to compute real of relations between lines
-        //
-        let qd = IMPQuad(region:currentCropRegion(model: model), aspect: transformFilter.aspect)
-        let vq = currentTransformedQuad(model: model)
-        return vq.insetCornerDistances(quad: qd)
-    }
     
     ///  Check bounds of inscribed Rectangular
     func checkBounds() {
         
-        // victor of distances
-        let distances  = currentCornerDistances(model: transformFilter.model)
-        
-        // result offset
-        var offset = float2(0)
-        
-        // summarize distances
-        for p in distances {
-            offset += p
-        }
-        
-        //
-        // covert to relation aspect ratio
-        //
-        offset.x /= transformFilter.aspect
+        let model    = transformFilter.model
+        let cropQuad = IMPQuad(region:currentCropRegion(model: model), aspect: transformFilter.aspect)
+        let offset   = IMPPlate(aspect: transformFilter.aspect).quad(model: model).translation(quad: cropQuad)
         
         animateTranslation(-offset)
     }
     
+    //
+    // Just trivial example! In real app we should implement some based on RT-timer
+    //
     let animatorQ = dispatch_queue_create("animator", DISPATCH_QUEUE_CONCURRENT)
-    
     func animateTranslation(offset:float2)  {
         
         let cicles = 200
