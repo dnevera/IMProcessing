@@ -3,7 +3,5 @@
     <pages>
         <page name='MatrixSolver'/>
         <page name='Transform2d'/>
-        <page name='QuadSolver'/>
-        <page name='LineCross'/>
     </pages>
 </playground>

@@ -11,6 +11,101 @@ import IMProcessing
 import SnapKit
 import AssetsLibrary
 import ImageIO
+import GLKit.GLKVector2
+
+public extension GLKVector2 {
+    public init(vector: float2) {
+        self = GLKVector2(v: (vector.x, vector.y))
+    }
+    
+    public var Float2:float2 {
+        return float2(self.x,self.y)
+    }
+}
+
+
+public class IMPDisplayTimer {
+    
+    public typealias UpdateHandler   = ((atTime:NSTimeInterval)->Void)
+    public typealias CompleteHandler = ((flag:Bool)->Void)
+    
+    public static func execute(duration duration: NSTimeInterval, update:UpdateHandler, complete:CompleteHandler? = nil){
+        let timer = IMPDisplayTimer(duration: duration, update: update, complete: complete)
+        timer.start()
+    }
+    
+    
+    let updateHandler:UpdateHandler
+    let completeHandler:CompleteHandler?
+    let duration:NSTimeInterval
+
+    init(duration:NSTimeInterval, update:UpdateHandler, complete:CompleteHandler?){
+        self.duration = duration
+        updateHandler = update
+        completeHandler = complete
+    }
+    
+    var frameCounter  = 0
+    var timeElapsed   = NSTimeInterval(0)
+    
+    var frameInterval:Int {
+        set{
+            if newValue < 1 {
+                displayLink?.frameInterval = 1
+            }
+            else if newValue > 4 {
+                displayLink?.frameInterval = 4
+            }
+            else {
+                displayLink?.frameInterval = newValue
+            }
+        }
+        get{
+            guard let d = displayLink else { return 0 }
+            return d.frameInterval
+        }
+    }
+    
+    func start() {
+        if duration > 0 {
+           dispatch_async(dispatch_get_main_queue()) {
+                self.frameCounter = 0
+                self.timeElapsed  = 0
+                self.displayLink  = CADisplayLink(target: self, selector: #selector(self.changeAnimation))
+                self.displayLink?.addToRunLoop(NSRunLoop.currentRunLoop(), forMode:NSRunLoopCommonModes)
+           }
+        }
+    }
+    
+    func stop() {
+        dispatch_async(dispatch_get_main_queue()) {
+            self.displayLink?.invalidate()
+            if let c = self.completeHandler {
+                c(flag: true)
+            }
+       }
+    }
+    
+    var displayLink:CADisplayLink? = nil
+    
+    @objc func changeAnimation() {
+        dispatch_async(dispatch_get_main_queue()) {
+            guard let link = self.displayLink else {return}
+            guard self.duration>0 else {return}
+            
+            if self.timeElapsed >= self.duration {
+                self.stop()
+                return
+            }
+            
+            self.updateHandler(atTime: self.timeElapsed/self.duration)
+            
+            self.timeElapsed += link.duration
+            self.frameCounter += 1
+       }
+    }
+}
+
 
 extension String{
     static func uniqString() -> String{
@@ -172,28 +267,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     //
     // Just trivial example! In real app we should implement some based on RT-timer
     //
-    let animatorQ = dispatch_queue_create("animator", DISPATCH_QUEUE_CONCURRENT)
     func animateTranslation(offset:float2)  {
-        
-        let cicles = 200
-        let shift = offset / cicles.float
-        let duration:UInt32 = 50000
         
         let final_translation = transformFilter.translation + offset
         
-
-        dispatch_async(animatorQ) {
+        IMPDisplayTimer.execute(duration: 0.1, update: { (atTime) in
             
-            for _ in 0..<cicles {
-                dispatch_async(dispatch_get_main_queue() , {
-                    self.transformFilter.translation += shift
-                })
-                usleep(duration / UInt32(cicles))
-            }
+            self.transformFilter.translation = GLKVector2Lerp(
+                GLKVector2(vector:self.transformFilter.translation),
+                GLKVector2(vector:final_translation), atTime.float).Float2
             
-            dispatch_async(dispatch_get_main_queue(), {
-                self.transformFilter.translation = final_translation
-            })
+            
+        }) { (flag) in
+            self.transformFilter.translation = final_translation
         }
     }
     
@@ -450,7 +536,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let f = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
-        return float2(x,y) * f * transformFilter.scale.x
+        return float2(x * f * transformFilter.scale.x,y * f * transformFilter.scale.x)
     }
     
     func translateImage(gesture:UIPanGestureRecognizer)  {
@@ -463,7 +549,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let distance = panningDistance()
         
-        transformFilter.translation -= distance * 3
+        transformFilter.translation -= float2(distance.x * 3, distance.y * 3)
     }
     
     func panningWarp(gesture:UIPanGestureRecognizer)  {
@@ -551,7 +637,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func rotate(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
-            self.transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
+            var a = IMPMatrixModel.right
+            a.z *= (sender.value - 0.5)
+            self.transformFilter.angle = a
             self.updateCrop()
             
             dispatch_async(dispatch_get_main_queue(), {
