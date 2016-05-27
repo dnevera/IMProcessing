@@ -14,6 +14,17 @@
 
 public class IMPHistogramView: IMPViewBase, IMPContextProvider {
     
+    public enum HistogramType {
+        case PDF
+        case CDF
+    }
+    
+    public var type:HistogramType = .PDF {
+        didSet{
+            filter?.dirty = true
+        }
+    }
+    
     public var context: IMPContext!
         
     public init(frame: NSRect, context contextIn: IMPContext, histogramHardware:IMPHistogramAnalyzer.Hardware) {
@@ -49,8 +60,13 @@ public class IMPHistogramView: IMPViewBase, IMPContextProvider {
     lazy var analizer:IMPHistogramAnalyzer = { 
         let a = IMPHistogramAnalyzer(context: self.context, hardware: self.histogramHardware)
         a.addUpdateObserver({ (histogram) in
-            self.generator.histogram = histogram.pdf()            
-        })       
+            if self.type == .PDF {
+                self.generator.histogram = histogram.pdf(1)
+            }
+            else {
+                self.generator.histogram = histogram.cdf(1)
+            }
+        })
         return a
     }()
     
