@@ -106,15 +106,15 @@ public struct IMPLineSegment {
         
     public func normalIntersection(point point:float2) -> float2 {
         //
-        // Sove equations:
+        // Solve equations:
         //
         //  ax + by = c
         //  a(y-y0) + b(x-x0) = 0
         //
         //  or
         //
-        // a1x + b1y = c2
-        // a2x + b2y = c2, where a2 = -b1, b2 = a1, c2 = a1y0 - b1x0
+        //  a1x + b1y = c2
+        //  a2x + b2y = c2, where a2 = -b1, b2 = a1, c2 = a1y0 - b1x0
         //
         
         let form = normalForm(toPoint: point)
