@@ -144,10 +144,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let aspect   = transformFilter.aspect
         let model    = transformFilter.model
+        
         //
         // Model of Cropped Quad
         //
-        let cropQuad = IMPQuad(region:currentCropRegion, aspect: aspect)
+        let cropQuad = IMPQuad(region:cropFilter.region, aspect: aspect)
         
         //
         // Model of transformed Quad
@@ -180,6 +181,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let final_translation = transformFilter.translation + offset
         
+
         dispatch_async(animatorQ) {
             
             for _ in 0..<cicles {
@@ -461,7 +463,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let distance = panningDistance()
         
-        transformFilter.translation -= distance
+        transformFilter.translation -= distance * 3
     }
     
     func panningWarp(gesture:UIPanGestureRecognizer)  {
@@ -512,10 +514,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func longPress(gesture:UIPanGestureRecognizer)  {
         if gesture.state == .Began {
-            filter.enabled = false
+            //filter.enabled = false
         }
         else if gesture.state == .Ended {
-            filter.enabled = true
+            //filter.enabled = true
         }
     }
     

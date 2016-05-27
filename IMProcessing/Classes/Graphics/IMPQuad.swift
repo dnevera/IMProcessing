@@ -23,63 +23,39 @@ public struct IMPLineSegment {
     public var standardForm:float3 {
         get {
             var f = float3()
-            f.x = p1.y-p0.y
-            f.y = p0.x-p1.x
-            f.z = -((p0.x*(p0.y-p1.y) + p0.y*(p1.x-p0.x)))
+            f.x =  p0.y-p1.y
+            f.y =  p1.x-p0.x
+            f.z = -(p0.x*p1.y - p1.x*p0.y) // -((p0.x*(p0.y-p1.y) + p0.y*(p1.x-p0.x)))
             return f
         }
     }
     
-    public var isParallelToX:Bool {
-        return (p0.y - p1.y) == 0
-    }
-
-    public var isParallelToY:Bool {
-        return (p0.x - p1.x) == 0
-    }
-
-    public init(p0:float2,p1:float2){
-        self.p0 = float2(p0.x,p0.y)
-        self.p1 = float2(p1.x,p1.y)
+    ///  Standard form of line perpendicular the line
+    ///
+    ///  - parameter point:
+    ///
+    ///  - returns: standard form for line defined by normal vector of the line segment
+    public func normalForm(toPoint point:float2) -> float3 {
+        let form1 = standardForm
+        
+        let a1 = form1.x
+        let b1 = form1.y
+        
+        var f = float3()
+        f.x = -b1
+        f.y = a1
+        f.z = a1*point.y - b1*point.x
+        
+        return f
     }
     
-    public func contains(point point:float2) -> Bool {
-        return float3x3(rows: [
-            float3(point.x,point.y,1),
-            float3(p0.x,p0.y,1),
-            float3(p1.x,p1.y,1)
-            ]).determinant == 0
+    public func determinants(line line:IMPLineSegment) -> (D:Float,Dx:Float,Dy:Float){
+        return determinants(standardForm: line.standardForm)
     }
     
-    public func normalIntersection(point point:float2) -> float2 {
-        
-        if self.contains(point:point) { return float2(0,0) }
-        
-        let p  = float2(point.x, point.y)
-
-        let k  = (p1.x-p0.x)/(p1.y-p0.y)
-        let k2 = pow(k,2)
-        let m  = k2+1
-        let l  = p.y + k * (p.x - p0.x) + k2 * p0.y
-        
-        let y = l/m
-        let x = l * (k/m) - k * p0.y + p0.x
-        
-        return float2(x,y)
-    }
-    
-    public func distanceTo(point point:float2) -> float2 {
-        return normalIntersection(point: point) - point
-    }
-    
-    public func crossPoint(line line:IMPLineSegment) -> float2 {
-        //
-        // a1*x + b1*y = c1 - self line
-        // a2*x + b2*y = c2 - another line
-        //
-        
-        let form1 = self.standardForm
-        let form2 = line.standardForm
+    public func determinants(standardForm form:float3) -> (D:Float,Dx:Float,Dy:Float){
+        let form1 = standardForm
+        let form2 = form
         
         let a1 = form1.x
         let b1 = form1.y
@@ -104,6 +80,72 @@ public struct IMPLineSegment {
             float2(a2,c2)
             ]).determinant
         
+        return (D,Dx,Dy)
+    }
+    
+    public var isParallelToX:Bool {
+        return (p0.y - p1.y) == 0
+    }
+
+    public var isParallelToY:Bool {
+        return (p0.x - p1.x) == 0
+    }
+
+    public init(p0:float2,p1:float2){
+        self.p0 = float2(p0.x,p0.y)
+        self.p1 = float2(p1.x,p1.y)
+    }
+    
+    public func contains(point point:float2) -> Bool {
+        return float3x3(rows: [
+            float3(point.x,point.y,1),
+            float3(p0.x,p0.y,1),
+            float3(p1.x,p1.y,1)
+            ]).determinant == 0
+    }
+        
+    public func normalIntersection(point point:float2) -> float2 {
+        //
+        // Sove equations:
+        //
+        //  ax + by = c
+        //  a(y-y0) + b(x-x0) = 0
+        //
+        //  or
+        //
+        // a1x + b1y = c2
+        // a2x + b2y = c2, where a2 = -b1, b2 = a1, c2 = a1y0 - b1x0
+        //
+        
+        let form = normalForm(toPoint: point)
+        
+        let (D,Dx,Dy) = determinants(standardForm: form)
+        
+        return float2(Dx/D,Dy/D)
+    }
+
+    
+    public func distanceTo(point point:float2) -> float2 {
+        return normalIntersection(point: point) - point
+    }
+    
+    public func distanceTo(parallelLine line:IMPLineSegment) -> Float {
+        if line.isParallel(toLine: self){
+            let p = line.normalIntersection(point: p0)
+            print("p = \(p)")
+            return distance(p0,p)
+        }
+        else {
+            return Float.NaN
+        }
+    }
+    
+    public func crossPoint(line line:IMPLineSegment) -> float2 {
+        //
+        // a1*x + b1*y = c1 - self line
+        // a2*x + b2*y = c2 - another line
+        //
+        let (D,Dx,Dy) = determinants(line: line)
         return float2(Dx/D,Dy/D)
     }
     
@@ -392,19 +434,23 @@ public struct IMPQuad {
         if a.isEmpty {
 
             // Parralels ?
-            
-            for i in 0..<4 {
-                
-                let pc    = quad[i]
 
-                let qline = IMPLineSegment(p0: quad[i-1], p1: pc)
-                let pline = IMPLineSegment(p0: self[i], p1: self[i+1])
+            for i in 0..<4 {
+                let qp0 = quad[i]
+                let qp1 = quad[i+1]
                 
-                let crossPoint = qline.crossPoint(line: pline)
+                let p0 = self[i]
+                let p1 = self[i+1]
                 
-                if quad.contains(point: crossPoint) {
-                    a.append(crossPoint - pc)
+                let qline = IMPLineSegment(p0: qp0, p1: qp1)
+                let  line = IMPLineSegment(p0: p0,  p1: p1)
+                
+                let p = line.normalIntersection(point: qp1)
+                
+                if quad.contains(point: p) {
+                    a.append(p - qp1)
                 }
+                
             }
         }
         

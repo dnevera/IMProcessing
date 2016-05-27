@@ -133,7 +133,7 @@ public class IMPPlate: IMPVertices{
     public let region:IMPRegion
     
     public func quad(model model:IMPMatrixModel) -> IMPQuad {
-        let v = self.xyProjection(model: model)
+        let v = xyProjection(model: model)
         var q = IMPQuad(left_bottom: v[1], left_top: v[0], right_bottom: v[2], right_top: v[5])
         q.aspect = aspect
         return q
