@@ -108,4 +108,217 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
         filter?.executeNewSourceObservers(self)
         filter?.dirty = true
     }
+    
+    public func rotateLeft() {
+        if let source = copyTexture() {
+            transformation(source, width: source.height, height: source.width,
+                           angle: IMPMatrixModel.left,
+                           reflectMode: (horizontal: .None, vertical: .None)
+            )
+        }
+    }
+
+    public func rotateRight() {
+        if let source = copyTexture() {
+            transformation(source, width: source.height, height: source.width,
+                           angle: IMPMatrixModel.right,
+                           reflectMode: (horizontal: .None, vertical: .None)
+            )
+        }
+    }
+
+    public func rotate180() {
+        if let source = copyTexture() {
+            transformation(source, width: source.width, height: source.height,
+                           angle: IMPMatrixModel.degrees180,
+                           reflectMode: (horizontal: .None, vertical: .None)
+            )
+        }
+    }
+
+    public func reflectHorizontal() {
+        if let source = copyTexture() {
+            transformation(source, width: source.width, height: source.height,
+                           angle: IMPMatrixModel.flat,
+                           reflectMode: (horizontal: .Mirroring, vertical: .None)
+            )
+        }
+    }
+
+    public func reflectVertical() {
+        if let source = copyTexture() {
+            transformation(source, width: source.width, height: source.height,
+                           angle: IMPMatrixModel.flat,
+                           reflectMode: (horizontal: .None, vertical: .Mirroring)
+            )
+        }
+    }
+
+    func transformation(source:MTLTexture, width:Int, height:Int, angle:float3, reflectMode: (horizontal:IMPRenderNode.ReflectMode, vertical:IMPRenderNode.ReflectMode)) {
+
+        guard let pipeline = graphics.pipeline else {return}
+
+        newTexture(source, width: width, height: height)
+        
+        transformer.angle = angle
+        transformer.reflectMode = reflectMode
+        
+        guard let newTexure = texture else {return}
+        
+        context.execute(complete: true) { (commandBuffer) in
+            self.transformer.render(commandBuffer, pipelineState: pipeline, source: source, destination: newTexure)
+        }
+        
+        completeUpdate()
+    }
+    
+    func newTexture(source:MTLTexture, width:Int, height:Int){
+        
+        if texture != nil {
+            texture?.setPurgeableState(.Empty)
+        }
+        
+        let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+            source.pixelFormat,
+            width: width, height: height,
+            mipmapped: false)
+        
+        texture = self.context.device.newTextureWithDescriptor(descriptor)
+    }
+    
+    func copyTexture() -> MTLTexture? {
+        
+        var source:MTLTexture? = nil
+        
+        if let texture = self.texture {
+            
+            context.execute(complete: true) { (commandBuffer) in
+                
+                let blitEncoder = commandBuffer.blitCommandEncoder()
+                
+                
+                let w = texture.width
+                let h = texture.height
+                let d = texture.depth
+                
+                let originSource = MTLOrigin(x: 0, y: 0, z: 0)
+                
+                let destinationSize = MTLSize(width:  w, height: h, depth: d)
+                
+                
+                let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+                    texture.pixelFormat,
+                    width: destinationSize.width, height: destinationSize.height,
+                    mipmapped: false)
+                
+                source = self.context.device.newTextureWithDescriptor(descriptor)
+                
+                
+                #if os(OSX)
+                    blitEncoder.synchronizeResource(texture)
+                #endif
+
+                blitEncoder.copyFromTexture(
+                    texture,
+                    sourceSlice:      0,
+                    sourceLevel:      0,
+                    sourceOrigin:     originSource,
+                    sourceSize:       destinationSize,
+                    toTexture:        source!,
+                    destinationSlice: 0,
+                    destinationLevel: 0,
+                    destinationOrigin: MTLOrigin(x:0,y:0,z:0))
+                
+                #if os(OSX)
+                    blitEncoder.synchronizeResource(source!)
+                #endif
+
+                blitEncoder.endEncoding()
+                
+            }
+        }
+        
+        return source
+    }
+    
+    internal func transform(source:MTLTexture, orientation:IMPExifOrientation) -> MTLTexture? {
+        
+        guard let pipeline = graphics.pipeline else {return nil}
+        
+        var width  = source.width
+        var height = source.height
+        
+        
+        func swapSize() {
+            width  = source.height
+            height = source.width
+        }
+        
+        switch orientation {
+            
+        case IMPExifOrientationHorizontalFlipped:
+            transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
+            
+        case IMPExifOrientationLeft180:
+            transformer.angle = IMPMatrixModel.degrees180
+            
+        case IMPExifOrientationVerticalFlipped:
+            transformer.reflectMode = (horizontal:.None, vertical:.Mirroring)
+            
+        case IMPExifOrientationLeft90VertcalFlipped:
+            swapSize()
+            transformer.angle = IMPMatrixModel.left
+            transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
+            
+        case IMPExifOrientationLeft90:
+            swapSize()
+            transformer.angle = IMPMatrixModel.right
+            
+        case IMPExifOrientationLeft90HorizontalFlipped:
+            swapSize()
+            transformer.angle = IMPMatrixModel.right
+            transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
+            
+        case IMPExifOrientationRight90:
+            swapSize()
+            transformer.angle = IMPMatrixModel.left
+            
+        default:
+            return source
+        }
+        
+        
+        if width != texture?.width || height != texture?.height{
+            let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+                source.pixelFormat,
+                width: width, height: height,
+                mipmapped: false)
+            
+            if texture != nil {
+                texture?.setPurgeableState(.Empty)
+            }
+            
+            texture = self.context.device.newTextureWithDescriptor(descriptor)
+        }
+        
+        guard let destination = texture else { return nil}
+        
+        context.execute(complete: true) { (commandBuffer) in
+            self.transformer.render(commandBuffer, pipelineState: pipeline, source: source, destination: destination)
+        }
+        
+        return texture
+    }
+    
+    lazy var graphics:IMPGraphics = {
+        return IMPGraphics(context:self.context, vertex: "vertex_transformation", fragment: "fragment_transformation")
+    }()
+    
+    lazy var transformer:Transfromer = {
+        return Transfromer(context: self.context, aspectRatio:1)
+    }()
+    
+    
+    // Plate is a cube with virtual depth == 0
+    class Transfromer: IMPPlateNode {}
 }

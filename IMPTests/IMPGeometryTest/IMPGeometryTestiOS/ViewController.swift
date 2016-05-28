@@ -241,7 +241,33 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             make.top.equalTo(imageView.snp_bottom).offset(10)
             make.left.equalTo(view).offset(40)
         }
+      
+        let flipButton = UIButton(type: .System)
         
+        flipButton.setTitle("Flip", forState: .Normal)
+        flipButton.backgroundColor = IMPColor.clearColor()
+        flipButton.tintColor = IMPColor.whiteColor()
+        flipButton.addTarget(self, action: #selector(self.flip(_:)), forControlEvents: .TouchUpInside)
+        view.addSubview(flipButton)
+        
+        flipButton.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(imageView.snp_bottom).offset(10)
+            make.left.equalTo(view).offset(100)
+        }
+
+        let leftButton = UIButton(type: .System)
+        
+        leftButton.setTitle("Left", forState: .Normal)
+        leftButton.backgroundColor = IMPColor.clearColor()
+        leftButton.tintColor = IMPColor.whiteColor()
+        leftButton.addTarget(self, action: #selector(self.rotateFixed(_:)), forControlEvents: .TouchUpInside)
+        view.addSubview(leftButton)
+        
+        leftButton.snp_makeConstraints { (make) -> Void in
+            make.top.equalTo(imageView.snp_bottom).offset(10)
+            make.left.equalTo(view).offset(140)
+        }
+
         
         let enableButton = UISwitch()
         enableButton.on = enableWarpFilter
@@ -566,6 +592,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    func flip(sender:UIButton){
+        filter.source?.reflectHorizontal()
+    }
+
+    func rotateFixed(sender:UIButton){
+        filter.source?.rotateLeft()
+    }
+
     func reset(sender:UIButton){
         
         slider.value = 0.5
