@@ -9,6 +9,27 @@
 import Foundation
 import simd
 
+// MARK: - Vector extensions 
+
+public extension float2 {
+    public func lerp(final final:float2, t:Float) -> float2 {
+        return (1-t)*self + t*final
+    }
+}
+
+public extension float3 {
+    public func lerp(final final:float3, t:Float) -> float3 {
+        return (1-t)*self + t*final
+    }
+}
+
+public extension float4 {
+    public func lerp(final final:float4, t:Float) -> float4 {
+        return (1-t)*self + t*final
+    }
+}
+
+
 // MARK: - Matrix constructors
 public extension float3x3 {
     public init(rows: [[Float]]){

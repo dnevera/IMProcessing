@@ -383,8 +383,8 @@ public struct IMPQuad {
             let cornerLine1 = IMPLineSegment(p0: cpc, p1: cp0)
             let cornerLine2 = IMPLineSegment(p0: cpc, p1: cp1)
             
-            var baseline1 = IMPLineSegment(p0: pc, p1:  p0)
-            var baseline2 = IMPLineSegment(p0: pc, p1:  p1)
+            let baseline1 = IMPLineSegment(p0: pc, p1:  p0)
+            let baseline2 = IMPLineSegment(p0: pc, p1:  p1)
             
             let crossPoint1 = cornerLine1.crossPoint(line: baseline1)
             let crossPoint2 = cornerLine2.crossPoint(line: baseline1)
@@ -436,13 +436,11 @@ public struct IMPQuad {
             // Parralels ?
 
             for i in 0..<4 {
-                let qp0 = quad[i]
                 let qp1 = quad[i+1]
                 
                 let p0 = self[i]
                 let p1 = self[i+1]
                 
-                let qline = IMPLineSegment(p0: qp0, p1: qp1)
                 let  line = IMPLineSegment(p0: p0,  p1: p1)
                 
                 let p = line.normalIntersection(point: qp1)
@@ -458,13 +456,11 @@ public struct IMPQuad {
     }
   
     func getInPlaceDistance(points:[float2], base:float2) -> [float2] {
-        var outp = float2(0)
         var a    = [float2]()
         for p in points {
-            outp = p
             if contains(point: p) {
-                var d = p-base
-                a.append(d)
+                
+                a.append(p-base)
             }
         }
         return a

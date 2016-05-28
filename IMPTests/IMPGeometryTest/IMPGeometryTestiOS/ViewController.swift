@@ -11,17 +11,6 @@ import IMProcessing
 import SnapKit
 import AssetsLibrary
 import ImageIO
-import GLKit.GLKVector2
-
-public extension GLKVector2 {
-    public init(vector: float2) {
-        self = GLKVector2(v: (vector.x, vector.y))
-    }
-    
-    public var Float2:float2 {
-        return float2(self.x,self.y)
-    }
-}
 
 
 extension String{
@@ -180,24 +169,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         animateTranslation(-offset)
     }
+
+    //
+    // Display link timer 
+    //
+    var currentTranslationTimer:IMPDisplayTimer? {
+        willSet {
+            if let t = currentTranslationTimer {
+                t.invalidate()
+            }
+        }
+    }
     
-    //
-    // Just trivial example! In real app we should implement some based on RT-timer
-    //
     func animateTranslation(offset:float2)  {
         
-        let final_translation = transformFilter.translation + offset
+        let start = transformFilter.translation
+        let final = start + offset
         
-        IMPDisplayTimer.execute(duration: 0.3, options: .EaseInOut, update: { (atTime) in
-            
-            self.transformFilter.translation = GLKVector2Lerp(
-                GLKVector2(vector:self.transformFilter.translation),
-                GLKVector2(vector:final_translation), atTime.float).Float2
-            
-            
-        }) { (flag) in
-            self.transformFilter.translation = final_translation
-        }
+        currentTranslationTimer = IMPDisplayTimer.execute(duration: 0.3, options: .EaseOut, update: { (atTime) in
+            self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
+        })
     }
     
     func updateCrop()  {
@@ -335,7 +326,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
         }
         else if gesture.state == .Ended{
-            tapUp()
+            tapUp(gesture)
         }
     }
     
@@ -436,14 +427,55 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
     }
     
-    func tapUp() {
+    let animator = UIDynamicAnimator()
+    
+    func tapUp(gesture:UIPanGestureRecognizer) {
+        
         tuoched = false
+        
+        //
+        // Bound limits
+        //
+        var transformedQuad = IMPPlate(aspect: transformFilter.aspect).quad(model: transformFilter.model)
+        transformedQuad.crop(region: IMPRegion(left: 0.1, right: 0.1, top: 0.1, bottom: 0.1))
+        
         if !enableWarpFilter {
-            checkBounds()
+            
+            //
+            // Decelerating timer execution example
+            //
+            
+            let velocity = gesture.velocityInView(imageView)
+            
+            let v            = float2((velocity.x/imageView.bounds.size.width).float,
+                                      (velocity.y/imageView.bounds.size.width).float)
+            //
+            // Convert view port velocity direction to right direction + control velocity scale factor
+            //
+            let directionConverter = float2(-0.2,0.2)
+            let offset = -(lastDistance + (directionConverter*abs(lastDistance))*v)
+            
+            currentTranslationTimer = IMPDisplayTimer.execute(duration: 0.1, options: .Decelerate, update: { (atTime) in
+                
+                let translation = self.transformFilter.translation + offset * atTime.float
+                
+                if transformedQuad.contains(point: translation) {
+                    self.transformFilter.translation = translation
+                }
+                
+                }, complete: { (flag) in
+                    if flag {
+                        self.checkBounds()
+                    }
+            })
         }
     }
     
     func panningDistance() -> float2 {
+        
+        if currentTranslationTimer != nil {
+            currentTranslationTimer = nil
+        }
         
         let w = self.imageView.frame.size.width.float
         let h = self.imageView.frame.size.height.float
@@ -453,8 +485,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let f = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
-        return float2(x * f * transformFilter.scale.x,y * f * transformFilter.scale.x)
+        return float2(x,y) * f * transformFilter.scale.x
     }
+    
+    var lastDistance = float2(0)
     
     func translateImage(gesture:UIPanGestureRecognizer)  {
         
@@ -464,9 +498,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         finger_point = convertOrientation(gesture.locationInView(imageView))
         
-        let distance = panningDistance()
+        lastDistance  = panningDistance()
         
-        transformFilter.translation -= float2(distance.x * 3, distance.y * 3)
+        transformFilter.translation -= lastDistance * 2
     }
     
     func panningWarp(gesture:UIPanGestureRecognizer)  {
@@ -517,10 +551,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func longPress(gesture:UIPanGestureRecognizer)  {
         if gesture.state == .Began {
-            //filter.enabled = false
+           // filter.enabled = false
         }
         else if gesture.state == .Ended {
-            //filter.enabled = true
+           // filter.enabled = true
         }
     }
     
@@ -554,9 +588,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func rotate(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
-            var a = IMPMatrixModel.right
-            a.z *= (sender.value - 0.5)
-            self.transformFilter.angle = a
+            self.transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
             self.updateCrop()
             
             dispatch_async(dispatch_get_main_queue(), {
