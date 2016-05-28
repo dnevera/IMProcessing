@@ -20,6 +20,7 @@
 		310AD8931CDB526200ADB6A8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 310AD8921CDB526200ADB6A8 /* Assets.xcassets */; };
 		310AD8961CDB526200ADB6A8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 310AD8941CDB526200ADB6A8 /* LaunchScreen.storyboard */; };
 		310AD89D1CDB528000ADB6A8 /* IMPMain_metal.metal in Sources */ = {isa = PBXBuildFile; fileRef = 310AD89C1CDB528000ADB6A8 /* IMPMain_metal.metal */; };
+		314186D11CF9822500BC49DE /* IMPDisplayTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314186D01CF9822500BC49DE /* IMPDisplayTimer.swift */; };
 		31E1025D1CD23505005924AF /* IMPMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E1025C1CD23505005924AF /* IMPMatrix.swift */; };
 		31E1025F1CD23576005924AF /* IMPMatrixOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E1025E1CD23576005924AF /* IMPMatrixOperations.swift */; };
 		456FAA5F17CAC565156F9B20 /* Pods_IMPGeometryTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6F42164AFC167C6C3036D9 /* Pods_IMPGeometryTest.framework */; };
@@ -47,6 +48,7 @@
 		310AD8971CDB526200ADB6A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		310AD89C1CDB528000ADB6A8 /* IMPMain_metal.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = IMPMain_metal.metal; sourceTree = "<group>"; };
 		313386D71CCF5EE20065E9A1 /* IMPGeometryTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IMPGeometryTest-Bridging-Header.h"; sourceTree = "<group>"; };
+		314186D01CF9822500BC49DE /* IMPDisplayTimer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPDisplayTimer.swift; sourceTree = "<group>"; };
 		31E1025C1CD23505005924AF /* IMPMatrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMatrix.swift; path = Classes/IMPMatrix.swift; sourceTree = "<group>"; };
 		31E1025E1CD23576005924AF /* IMPMatrixOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IMPMatrixOperations.swift; path = Classes/IMPMatrixOperations.swift; sourceTree = "<group>"; };
 		473684C335C93A7AB171F673 /* Pods-IMPGeometryTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IMPGeometryTest.release.xcconfig"; path = "Pods/Target Support Files/Pods-IMPGeometryTest/Pods-IMPGeometryTest.release.xcconfig"; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				310AD89B1CDB528000ADB6A8 /* Shaders */,
 				310AD88B1CDB526200ADB6A8 /* AppDelegate.swift */,
 				310AD88D1CDB526200ADB6A8 /* ViewController.swift */,
+				314186D01CF9822500BC49DE /* IMPDisplayTimer.swift */,
 				310AD88F1CDB526200ADB6A8 /* Main.storyboard */,
 				310AD8921CDB526200ADB6A8 /* Assets.xcassets */,
 				310AD8941CDB526200ADB6A8 /* LaunchScreen.storyboard */,
@@ -387,6 +390,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				310AD88E1CDB526200ADB6A8 /* ViewController.swift in Sources */,
+				314186D11CF9822500BC49DE /* IMPDisplayTimer.swift in Sources */,
 				310AD89D1CDB528000ADB6A8 /* IMPMain_metal.metal in Sources */,
 				310AD88C1CDB526200ADB6A8 /* AppDelegate.swift in Sources */,
 			);
