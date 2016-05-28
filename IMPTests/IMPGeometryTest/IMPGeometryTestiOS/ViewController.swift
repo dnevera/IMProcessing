@@ -181,12 +181,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    let animateDuration:NSTimeInterval = 0.2
+    
     func animateTranslation(offset:float2)  {
         
         let start = transformFilter.translation
         let final = start + offset
         
-        currentTranslationTimer = IMPDisplayTimer.execute(duration: 0.3, options: .EaseOut, update: { (atTime) in
+        currentTranslationTimer = IMPDisplayTimer.execute(duration: animateDuration, options: .EaseIn, update: { (atTime) in
             self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
         })
     }
@@ -436,7 +438,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         //
         // Bound limits
         //
-        var transformedQuad = IMPPlate(aspect: transformFilter.aspect).quad(model: transformFilter.model)
+        let plate           = IMPPlate(aspect: transformFilter.aspect)
+        var transformedQuad = plate.quad(model: transformFilter.model)
         transformedQuad.crop(region: IMPRegion(left: 0.1, right: 0.1, top: 0.1, bottom: 0.1))
         
         if !enableWarpFilter {
@@ -455,7 +458,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             let directionConverter = float2(-0.2,0.2)
             let offset = -(lastDistance + (directionConverter*abs(lastDistance))*v)
             
-            currentTranslationTimer = IMPDisplayTimer.execute(duration: 0.1, options: .Decelerate, update: { (atTime) in
+            //
+            // For example...
+            //
+            let duration = animateDuration * NSTimeInterval(transformFilter.scale.x)
+
+            currentTranslationTimer = IMPDisplayTimer.execute(duration: duration, options: .Decelerate, update: { (atTime) in
                 
                 let translation = self.transformFilter.translation + offset * atTime.float
                 

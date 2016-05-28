@@ -102,7 +102,7 @@
             case .EaseInOut:
                 c = range(step).cubicSpline(IMPDisplayTimer.easyInOutControlPoints)
             case .Decelerate:
-                c = Array<Float>(Float(1).stride(through: 0, by: -step))
+                c = Array<Float>(Float(1).stride(through: 0, by: -step).map({pow($0,2)}))
             default:
                 c = range(step)
             }
