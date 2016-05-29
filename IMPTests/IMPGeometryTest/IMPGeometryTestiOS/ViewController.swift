@@ -140,34 +140,37 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     
+    var outOfBounds:float2 {
+        get {
+            let aspect   = transformFilter.aspect
+            let model    = transformFilter.model
+            
+            //
+            // Model of Cropped Quad
+            //
+            let cropQuad = IMPQuad(region:cropFilter.region, aspect: aspect)
+            
+            //
+            // Model of transformed Quad
+            // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
+            //
+            let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
+            
+            //
+            // Offset for transformed quad which should contain inscribed croped quad
+            //
+            // NOTE:
+            // 1. quads should be rectangle
+            // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
+            //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
+            //
+            return transformedQuad.translation(quad: cropQuad)
+        }
+    }
+    
     ///  Check bounds of inscribed Rectangular
     func checkBounds() {
-        
-        let aspect   = transformFilter.aspect
-        let model    = transformFilter.model
-        
-        //
-        // Model of Cropped Quad
-        //
-        let cropQuad = IMPQuad(region:cropFilter.region, aspect: aspect)
-        
-        //
-        // Model of transformed Quad
-        // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
-        //
-        let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
-        
-        //
-        // Offset for transformed quad which should contain inscribed croped quad
-        //
-        // NOTE: 
-        // 1. quads should be rectangle
-        // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
-        //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
-        //
-        let offset   = transformedQuad.translation(quad: cropQuad)
-        
-        animateTranslation(-offset)
+        animateTranslation(-outOfBounds)
     }
 
     //
@@ -181,16 +184,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    let animateDuration:NSTimeInterval = 0.2
+    let animateDuration:NSTimeInterval = 0.3
     
     func animateTranslation(offset:float2)  {
         
         let start = transformFilter.translation
         let final = start + offset
         
-        currentTranslationTimer = IMPDisplayTimer.execute(duration: animateDuration, options: .EaseIn, update: { (atTime) in
-            self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
-        })
+        currentTranslationTimer = IMPDisplayTimer.execute(
+            duration: animateDuration,
+            options: .EaseIn,
+            update: { (atTime) in
+                self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
+            })
     }
     
     func updateCrop()  {
@@ -481,13 +487,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             //
             // Convert view port velocity direction to right direction + control velocity scale factor
             //
-            let directionConverter = float2(-0.2,0.2)
-            let offset = -(lastDistance + (directionConverter*abs(lastDistance))*v)
+            let directionConverter = float2(-0.1,0.1)
+            let dist = (directionConverter*abs(lastDistance))*v
+            let offset = -(lastDistance+dist)
             
             //
             // For example...
             //
-            let duration = animateDuration * NSTimeInterval(transformFilter.scale.x)
+            let duration = animateDuration * NSTimeInterval(abs(transformFilter.scale.x))
 
             currentTranslationTimer = IMPDisplayTimer.execute(duration: duration, options: .Decelerate, update: { (atTime) in
                 
@@ -534,7 +541,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         lastDistance  = panningDistance()
         
-        transformFilter.translation -= lastDistance * 2
+        transformFilter.translation -= lastDistance * (float2(1)-abs(outOfBounds))
     }
     
     func panningWarp(gesture:UIPanGestureRecognizer)  {
@@ -710,7 +717,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             data?.writeToFile(path, atomically: true)
             
             do{
-                let image = try IMPJpegProvider(context: context, file: path, maxSize: 1500, orientation: IMPExifOrientation(rawValue: exifOrientation))
+                let image = try IMPJpegProvider(context: context, file: path, maxSize: 1000, orientation: IMPExifOrientation(rawValue: exifOrientation))
                 imageView?.filter?.source = image
             }
             catch let error as NSError {

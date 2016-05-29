@@ -121,15 +121,6 @@ public class IMPRenderNode: IMPContextProvider {
         if let input = source.texture {
             if let texture = destination.texture {
                 render(commandBuffer, pipelineState: pipelineState, source: input, destination: texture)
-                
-                if let destination = currentDestination {
-                    if currentMatrixModelIsUpdated {
-                        for o in matrixModelObservers {
-                            o(destination: destination, model: model, aspect: aspect)
-                        }
-                        currentMatrixModelIsUpdated = false
-                    }
-                }
             }
         }
      }
@@ -175,10 +166,6 @@ public class IMPRenderNode: IMPContextProvider {
         }
     }
     
-    public final func addMatrixModelObserver(model observer:MatrixModelHandler){
-        matrixModelObservers.append(observer)
-    }
-
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = {
         return MTLRenderPassDescriptor()                
     }()
@@ -230,12 +217,9 @@ public class IMPRenderNode: IMPContextProvider {
     
     var currentMatrixModel:IMPMatrixModel! {
         didSet {
-            currentMatrixModelIsUpdated = true
             memcpy(matrixBuffer.contents(), &currentMatrixModel, matrixBuffer.length)
         }
     }
-    
-    var currentMatrixModelIsUpdated = true
     
     func updateMatrixModel(size:MTLSize) -> IMPMatrixModel  {
         
@@ -247,12 +231,6 @@ public class IMPRenderNode: IMPContextProvider {
         matrix.rotateAround(x: angle.x, y: angle.y, z: angle.z)
         matrix.move(x: translation.x, y: translation.y)
         
-//        if let destination = currentDestination {
-//            for o in matrixModelObservers {
-//                o(destination: destination, model: matrix, aspect: aspect)
-//            }
-//        }
-        
         currentMatrixModel = matrix
         
         return currentMatrixModel
@@ -261,7 +239,4 @@ public class IMPRenderNode: IMPContextProvider {
     lazy var matrixBuffer: MTLBuffer = {
         return self.context.device.newBufferWithLength(sizeof(IMPMatrixModel), options: .CPUCacheModeDefaultCache)
     }()
-    
-    var matrixModelObservers = [MatrixModelHandler]()
-    
 }

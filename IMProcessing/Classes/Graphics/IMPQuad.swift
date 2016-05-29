@@ -10,6 +10,7 @@ import Foundation
 import simd
 import Accelerate
 
+public let IMPMinimumPoint:Float = 1e-6
 
 public struct IMPLineSegment {
     
@@ -84,11 +85,11 @@ public struct IMPLineSegment {
     }
     
     public var isParallelToX:Bool {
-        return (p0.y - p1.y) == 0
+        return abs(p0.y - p1.y) <= IMPMinimumPoint
     }
 
     public var isParallelToY:Bool {
-        return (p0.x - p1.x) == 0
+        return abs(p0.x - p1.x) <= IMPMinimumPoint
     }
 
     public init(p0:float2,p1:float2){
@@ -97,11 +98,11 @@ public struct IMPLineSegment {
     }
     
     public func contains(point point:float2) -> Bool {
-        return float3x3(rows: [
+        return abs(float3x3(rows: [
             float3(point.x,point.y,1),
             float3(p0.x,p0.y,1),
             float3(p1.x,p1.y,1)
-            ]).determinant == 0
+            ]).determinant) <= IMPMinimumPoint
     }
         
     public func normalIntersection(point point:float2) -> float2 {
@@ -159,10 +160,10 @@ public struct IMPLineSegment {
         let a2 = form2.x
         let b2 = form2.y
 
-        return float2x2(rows: [
+        return abs(float2x2(rows: [
             float2(a1,b1),
             float2(a2,b2)
-            ]).determinant == 0
+            ]).determinant) <= IMPMinimumPoint
     }
 }
 
@@ -323,10 +324,10 @@ public struct IMPQuad {
     ///
     ///  - returns: result
     public func contains(point point:float2) -> Bool {
-        if point.x>=left_bottom.x && point.y>=left_bottom.y {
-            if point.x>=left_top.x && point.y<=left_top.y {
-                if point.x<=right_top.x && point.y<=right_top.y {
-                    if point.x<=right_bottom.x && point.y>=right_bottom.y {
+        if point.x>=left_bottom.x-IMPMinimumPoint && point.y>=left_bottom.y-IMPMinimumPoint {
+            if point.x>=left_top.x-IMPMinimumPoint && point.y<=left_top.y+IMPMinimumPoint {
+                if point.x<=right_top.x+IMPMinimumPoint && point.y<=right_top.y+IMPMinimumPoint {
+                    if point.x<=right_bottom.x+IMPMinimumPoint && point.y>=right_bottom.y-IMPMinimumPoint {
                         return true
                     }
                 }

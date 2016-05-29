@@ -310,15 +310,15 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
         return texture
     }
     
-    lazy var graphics:IMPGraphics = {
+    internal lazy var graphics:IMPGraphics = {
         return IMPGraphics(context:self.context, vertex: "vertex_transformation", fragment: "fragment_transformation")
     }()
     
-    lazy var transformer:Transfromer = {
+    internal lazy var transformer:Transfromer = {
         return Transfromer(context: self.context, aspectRatio:1)
     }()
     
     
     // Plate is a cube with virtual depth == 0
-    class Transfromer: IMPPlateNode {}
+    internal class Transfromer: IMPPlateNode {}
 }

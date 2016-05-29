@@ -185,11 +185,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
             return plate.reflectMode
         }
     }
-    
-    public final func addMatrixModelObserver(model observer:IMPRenderNode.MatrixModelHandler){
-        plate.addMatrixModelObserver(model: observer)
-    }
-    
+        
     lazy var plate:Plate = {
         return Plate(context: self.context, aspectRatio:4/3)
     }()

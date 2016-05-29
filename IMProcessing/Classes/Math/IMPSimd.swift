@@ -9,7 +9,13 @@
 import Foundation
 import simd
 
-// MARK: - Vector extensions 
+// MARK: - Vector extensions
+
+public extension Float {
+    public func lerp(final final:Float, t:Float) -> Float {
+        return (1-t)*self + t*final
+    }
+}
 
 public extension float2 {
     public func lerp(final final:float2, t:Float) -> float2 {
