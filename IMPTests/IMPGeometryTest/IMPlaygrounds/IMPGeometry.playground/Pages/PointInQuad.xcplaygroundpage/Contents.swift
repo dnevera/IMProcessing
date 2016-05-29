@@ -1,17 +1,32 @@
-//
-//  IMPQuad.swift
-//  IMPGeometryTest
-//
-//  Created by denis svinarchuk on 04.05.16.
-//  Copyright © 2016 ImageMetalling. All rights reserved.
-//
+//: [Previous](@previous)
 
 import Foundation
-import simd
 import Accelerate
+import simd
+
+// MARK: - Basic algebra
+public extension float2x2 {
+    var determinant:Float {
+        get {
+            let t = cmatrix.columns
+            return t.0.x*t.1.y - t.0.y*t.1.x
+        }
+    }
+}
+
+public extension float3x3 {
+    var determinant:Float {
+        get {
+            let t  = self.transpose
+            let a1 = t.cmatrix.columns.0
+            let a2 = t.cmatrix.columns.1
+            let a3 = t.cmatrix.columns.2
+            return a1.x*a2.y*a3.z - a1.x*a2.z*a3.y - a1.y*a2.x*a3.z + a1.y*a2.z*a3.x + a1.z*a2.x*a3.y - a1.z*a2.y*a3.x
+        }
+    }
+}
 
 public let IMPMinimumPoint:Float = 1e-6
-public let IMPEPSPoint:Float = (1+1e-4)
 
 public struct IMPLineSegment {
     
@@ -88,11 +103,11 @@ public struct IMPLineSegment {
     public var isParallelToX:Bool {
         return abs(p0.y - p1.y) <= IMPMinimumPoint
     }
-
+    
     public var isParallelToY:Bool {
         return abs(p0.x - p1.x) <= IMPMinimumPoint
     }
-
+    
     public init(p0:float2,p1:float2){
         self.p0 = float2(p0.x,p0.y)
         self.p1 = float2(p1.x,p1.y)
@@ -105,7 +120,7 @@ public struct IMPLineSegment {
             float3(p1.x,p1.y,1)
             ]).determinant) <= IMPMinimumPoint
     }
-        
+    
     public func normalIntersection(point point:float2) -> float2 {
         //
         // Solve equations:
@@ -125,7 +140,7 @@ public struct IMPLineSegment {
         
         return float2(Dx/D,Dy/D)
     }
-
+    
     
     public func distanceTo(point point:float2) -> float2 {
         return normalIntersection(point: point) - point
@@ -154,13 +169,13 @@ public struct IMPLineSegment {
     public func isParallel(toLine line:IMPLineSegment) -> Bool {
         let form1 = self.standardForm
         let form2 = line.standardForm
-
+        
         let a1 = form1.x
         let b1 = form1.y
         
         let a2 = form2.x
         let b2 = form2.y
-
+        
         return abs(float2x2(rows: [
             float2(a1,b1),
             float2(a2,b2)
@@ -257,30 +272,7 @@ public struct IMPQuad {
         self.right_top = right_top
     }
     
-    public init(region:IMPRegion, aspect:Float = 1){
-        crop(region: region)
-        defer{
-            self.aspect = aspect
-        }
-    }
-    
-    ///  Crop quad
-    ///
-    ///  - parameter region: rectangle region
-    public mutating func crop(region region:IMPRegion){
-        left_bottom.x = left_bottom.x * (1-2*region.left)
-        left_bottom.y = left_bottom.y * (1-2*region.bottom)
-        
-        left_top.x = left_top.x * (1-2*region.left)
-        left_top.y = left_top.y * (1-2*region.top)
-        
-        right_bottom.x = right_bottom.x * (1-2*region.right)
-        right_bottom.y = right_bottom.y * (1-2*region.bottom)
-        
-        right_top.x = right_top.x * (1-2*region.right)
-        right_top.y = right_top.y * (1-2*region.top)
-    }
-    
+  
     private mutating func setAspect(ratio ratio:Float){
         left_bottom.x *= ratio
         left_top.x *= ratio
@@ -319,21 +311,12 @@ public struct IMPQuad {
             ])
     }
     
-    ///  Test whether the point belongs to the quad
+    ///  Test whether the point belongs to the line or not
     ///
     ///  - parameter point: point coords
     ///
     ///  - returns: result
     public func contains(point point:float2) -> Bool {
-        return pnpoly(point:point)
-    }
-
-    ///  Test whether the point belongs to the rect of the quad pints
-    ///
-    ///  - parameter point: point coords
-    ///
-    ///  - returns: result
-    public func containsRect(point point:float2) -> Bool {
         if point.x>=left_bottom.x-IMPMinimumPoint && point.y>=left_bottom.y-IMPMinimumPoint {
             if point.x>=left_top.x-IMPMinimumPoint && point.y<=left_top.y+IMPMinimumPoint {
                 if point.x<=right_top.x+IMPMinimumPoint && point.y<=right_top.y+IMPMinimumPoint {
@@ -345,8 +328,6 @@ public struct IMPQuad {
         }
         return false
     }
-    
-
     
     ///  Get translation vector between two quads
     ///
@@ -377,7 +358,7 @@ public struct IMPQuad {
     ///
     ///  - parameter quad: another quad
     ///
-    ///  - returns: triangles 
+    ///  - returns: triangles
     ///
     public func insetTriangles(quad quad:IMPQuad) -> [IMPTriangle] {
         
@@ -435,7 +416,7 @@ public struct IMPQuad {
             let bp1 = self[i+1]
             
             let bline = IMPLineSegment(p0: bp0, p1: bpc)
-
+            
             if !bline.isParallel(toLine: qline) {
                 
                 let p  = IMPTriangle(p0: bp0, pc: bpc, p1: bp1).normalIntersections(point: pc)
@@ -445,9 +426,9 @@ public struct IMPQuad {
         }
         
         if a.isEmpty {
-
+            
             // Parralels ?
-
+            
             for i in 0..<4 {
                 let qp1 = quad[i+1]
                 
@@ -467,7 +448,7 @@ public struct IMPQuad {
         
         return a
     }
-  
+    
     func getInPlaceDistance(points:[float2], base:float2) -> [float2] {
         var a    = [float2]()
         for p in points {
@@ -479,7 +460,44 @@ public struct IMPQuad {
         return a
     }
     
-    func pnpoly(point point:float2) -> Bool {
+    func pnpoly(point point:float2) -> Int
+    {
+        //
+        // Jordan curve
+        //
+        let count = 4
+        var result = 0
+        
+        var i:Int, j:Int
+        
+        let testx = point.x
+        let testy = point.y
+        
+        for i = 0, j = count-1; i <= count; j = i++ {
+            
+            let pi = self[i]
+            let pj = self[j]
+            
+            let vertxi = pi.x
+            let vertxj = pj.x
+            
+            let vertyi = pi.y
+            let vertyj = pj.y
+            
+            print(vertxi,vertyi)
+            print(vertxj,vertyj)
+            
+            if ((vertyi > testy) != (vertyj > testy)) &&
+                (testx < (vertxj-vertxi) * (testy-vertyi) / (vertyj-vertyi) + vertxi)
+            {
+                result += 1
+            }
+        }
+        return result
+    }
+
+    
+    func pnpoly2(point point:float2) -> Bool {
         
         var c = false
         let x = point.x
@@ -490,11 +508,11 @@ public struct IMPQuad {
             let ii  = self[i]
             let jj  = self[j]
             
-            let xpi = ii.x * IMPEPSPoint
-            let ypi = ii.y * IMPEPSPoint
+            let xpi = ii.x * 1.001
+            let ypi = ii.y * 1.001
             
-            let xpj = jj.x * IMPEPSPoint
-            let ypj = jj.y * IMPEPSPoint
+            let xpj = jj.x * 1.001
+            let ypj = jj.y * 1.001
             
             if ((
                 (ypi<ypj) && (ypi<=y) && (y<=ypj) &&
@@ -509,3 +527,13 @@ public struct IMPQuad {
         return c
     }
 }
+
+let q = IMPQuad()
+let p = float2(-1.0,2.0)
+
+print(q.pnpoly2(point: p))
+
+
+
+
+

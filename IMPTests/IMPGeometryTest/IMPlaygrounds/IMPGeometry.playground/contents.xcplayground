@@ -2,7 +2,7 @@
 <playground version='6.0' target-platform='osx'>
     <pages>
         <page name='Lookup'/>
-        <page name='Transform2d'/>
+        <page name='PointInQuad'/>
         <page name='LineCross'/>
         <page name='QuadSolver'/>
     </pages>
