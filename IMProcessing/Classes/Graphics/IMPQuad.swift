@@ -485,10 +485,14 @@ public struct IMPQuad {
         let x = point.x
         let y = point.y
         
-        for (var i = 0, j = 4 - 1; i < 4; j = i++)
-        {
+        var j=3
+        
+        for i in 0..<4 {
+            
             let ii  = self[i]
             let jj  = self[j]
+            
+            j += 1
             
             let xpi = ii.x * IMPEPSPoint
             let ypi = ii.y * IMPEPSPoint

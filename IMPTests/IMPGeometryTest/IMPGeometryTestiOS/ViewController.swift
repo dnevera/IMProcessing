@@ -220,6 +220,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             ))
         self.view.insertSubview(imageView, atIndex: 0)
         
+        imageView.animationDuration = 0
         imageView.filter = filter
         
         let albumButton = UIButton(type: .System)
@@ -600,11 +601,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func flip(sender:UIButton){
-        filter.source?.reflectHorizontal()
+        self.filter.source?.reflectHorizontal()
     }
 
     func rotateFixed(sender:UIButton){
-        filter.source?.rotateLeft()
+        self.filter.source?.rotateLeft()
     }
 
     func reset(sender:UIButton){

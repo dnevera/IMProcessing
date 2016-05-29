@@ -503,8 +503,10 @@ public struct IMPQuad {
         let x = point.x
         let y = point.y
         
-        for (var i = 0, j = 4 - 1; i < 4; j = i++)
-        {
+        var j=3
+        
+        for i in 0..<4 {
+            
             let ii  = self[i]
             let jj  = self[j]
             
@@ -523,13 +525,15 @@ public struct IMPQuad {
                 )) {
                 c = !c
             }
+            
+            j += 1
         }
         return c
     }
 }
 
 let q = IMPQuad()
-let p = float2(-1.0,2.0)
+let p = float2(-1.0,1.0)
 
 print(q.pnpoly2(point: p))
 

@@ -38,6 +38,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     var ignoreDeviceOrientation:Bool = false
     
+    public var animationDuration:CFTimeInterval = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+    
     /// Current image filter
     public var filter:IMPFilter?{
         didSet{
@@ -278,7 +280,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
         
-        let duration = animate ? UIApplication.sharedApplication().statusBarOrientationAnimationDuration : 0
+        let duration = animate ? animationDuration : 0
         
         var transform = CATransform3DIdentity
         
@@ -385,9 +387,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                             self.renderPassDescriptor.colorAttachments[0].storeAction = .Store
                             self.renderPassDescriptor.colorAttachments[0].clearColor =  self.clearColor
                             
-                           // NSLog(" view color = \(self.clearColor)")
-                            
-                            
                             self.context.execute { (commandBuffer) -> Void in
                                 
                                 self.context.wait()
@@ -481,9 +480,16 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             if adjustedSize.width < bounds.width {
                 origin.x = ( bounds.width - adjustedSize.width ) / 2
             }
-            
+    
+            CATransaction.begin()
+            CATransaction.setDisableActions(false)
+            CATransaction.setAnimationDuration(animationDuration)
+    
             l.frame = CGRect(origin: origin, size: adjustedSize)
-            
+    
+            CATransaction.commit()
+
+    
             layerNeedUpdate = true
         }
     }
