@@ -20,8 +20,6 @@ public class IMPPlateNode: IMPRenderNode {
                     region.top != oldValue.top ||
                     region.bottom != oldValue.bottom
             {
-                //print(" ###  aspect = \(aspect), <==>  \(region.width/region.height)")
-                //aspect  = region.width/region.height
                 vertices = IMPPlate(aspect: aspect, region: region)
             }
         }
@@ -31,7 +29,6 @@ public class IMPPlateNode: IMPRenderNode {
     
     override public var aspect:Float {
         didSet{
-            //print(" $$$  aspect = \(aspect))")
             if super.aspect != oldValue || resetAspect {
                 super.aspect = aspect
                 resetAspect = false
