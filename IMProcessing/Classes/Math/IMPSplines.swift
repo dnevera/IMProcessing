@@ -9,6 +9,67 @@
 import Foundation
 import Accelerate
 
+// MARK: - Bezier cubic splines 
+public extension Float {
+    
+    public func cubicBesierFunction(c1 c1:float2, c2:float2) -> Float {
+        let t = cubicBezierBinarySubdivide(x: self, x1: c1.x, x2: c2.x)
+        return cubicBezierCalculate(t: t, a1: c1.y, a2: c2.y)
+        
+    }
+    
+    func  A(a1 a1:Float, a2:Float) -> Float { return (1.0 - 3.0 * a2 + 3.0 * a1) }
+    func  B(a1 a1:Float, a2:Float) -> Float { return (3.0 * a2 - 6.0 * a1) }
+    func  C(a1 a1:Float) -> Float  { return (3.0 * a1) }
+    
+    func cubicBezierCalculate(t t:Float, a1:Float, a2:Float) -> Float {
+        return ((A(a1: a1, a2: a2) * t + B(a1: a1, a2: a2)) * t + C(a1: a1)) * t
+    }
+    
+    func cubicBezierSlope(t t:Float, a1:Float, a2:Float) ->Float {
+        return 3.0 * A(a1: a1, a2: a2) * t * t + 2.0 * B(a1: a1, a2: a2) * t + C(a1: a1)
+    }
+    
+    func cubicBezierBinarySubdivide(x x:Float, x1: Float, x2: Float) -> Float {
+        let epsilon:Float = 0.0000001
+        let maxIterations = 10
+        
+        var start:Float = 0
+        var end:Float = 1
+        
+        var currentX:Float
+        var currentT:Float
+        
+        var i = 0
+        repeat {
+            currentT = start + (end - start) / 2
+            currentX = cubicBezierCalculate(t: currentT, a1: x1, a2: x2) - x;
+            
+            if (currentX > 0) {
+                end = currentT;
+            } else {
+                start = currentT;
+            }
+            
+            i += 1
+            
+        } while (fabs(currentX) > epsilon && i < maxIterations)
+        
+        return currentT
+    }
+}
+
+public extension CollectionType where Generator.Element == Float {
+    public func cubicBezierSpline(c1 c1:float2, c2:float2, scale:Float=0)-> [Float]{
+        var curve = [Float]()
+        for x in self {
+            curve.append(x.cubicBesierFunction(c1: c1, c2: c2))
+        }
+        return curve
+    }
+}
+
+
 // MARK: - Cubic Splines
 public extension CollectionType where Generator.Element == Float {
     

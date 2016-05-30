@@ -139,7 +139,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
     }
     
-    
     var outOfBounds:float2 {
         get {
             let aspect   = transformFilter.aspect
@@ -184,7 +183,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
-    let animateDuration:NSTimeInterval = 0.3
+    let animateDuration:NSTimeInterval = 0.2
     
     func animateTranslation(offset:float2)  {
         
@@ -349,6 +348,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     var pointerPlace:PointerPlace = .Undefined
     
     func panHandler(gesture:UIPanGestureRecognizer)  {
+
+        //velocityUpdate(gesture)
+
         if gesture.state == .Began {
             tapDown(gesture)
         }
@@ -423,7 +425,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return new_point
     }
     
+    var tapDownTime:NSTimeInterval = 0
+    var tapUpTime:NSTimeInterval = 0
+    var tapDownTranslation = float2(0)
+    var tapUpTranslation = float2(0)
+    
     func tapDown(gesture:UIPanGestureRecognizer) {
+        
+        if tuoched {
+            return
+        }
+
+        tapDownTranslation = transformFilter.translation
         
         finger_point = convertOrientation(gesture.locationInView(imageView))
         
@@ -462,8 +475,60 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
     }
     
-    let animator = UIDynamicAnimator()
-    
+//    var velocity0 = float2(0)
+//    var velocity  = float2(0)
+//    
+//    func velocityUpdate(gesture:UIPanGestureRecognizer) {
+//        let v = gesture.velocityInView(imageView)
+//        
+//        if gesture.state == .Began {
+//            tapDownTime = NSDate.timeIntervalSinceReferenceDate()
+//            velocity0 = float2(v.x.float,v.y.float)
+//        }
+//        else if gesture.state == .Changed {
+//            
+//            velocity0 = velocity
+//            velocity  = float2(v.x.float,v.y.float)
+//            
+//            tapDownTime = tapUpTime
+//            tapUpTime = NSDate.timeIntervalSinceReferenceDate()
+//        }
+//        else if gesture.state == .Ended{
+//                tapDownTime = tapUpTime
+//                tapUpTime = NSDate.timeIntervalSinceReferenceDate()
+//                velocity0 = velocity
+//                velocity  = float2(v.x.float,v.y.float);// + velocity0
+//        }
+//    }
+//
+//    func deccelerating_distance(current offset:float2, time:Float) -> float2 {
+//        
+//        let k:Float = 20 // spring constant
+//        let m:Float = 300 // mass
+//        
+//        let size = imageView.layer.bounds.size
+//        let length = min(size.width.float,size.height.float)
+//        
+//        let target  = float2(length)
+//        let current = offset * length
+//        
+//        let impulse_force = velocity * m
+//        let spring_force  = k * abs(target - current)
+//        
+//        var dy = (velocity0 + (impulse_force + spring_force) * time) * time
+//        dy = dy * float2(1,-1) / target
+//        
+//        if abs(dy.x) > 0.9 {
+//            dy.x = 0.9 * sign(dy.x)
+//        }
+//
+//        if abs(dy.y) > 0.9 {
+//            dy.y = 0.9 * sign(dy.y)
+//        }
+//
+//        return dy * transformFilter.scale.x
+//    }
+//    
     func tapUp(gesture:UIPanGestureRecognizer) {
         
         tuoched = false
@@ -477,39 +542,38 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         if !enableWarpFilter {
             
-            //
-            // Decelerating timer execution example
-            //
-            
-            let velocity = gesture.velocityInView(imageView)
-            
-            let v            = float2((velocity.x/imageView.bounds.size.width).float,
-                                      (velocity.y/imageView.bounds.size.width).float)
-            //
-            // Convert view port velocity direction to right direction + control velocity scale factor
-            //
-            let directionConverter = float2(-0.1,0.1)
-            let dist = (directionConverter*abs(lastDistance))*v
-            let offset = -(lastDistance+dist)
-            
-            //
-            // For example...
-            //
-            let duration = animateDuration * NSTimeInterval(abs(transformFilter.scale.x))
-
-            currentTranslationTimer = IMPDisplayTimer.execute(duration: duration, options: .Decelerate, update: { (atTime) in
-                
-                let translation = self.transformFilter.translation + offset * atTime.float
-                
-                if transformedQuad.contains(point: translation) {
-                    self.transformFilter.translation = translation
-                }
-                
-                }, complete: { (flag) in
-                    if flag {
+//            let time        = (tapUpTime-tapDownTime).float
+//
+//            let offset      = deccelerating_distance(current: transformFilter.translation, time: time)
+//            
+//            let decelerate:Float  = 9.8
+//            let duration    = NSTimeInterval(sqrtf(distance(offset, float2(0))/decelerate))
+//            
+//            print(" velocity0 = \(velocity0) velocity  = \(velocity) offset = \(offset) time =\(time) duration =\(duration)")
+//            
+//            let start = transformFilter.translation
+//            let final = start + offset
+//
+//            var curve = [Float]()
+//            
+//            currentTranslationTimer = IMPDisplayTimer.execute(duration: animateDuration, options: .EaseOut, update: { (atTime) in
+//                let t = pow(atTime.float,1/2)
+//                curve.append(t)
+//                self.transformFilter.translation = start.lerp(final: final, t: t)
+//                
+//                let bounds = abs(self.outOfBounds)
+//                
+//                if bounds.x >= 1 || bounds.y > 1 {
+//                    self.currentTranslationTimer?.cancel()
+//                }
+//                
+//                //print(" out of bounds == \(self.outOfBounds)")
+//                }, complete: { (flag) in
+//                    //print("curve = \(curve); x = 0:1/(length(curve)-1):1; plot(x,curve);")
+//                    if flag {
                         self.checkBounds()
-                    }
-            })
+//                    }
+//            })
         }
     }
     

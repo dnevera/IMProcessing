@@ -3,6 +3,7 @@
     <pages>
         <page name='Lookup'/>
         <page name='PointInQuad'/>
+        <page name='TimingFunction'/>
         <page name='LineCross'/>
         <page name='QuadSolver'/>
     </pages>
