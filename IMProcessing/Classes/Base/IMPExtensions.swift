@@ -122,8 +122,10 @@ public extension IMPBlendingMode{
 }
 
 public extension IMPRegion{
+    public var width:Float {return 1-(left+right) }
+    public var height:Float {return 1-(top+bottom) }
     public var rectangle:NSRect{
-        return NSRect(origin: NSPoint(x:left.cgfloat,y:top.cgfloat), size: NSSize(width: 1-(left+right), height: 1-(top+bottom)))
+        return NSRect(origin: NSPoint(x:left.cgfloat,y:top.cgfloat), size: NSSize(width: width, height: height))
     }
 }
 

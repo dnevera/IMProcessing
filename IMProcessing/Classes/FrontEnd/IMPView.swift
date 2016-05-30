@@ -36,7 +36,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     /// Current Metal device context
     public var context:IMPContext!
     
-    var ignoreDeviceOrientation:Bool = false
+    public var ignoreDeviceOrientation:Bool = false
     
     public var animationDuration:CFTimeInterval = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
     
@@ -444,54 +444,54 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     #if os(iOS)
     
     internal func updateLayer(){
-
-        if let l = metalLayer {
-                        
-            var adjustedSize = bounds.size
+        
+        guard let t = filter?.destination?.texture else { return }
+        
+        guard let l = metalLayer else { return }
+        
+        var adjustedSize = originalBounds.size
+        
+        l.drawableSize = t.size
+        
+        if !ignoreDeviceOrientation{
+        
+            var ratio  = t.width.cgfloat/t.height.cgfloat
+            let aspect = originalBounds.size.width/originalBounds.size.height
             
-            if let t = filter?.destination?.texture {
-                
-                l.drawableSize = t.size
-                
-                if !ignoreDeviceOrientation{
-                    
-                    var size:CGFloat = min(originalBounds.width,originalBounds.height)
-                    
-                    if UIDeviceOrientationIsLandscape(self.orientation)  {
-                        
-                        size = t.width == t.height ? size : t.width < t.height ? originalBounds.width : originalBounds.height
-                        
-                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size.swap(), maxSize: size.float)
-                    }
-                    else{
-                        
-                        size = t.width == t.height ? size : t.width > t.height ? originalBounds.width : originalBounds.height
-                        
-                        adjustedSize = IMPContext.sizeAdjustTo(size: t.size, maxSize: size.float)
-                    }
-                }
+            if UIDeviceOrientationIsLandscape(self.orientation)  {
+                ratio  = 1/ratio
             }
+        
+            let newRatio = aspect/ratio
             
-            var origin = CGPointZero
-            
-            if adjustedSize.height < bounds.height {
-                origin.y = ( bounds.height - adjustedSize.height ) / 2
+            if newRatio < 1 {
+                adjustedSize.height *= newRatio
             }
-            if adjustedSize.width < bounds.width {
-                origin.x = ( bounds.width - adjustedSize.width ) / 2
+            else {
+                adjustedSize.width /= newRatio
             }
-    
-            CATransaction.begin()
-            CATransaction.setDisableActions(false)
-            CATransaction.setAnimationDuration(animationDuration)
-    
-            l.frame = CGRect(origin: origin, size: adjustedSize)
-    
-            CATransaction.commit()
-
-    
-            layerNeedUpdate = true
         }
+        
+        var origin = CGPointZero
+        
+        if adjustedSize.height < bounds.height {
+            origin.y = ( bounds.height - adjustedSize.height ) / 2
+        }
+        if adjustedSize.width < bounds.width {
+            origin.x = ( bounds.width - adjustedSize.width ) / 2
+        }
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(animationDuration <= 0 ? true : false)
+        if animationDuration > 0 {
+            CATransaction.setAnimationDuration(animationDuration)
+        }
+        
+        l.frame = CGRect(origin: origin, size: adjustedSize)
+        
+        CATransaction.commit()
+        
+        layerNeedUpdate = true
     }
     
     override public func layoutSubviews() {

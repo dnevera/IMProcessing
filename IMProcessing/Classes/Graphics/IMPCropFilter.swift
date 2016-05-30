@@ -31,8 +31,8 @@ public class IMPCropFilter: IMPFilter {
                 let oroginSource = MTLOrigin(x: (self.region.left * w.float).int, y: (self.region.top * h.float).int, z: 0)
                 
                 let destinationSize = MTLSize(
-                    width: (self.region.rectangle.width.float * w.float).int,
-                    height: (self.region.rectangle.height.float * h.float).int, depth: d)
+                    width: (self.region.width * w.float).int,
+                    height: (self.region.height * h.float).int, depth: d)
                 
                 
                 if destinationSize.width != provider.texture?.width || destinationSize.height != provider.texture?.height{
@@ -41,10 +41,6 @@ public class IMPCropFilter: IMPFilter {
                         texture.pixelFormat,
                         width: destinationSize.width, height: destinationSize.height,
                         mipmapped: false)
-                    
-                    if provider.texture != nil {
-                        //provider.texture?.setPurgeableState(MTLPurgeableState.Empty)
-                    }
                     
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
@@ -60,7 +56,7 @@ public class IMPCropFilter: IMPFilter {
                     destinationLevel: 0,
                     destinationOrigin: MTLOrigin(x:0,y:0,z:0))
                                 
-                blit.endEncoding()
+                blit.endEncoding()                
             }
         }
         return provider

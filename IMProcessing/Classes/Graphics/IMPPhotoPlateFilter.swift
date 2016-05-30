@@ -20,7 +20,9 @@ public class IMPPlateNode: IMPRenderNode {
                     region.top != oldValue.top ||
                     region.bottom != oldValue.bottom
             {
-                vertices = IMPPlate(aspect: self.aspect, region: self.region)
+                //print(" ###  aspect = \(aspect), <==>  \(region.width/region.height)")
+                //aspect  = region.width/region.height
+                vertices = IMPPlate(aspect: aspect, region: region)
             }
         }
     }
@@ -29,6 +31,7 @@ public class IMPPlateNode: IMPRenderNode {
     
     override public var aspect:Float {
         didSet{
+            //print(" $$$  aspect = \(aspect))")
             if super.aspect != oldValue || resetAspect {
                 super.aspect = aspect
                 resetAspect = false
@@ -54,6 +57,12 @@ public class IMPPhotoPlateFilter: IMPFilter {
         }
     }
 
+    public override var source: IMPImageProvider? {
+        didSet {
+            updatePlateAspect(cropRegion)
+        }
+    }
+    
     public var keepAspectRatio = true
     
     public var graphics:IMPGraphics!
@@ -87,14 +96,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
                                         
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
-                
-                switch provider.orientation {
-                case .Left, .Right, .LeftMirrored, .RightMirrored:
-                    self.plate.aspect = self.keepAspectRatio ? height/width : 1
-                default:
-                    self.plate.aspect = self.keepAspectRatio ? width/height : 1
-                }
-                                                
+                        
                 self.plate.render(commandBuffer, pipelineState: self.graphics.pipeline!, source: source, destination: provider)
             }
         }
@@ -167,8 +169,11 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  - parameter region: crop region
     public var cropRegion:IMPRegion {
         set {
-            plate.region = newValue
-            dirty = true
+            if let s = source {
+                updatePlateAspect(newValue)
+                plate.region = newValue
+                dirty = true
+            }
         }
         get {
             return plate.region
@@ -190,6 +195,13 @@ public class IMPPhotoPlateFilter: IMPFilter {
         return Plate(context: self.context, aspectRatio:4/3)
     }()
     
+    func updatePlateAspect(region:IMPRegion)  {
+        if let s = source {
+            let width  = s.width - s.width  * (region.left   + region.right);
+            let height = s.height - s.height * (region.bottom + region.top);
+            plate.aspect = self.keepAspectRatio ? width/height : 1
+        }
+    }
     
     // Plate is a cube with virtual depth == 0
     class Plate: IMPPlateNode {}

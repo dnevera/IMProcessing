@@ -83,6 +83,20 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public var context:IMPContext!
     public var texture:MTLTexture?
     
+    public var width:Float {
+        get {
+            guard texture != nil else { return 0 }
+            return texture!.width.float
+        }
+    }
+   
+    public var height:Float {
+        get {
+            guard texture != nil else { return 0 }
+            return texture!.height.float
+        }
+    }
+    
     public lazy var videoCache:IMPVideoTextureCache = {
         return IMPVideoTextureCache(context: self.context)
     }()

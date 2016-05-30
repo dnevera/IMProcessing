@@ -26,6 +26,34 @@ public extension IMPImageProvider{
         texture = image.newTexture(context, maxSize: maxSize)
         #if os(iOS)
             self.orientation = image.imageOrientation
+            
+//            var orientation = IMPExifOrientationUp
+//            
+//            switch image.imageOrientation {
+//            case .Down:
+//                orientation = IMPExifOrientationLeft180
+//            case .DownMirrored:
+//                orientation = IMPExifOrientationVerticalFlipped
+//            case .Left:
+//                orientation = IMPExifOrientationLeft90
+//            case .LeftMirrored:
+//                orientation = IMPExifOrientationLeft90HorizontalFlipped
+//            case .Right:
+//                orientation = IMPExifOrientationRight90
+//            case .RightMirrored:
+//                orientation = IMPExifOrientationLeft90VertcalFlipped
+//            case .UpMirrored:
+//                orientation = IMPExifOrientationVerticalFlipped
+//            default:
+//                orientation = IMPExifOrientationUp
+//            }
+//            
+//            print(" image oriention = \(image.imageOrientation.rawValue), exif = \(orientation)")
+//            
+//            texture = transform(source!, orientation: orientation)
+//            
+//            self.orientation = .Up
+            
         #endif
         completeUpdate()
     }
