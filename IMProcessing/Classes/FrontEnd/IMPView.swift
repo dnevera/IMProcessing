@@ -59,6 +59,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 if /*self.orientation != .Unknown */ !self.ignoreDeviceOrientation {
                     self.setOrientation(UIDevice.currentDevice().orientation, animate: false)
                 }
+                else {
+                    if !CGSizeEqualToSize(self.metalLayer.bounds.size, self.bounds.size)  {
+                        self.updateLayer()
+                    }
+                }
             })
             #endif
         }
@@ -369,7 +374,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         }
     }
     
+    var currentDestination:IMPImageProvider? = nil
+    
+    
     internal func refresh() {
+        
         dispatch_async(dispatch_get_main_queue()) {
             
             if self.layerNeedUpdate {
@@ -378,7 +387,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 
                 autoreleasepool({ () -> () in
                     
-                    if let actualImageTexture = self.filter?.destination?.texture {
+                    self.currentDestination = self.filter?.destination
+                    
+                    if let actualImageTexture = self.currentDestination?.texture {
                         
                         if let drawable = self.metalLayer.nextDrawable(){
                             
@@ -449,12 +460,14 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         guard let l = metalLayer else { return }
         
-        var adjustedSize = originalBounds.size
-        
         l.drawableSize = t.size
         
+        var adjustedSize = bounds.size
+
         if !ignoreDeviceOrientation{
         
+            adjustedSize = originalBounds.size
+
             var ratio  = t.width.cgfloat/t.height.cgfloat
             let aspect = originalBounds.size.width/originalBounds.size.height
             

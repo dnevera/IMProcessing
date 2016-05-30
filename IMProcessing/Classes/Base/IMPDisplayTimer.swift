@@ -7,7 +7,7 @@
 //
 
 
-//#if os(iOS)
+#if os(iOS)
 import UIKit
 
 public typealias IMPTimingFunction = ((t:Float) -> Float)
@@ -172,4 +172,4 @@ public class IMPDisplayTimer {
         
     }
 }
-//#endif
+#endif

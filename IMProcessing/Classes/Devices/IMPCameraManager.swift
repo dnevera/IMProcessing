@@ -739,6 +739,7 @@
             view.autoresizingMask = [.FlexibleLeftMargin,.FlexibleRightMargin,.FlexibleTopMargin,.FlexibleBottomMargin]
             view.filter = IMPFilter(context: self.context)
             view.ignoreDeviceOrientation = true
+            view.animationDuration = 0
             view.viewReadyHandler = {
                 self.liveViewReadyObserversHandle()
             }
