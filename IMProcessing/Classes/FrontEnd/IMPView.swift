@@ -322,11 +322,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 }
                 
                 transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-
-                delay(self.animationDuration, closure: {
+    
+                delay(duration, closure: {
                     self.animateLayer(duration, closure: { (duration) in
                         layer.transform = self.correctImageOrientation(transform);
                     })
+                    self.updateLayer(duration)
                 })
             }
         }
@@ -524,19 +525,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         return  CGRect(origin: origin, size: adjustedSize)
     }
-    
-//    func animateLayer(duration:NSTimeInterval, closure:((duration:NSTimeInterval)->Void)) {
-//        
-//        CATransaction.begin()
-//        CATransaction.setDisableActions(duration <= 0 ? true : false)
-//        if duration > 0 {
-//            CATransaction.setAnimationDuration(duration)
-//        }
-//        
-//        closure(duration: duration)
-//        
-//        CATransaction.commit()
-//    }
+
     
     func changeBounds(texure:MTLTexture, bounds:CGRect, duration:NSTimeInterval) {
         
