@@ -30,8 +30,6 @@ extension IMPImage {
             return meta as! [String: AnyObject]?
         }
     }
-    
-    
 }
 
 class IMPFileManager{
@@ -219,7 +217,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             ))
         self.view.insertSubview(imageView, atIndex: 0)
         
-        imageView.animationDuration = 0
         imageView.filter = filter
         
         let albumButton = UIButton(type: .System)
@@ -319,6 +316,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         longPress.minimumPressDuration = 0.1
         imageView.addGestureRecognizer(longPress)
+        
     }
     
     var finger_point_offset = NSPoint()
@@ -744,10 +742,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 
+    var aflag = true
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        if aflag {
+            imagePicker = UIImagePickerController()
+            aflag = false
+        }
+    }
+    
     func openAlbum(sender:UIButton){
         imagePicker = UIImagePickerController()
     }
-    
+
     var imagePicker:UIImagePickerController!{
         didSet{
             self.imagePicker.delegate = self

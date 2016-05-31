@@ -38,7 +38,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     public var ignoreDeviceOrientation:Bool = false
     
-    public var animationDuration:CFTimeInterval = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+    #if os(iOS)
+    public var animationDuration:CFTimeInterval  = UIApplication.sharedApplication().statusBarOrientationAnimationDuration
+    #else
+    public var animationDuration:CFTimeInterval  = 0
+    #endif
     
     /// Current image filter
     public var filter:IMPFilter?{
@@ -56,22 +60,13 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             
             #if os(iOS)
             filter?.addDestinationObserver(destination: { (destination) in
-                if /*self.orientation != .Unknown */ !self.ignoreDeviceOrientation {
+                if !self.ignoreDeviceOrientation {
                     self.setOrientation(UIDevice.currentDevice().orientation, animate: false)
-                }
-                else {
-                    if !CGSizeEqualToSize(self.metalLayer.bounds.size, self.bounds.size)  {
-                        self.updateLayer()
-                    }
                 }
             })
             #endif
         }
     }
-    
-    lazy internal var updateLayerHandler:(()->Void) = {
-        return self.updateLayer
-    }()
     
     public var isPaused:Bool = false {
         didSet{
@@ -270,7 +265,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         return CATransform3DRotate(inTransform, angle, 0.0, 0.0, -1.0)
     }
-    
 
     private var currentDeviceOrientation = UIDeviceOrientation.Unknown
     
@@ -282,6 +276,16 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             setOrientation(orientation, animate: false)
         }
     }
+    
+    func delay(delay:NSTimeInterval, closure:()->()) {
+        dispatch_after(
+            dispatch_time(
+                DISPATCH_TIME_NOW,
+                Int64(delay * Double(NSEC_PER_SEC))
+            ),
+            dispatch_get_main_queue(), closure)
+    }
+    
     
     public func setOrientation(orientation:UIDeviceOrientation, animate:Bool){
         
@@ -318,10 +322,12 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 }
                 
                 transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
-                
-                layer.transform = self.correctImageOrientation(transform);
-                
-                self.updateLayerHandler()
+
+                delay(self.animationDuration, closure: {
+                    self.animateLayer(duration, closure: { (duration) in
+                        layer.transform = self.correctImageOrientation(transform);
+                    })
+                })
             }
         }
         
@@ -381,6 +387,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         dispatch_async(dispatch_get_main_queue()) {
             
+            
             if self.layerNeedUpdate {
                 
                 self.layerNeedUpdate = false
@@ -391,7 +398,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                     
                     if let actualImageTexture = self.currentDestination?.texture {
                         
+                        if !CGSizeEqualToSize(self.metalLayer.drawableSize, actualImageTexture.size){ self.metalLayer.drawableSize = actualImageTexture.size }
+
                         if let drawable = self.metalLayer.nextDrawable(){
+                            
+                            //self.changeBounds(actualImageTexture, bounds: self.getNewBounds(actualImageTexture), duration: 0)
                             
                             self.renderPassDescriptor.colorAttachments[0].texture     = drawable.texture
                             self.renderPassDescriptor.colorAttachments[0].loadAction  = .Clear
@@ -450,31 +461,48 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     #endif
     
-    internal var layerNeedUpdate:Bool = true 
+    internal var layerNeedUpdate:Bool = true  {
+        didSet {
+            if layerNeedUpdate {
+                #if os(iOS)
+                    updateLayer(isFirstFrame ? 0 : animationDuration)
+                #else
+                    updateLayer()
+                #endif
+            }
+        }
+    }
     
+    func animateLayer(duration:NSTimeInterval, closure:((duration:NSTimeInterval)->Void)) {
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(duration <= 0 ? true : false)
+        if duration > 0 {
+            CATransaction.setAnimationDuration(duration)
+        }
+        
+        closure(duration: duration)
+        
+        CATransaction.commit()
+    }
+    
+
     #if os(iOS)
     
-    internal func updateLayer(){
-        
-        guard let t = filter?.destination?.texture else { return }
-        
-        guard let l = metalLayer else { return }
-        
-        l.drawableSize = t.size
-        
+    func getNewBounds(texture:MTLTexture) -> CGRect {
         var adjustedSize = bounds.size
-
-        if !ignoreDeviceOrientation{
         
+        if !ignoreDeviceOrientation{
+            
             adjustedSize = originalBounds.size
-
-            var ratio  = t.width.cgfloat/t.height.cgfloat
+            
+            var ratio  = texture.width.cgfloat/texture.height.cgfloat
             let aspect = originalBounds.size.width/originalBounds.size.height
             
             if UIDeviceOrientationIsLandscape(self.orientation)  {
                 ratio  = 1/ratio
             }
-        
+            
             let newRatio = aspect/ratio
             
             if newRatio < 1 {
@@ -494,34 +522,68 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             origin.x = ( bounds.width - adjustedSize.width ) / 2
         }
         
-        CATransaction.begin()
-        CATransaction.setDisableActions(animationDuration <= 0 ? true : false)
-        if animationDuration > 0 {
-            CATransaction.setAnimationDuration(animationDuration)
+        return  CGRect(origin: origin, size: adjustedSize)
+    }
+    
+//    func animateLayer(duration:NSTimeInterval, closure:((duration:NSTimeInterval)->Void)) {
+//        
+//        CATransaction.begin()
+//        CATransaction.setDisableActions(duration <= 0 ? true : false)
+//        if duration > 0 {
+//            CATransaction.setAnimationDuration(duration)
+//        }
+//        
+//        closure(duration: duration)
+//        
+//        CATransaction.commit()
+//    }
+    
+    func changeBounds(texure:MTLTexture, bounds:CGRect, duration:NSTimeInterval) {
+        
+        guard let l = metalLayer else { return }
+        
+        if !CGRectEqualToRect(l.frame, bounds) {
+
+            animateLayer(duration, closure: { (duration) in
+              l.frame = bounds
+            })
         }
-        
-        l.frame = CGRect(origin: origin, size: adjustedSize)
-        
-        CATransaction.commit()
-        
-        layerNeedUpdate = true
+    }
+    
+    internal func updateLayer(duration:NSTimeInterval){
+        currentDestination = currentDestination ?? filter?.destination
+        guard let t = currentDestination?.texture else { return }
+        changeBounds(t, bounds:  getNewBounds(t), duration: duration)
     }
     
     override public func layoutSubviews() {
         super.layoutSubviews()
-        updateLayerHandler()
+        layerNeedUpdate = true
     }
     
     #else
     
+    func changeBounds(texure:MTLTexture, bounds:CGRect, duration:NSTimeInterval) {
+    
+        guard let l = metalLayer else { return }
+    
+        if !CGRectEqualToRect(l.frame, bounds) {
+            animateLayer(duration, closure: { (duration) in
+                l.frame = bounds
+            })
+        }
+    }
+
     override public func updateLayer(){
         if let l = metalLayer {
-            if let t = filter?.destination?.texture{
+            currentDestination = currentDestination ?? filter?.destination
+
+            if let t = currentDestination?.texture{
                 l.drawableSize = t.size
             }
             l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
         }
-        layerNeedUpdate = true
+        //layerNeedUpdate = true
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {

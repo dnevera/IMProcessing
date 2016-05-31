@@ -17,7 +17,7 @@ class IMPTestFilter:IMPFilter {
     var awbFilter:IMPAutoWBFilter!
     var hsvFilter:IMPHSVFilter!
         
-    required init(context: IMPContext, histogramView:IMPView) {
+    required init(context: IMPContext, histogramView:IMPHistogramView) {
         
         super.init(context: context)
                 

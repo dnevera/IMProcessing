@@ -105,6 +105,7 @@ class ViewController: NSViewController {
         
         histogramCDFView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
         histogramCDFView.generator.layer.backgroundColor = IMPPrefs.colors.background
+        histogramCDFView.type = .CDF
         //histogramCDFView.generator.layer.histogramType = (type:.CDF,power:self.valueSlider1.floatValue/100)
         
         histogramContainerView.addSubview(histogramView)
@@ -145,7 +146,7 @@ class ViewController: NSViewController {
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
                 do{
-                    self.imageView.filter?.source = try IMPImageProvider(context: self.imageView.context, file: file)
+                    self.imageView.filter?.source = try IMPJpegProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
                         self.zoomOne()
                     })

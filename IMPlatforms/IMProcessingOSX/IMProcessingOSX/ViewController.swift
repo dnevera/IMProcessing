@@ -88,8 +88,7 @@ class ViewController: NSViewController {
         histogramContainerView.wantsLayer = true
         histogramContainerView.layer?.backgroundColor = IMPColor.redColor().CGColor
         
-        histogramView = IMPHistogramView(frame: histogramContainerView.bounds)
-        histogramView.histogramLayer.solver.layer.backgroundColor = IMPPrefs.colors.background
+        histogramView = IMPHistogramView(context: context, frame: histogramContainerView.bounds)
         
         histogramContainerView.addSubview(histogramView)
         
@@ -128,7 +127,7 @@ class ViewController: NSViewController {
         IMPDocument.sharedInstance.addDocumentObserver { (file, type) -> Void in
             if type == .Image {
                 do{
-                    self.imageView.filter?.source = try IMPImageProvider(context: self.imageView.context, file: file)
+                    self.imageView.filter?.source = try IMPJpegProvider(context: self.imageView.context, file: file)
                     self.asyncChanges({ () -> Void in
                         self.zoomOne()
                     })

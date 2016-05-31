@@ -256,7 +256,7 @@ extension IMPImageView {
         ///  Fite image to current view size
         public func sizeFit(){
             isSizeFit = true
-            imageView.updateLayerHandler()
+            imageView.updateLayer()
             scrollView.magnifyToFitRect(imageView.bounds)
             imageView.layerNeedUpdate = true
         }
@@ -264,7 +264,7 @@ extension IMPImageView {
         ///  Present image in oroginal size
         public func sizeOriginal(){
             isSizeFit = false
-            imageView.updateLayerHandler()
+            imageView.updateLayer()
             scrollView.magnifyToFitRect(bounds)
             imageView.layerNeedUpdate = true
         }
