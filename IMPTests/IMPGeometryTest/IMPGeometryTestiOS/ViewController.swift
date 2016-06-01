@@ -247,8 +247,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPFilter(context:self.context)
     }()
     
-    lazy var transformBehavior:IMPPanningBehavior = IMPPanningBehavior()
-    
     lazy var transformFilter:IMPPhotoPlateFilter = {
         return IMPPhotoPlateFilter(context:self.context)
     }()
@@ -493,14 +491,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         if gesture.state == .Began {
             animator.removeAllBehaviors()
-            transformBehavior.enabled = true
             tapDown(gesture)
         }
         else if gesture.state == .Changed {
-
-            let velocity = gesture.velocityInView(imageView)
-            self.transformBehavior.velocity = velocity.Float2 * float2(1,-1) * float2(transformFilter.aspect,1) * transformFilter.scale.x
-            
             if enableWarpFilter{
                 panningWarp(gesture)
             }
@@ -509,11 +502,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
         }
         else if gesture.state == .Ended{
-            transformBehavior.enabled = false
             tapUp(gesture)
         }
         else if gesture.state == .Cancelled {
-            transformBehavior.enabled = false
             tapUp(gesture)
         }
     }
@@ -628,6 +619,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             let offset = (dynamicOffset/self.imageView.bounds.size.Float2 * 2)
             self.transformFilter.translation = offset
             
+            print(" outOfBounds == \(outOfBounds)")
+            
             let bounds = -outOfBounds * imageView.bounds.size.Float2/2
             
             if abs(bounds.x) > 0 || abs(bounds.y) > 0 {
@@ -637,7 +630,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 
                 spring.length    = 0
                 spring.damping   = 1
-                spring.frequency = 2
+                spring.frequency = 1
+                
+                deceleration?.resistance = 20
+                
                 animator.addBehavior(spring)
                 
                 self.spring = spring
@@ -659,8 +655,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         decelerate.resistance = 3
         
         decelerate.action = {
-            //let offset = (self.dynamicItem.offset/self.imageView.bounds.size.Float2 * 2)
-            //self.transformFilter.translation = offset
             self.dynamicOffset = self.dynamicItem.offset
         }
         
@@ -672,62 +666,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     lazy var dynamicItem:IMPDynamicItem = IMPDynamicItem()
     
     
-    func tapUp__(gesture:UIPanGestureRecognizer) {
-        
-        tuoched = false
-        
-        //
-        // Bound limits
-        //
-        //let plate           = IMPPlate(aspect: transformFilter.aspect)
-        //var transformedQuad = plate.quad(model: transformFilter.model)
-        //transformedQuad.crop(region: IMPRegion(left: 0.1, right: 0.1, top: 0.1, bottom: 0.1))
-        
-//        if !enableWarpFilter {
-//            
-//            transformBehavior.offset = self.outOfBounds
-//            transformBehavior.resistanceFacor = 1
-//            transformBehavior.springFactor = 10
-//            
-//            let decelerating = transformBehavior.deceleration
-//            
-//            var duration = NSTimeInterval(decelerating.duration)
-//            
-//            guard duration > 0.01 else {
-//                self.checkBounds(self.animateDuration)
-//                return
-//            }
-//            
-//            //let nom = 4 * transformFilter.scale.x.double
-//            //let newDuration = duration > self.animateDuration * nom ? self.animateDuration * nom : duration
-//
-//            let start = transformFilter.translation
-//            let final = start + decelerating.distance
-//
-//            //duration = newDuration
-//            
-//            currentTranslationTimer = IMPDisplayTimer.execute(duration: duration, options: .Linear, update: { (atTime) in
-//                
-//                
-//                let t = pow(atTime.float,1/2)
-//                print(t)
-//                self.transformFilter.translation = start.lerp(final: final, t: t)
-//                
-//                let bounds = abs(self.outOfBounds)
-//                
-//                if bounds.x > 0 || bounds.y > 0 {
-//                    duration = self.animateDuration
-//                    print("cancel: \(bounds)")
-//                    self.currentTranslationTimer?.cancel()
-//                }
-//                
-//                }, complete: { (flag) in
-//                    if flag {
-                        self.checkBounds(self.animateDuration)
-//                    }
-//            })
-//        }
-    }
     
     func panningDistance() -> float2 {
         
@@ -741,7 +679,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let x = 1/w * finger_point_offset.x.float
         let y = -1/h * finger_point_offset.y.float
         
-        let f = 1/IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+        //let f = 1/IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
         return float2(x,y) * transformFilter.scale.x
     }
