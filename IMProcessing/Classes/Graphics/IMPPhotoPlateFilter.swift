@@ -151,7 +151,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  Move plate with vector
     ///
     ///  - parameter vector: vector
-    public var translation:float2 {
+    public var translation: float2 {
         set{
             plate.translation = newValue
             dirty = true
@@ -166,11 +166,10 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  - parameter region: crop region
     public var cropRegion:IMPRegion {
         set {
-            if let s = source {
-                updatePlateAspect(newValue)
-                plate.region = newValue
-                dirty = true
-            }
+            guard (source != nil) else {return}
+            updatePlateAspect(newValue)
+            plate.region = newValue
+            dirty = true
         }
         get {
             return plate.region
@@ -203,3 +202,4 @@ public class IMPPhotoPlateFilter: IMPFilter {
     // Plate is a cube with virtual depth == 0
     class Plate: IMPPlateNode {}
 }
+

@@ -257,10 +257,11 @@ public struct IMPQuad {
         self.right_top = right_top
     }
     
-    public init(region:IMPRegion, aspect:Float = 1){
+    public init(region:IMPRegion, aspect:Float = 1, scale:Float=1){
         crop(region: region)
         defer{
             self.aspect = aspect
+            self.scale = scale
         }
     }
     
@@ -281,12 +282,22 @@ public struct IMPQuad {
         right_top.y = right_top.y * (1-2*region.top)
     }
     
+    public var scale:Float = 1 {
+        didSet{
+            left_bottom *= scale
+            left_top *= scale
+            right_top *= scale
+            right_bottom *= scale
+        }
+    }
+    
     private mutating func setAspect(ratio ratio:Float){
         left_bottom.x *= ratio
         left_top.x *= ratio
         right_top.x *= ratio
         right_bottom.x *= ratio
     }
+    
     
     /// Basis matrix
     public var basis:float3x3 {
@@ -346,6 +357,20 @@ public struct IMPQuad {
         return false
     }
     
+    
+    public func intersects(quad quad:IMPQuad) -> Bool {
+        for i in 0..<4{
+            let line = IMPLineSegment(p0: self[i], p1: self[i+1])
+            for j in 0..<4{
+                let qline = IMPLineSegment(p0: quad[i], p1: quad[i+1])
+                let p = qline.crossPoint(line: line)
+                if contains(point: p) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 
     
     ///  Get translation vector between two quads
@@ -354,7 +379,7 @@ public struct IMPQuad {
     ///
     ///  - returns: translation (offset) vector
     public func translation(quad quad:IMPQuad) -> float2 {
-        
+                
         let distances = insetCornerDistances(quad: quad)
         
         // result offset

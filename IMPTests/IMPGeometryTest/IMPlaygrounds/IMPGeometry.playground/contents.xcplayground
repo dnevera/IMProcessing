@@ -6,5 +6,6 @@
         <page name='TimingFunction'/>
         <page name='LineCross'/>
         <page name='QuadSolver'/>
+        <page name='RTTimer'/>
     </pages>
 </playground>

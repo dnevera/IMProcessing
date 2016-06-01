@@ -13,6 +13,18 @@ import AssetsLibrary
 import ImageIO
 
 
+extension NSSize {
+    var Float2:float2 {
+        return float2(self.width.float,self.height.float)
+    }
+}
+
+extension NSPoint {
+    var Float2:float2 {
+        return float2(self.x.float,self.y.float)
+    }
+}
+
 extension String{
     static func uniqString() -> String{
         return CFUUIDCreateString(nil, CFUUIDCreate(nil)) as String;
@@ -96,6 +108,135 @@ public func + (left:NSPoint, right:NSPoint) -> NSPoint {
     return NSPoint(x: left.x+right.x, y: left.y+right.y)
 }
 
+
+extension _ArrayType where Generator.Element == Float {
+    var total: Float {
+        guard !isEmpty else { return 0 }
+        return  reduce(0, combine: +)
+    }
+    var average: Float {
+        guard !isEmpty else { return 0 }
+        return  total / Float(count)
+    }
+}
+
+extension _ArrayType where Generator.Element == float2 {
+    var total: float2 {
+        guard !isEmpty else { return float2(0) }
+        return reduce(float2(0), combine: +)
+    }
+    var average: float2 {
+        guard !isEmpty else { return float2(0) }
+        return  total /// Float(count)
+    }
+}
+
+public class IMPPanningBehavior{
+    
+    public struct Deceleration {
+        public let duration:Float
+        public let distance:float2
+        init(initial velocity:float2, offset:float2, spring:Float, resistance:Float){
+            
+            let norm:Float = 10000
+            let v = velocity
+            let velocity_mod = simd.distance(v, float2(0))
+            
+            let velocityAngle  = abs(atan(velocity.y/velocity.x))
+            let velocityVector = float2(sin(velocityAngle) * sign(velocity.x),cos(velocityAngle) * sign(velocity.y))
+            let x              = simd.distance(offset, float2(0)) * velocityVector
+            let force          = (spring * x + resistance * velocityVector) * norm
+            let force_mod      = simd.distance(force, float2(0))
+            
+            guard force_mod > 0 else {
+                duration = 0
+                distance = float2(0)
+                return
+            }
+
+            duration = velocity_mod/force_mod
+            
+            let d = (powf(velocity_mod, 2) * float2(1,1))/force/norm
+            distance =  d//clamp(d, min: float2(-1), max: float2(1))
+        }
+    }
+    
+    public init(precision:Int = 10) {
+        self.precision = precision
+    }
+    
+    public var offset = float2(0)
+    public let precision:Int
+    
+    public var deceleration:Deceleration {
+        return Deceleration(initial: velocity, offset: offset, spring: springFactor, resistance: resistanceFacor)
+    }
+    
+    public var velocity:float2 {
+        set {
+            if enabled {
+                isUpdating = true
+                velocityQueue.append(newValue)
+                isUpdating = false
+            }
+        }
+        get{
+            if velocityQueue.isEmpty { return lastVelocity }
+            return velocityQueue.suffix(self.precision).average
+        }
+    }
+    
+    public var resistanceFacor:Float = 50
+    public var springFactor:Float = 10
+
+    
+    public var enabled:Bool = false {
+        didSet {
+            if enabled {
+                lastUpdate = NSDate.timeIntervalSinceReferenceDate()
+                //timer.start()
+            }
+            else {
+                //timer.stop()
+                self.lastVelocity = self.velocityQueue.suffix(self.precision).average
+                self.velocityQueue.removeAll()
+                print(" deceleration = \(deceleration) ")
+            }
+        }
+    }
+    
+    var lastUpdate   = NSTimeInterval(0)
+    var lastPosition = float2(0)
+    var lastVelocity = float2(0)
+    var velocityQueue = [float2]()
+    var isUpdating    = false
+    
+    lazy var timer:IMPRTTimer = IMPRTTimer(usec: 100, update: { (timestamp, duration) in
+        dispatch_async(dispatch_get_main_queue(), {
+            if self.isUpdating { return }
+            self.velocityQueue.append(float2(0))
+        })
+    }){ (timestamp, duration) in
+        //self.lastVelocity = self.velocityQueue.suffix(self.precision).average
+        //self.velocityQueue.removeAll()
+    }
+}
+
+
+public class IMPDynamicItem:NSObject, UIDynamicItem{
+    public var center = CGPoint()
+    public var bounds = CGRect(x: 0, y: 0, width: 1, height: 1);
+    public var transform = CGAffineTransform()
+    public var offset:float2 {
+        set {
+            center = CGPoint(x: newValue.x.cgfloat, y: newValue.y.cgfloat)
+        }
+        get {
+            return float2(center.x.float,center.y.float)
+        }
+    }
+}
+
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate{
     
     var context = IMPContext()
@@ -105,6 +246,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     lazy var filter:IMPFilter = {
         return IMPFilter(context:self.context)
     }()
+    
+    lazy var transformBehavior:IMPPanningBehavior = IMPPanningBehavior()
     
     lazy var transformFilter:IMPPhotoPlateFilter = {
         return IMPPhotoPlateFilter(context:self.context)
@@ -166,8 +309,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     ///  Check bounds of inscribed Rectangular
-    func checkBounds() {
-        animateTranslation(-outOfBounds)
+    func checkBounds(duration:NSTimeInterval) {
+        animateTranslation(-outOfBounds, duration: duration)
     }
 
     //
@@ -183,13 +326,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     let animateDuration:NSTimeInterval = 0.2
     
-    func animateTranslation(offset:float2)  {
+    func animateTranslation(offset:float2, duration:NSTimeInterval)  {
         
         let start = transformFilter.translation
         let final = start + offset
         
         currentTranslationTimer = IMPDisplayTimer.execute(
-            duration: animateDuration,
+            duration: duration,
             options: .EaseIn,
             update: { (atTime) in
                 self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
@@ -201,6 +344,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.blackColor()
@@ -296,7 +440,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
         
-        scaleSlider.value = 0.5
+        scaleSlider.value = 0
         scaleSlider.addTarget(self, action: #selector(ViewController.scale(_:)), forControlEvents: .ValueChanged)
         view.addSubview(scaleSlider)
         
@@ -346,13 +490,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     var pointerPlace:PointerPlace = .Undefined
     
     func panHandler(gesture:UIPanGestureRecognizer)  {
-
-        //velocityUpdate(gesture)
-
+        
         if gesture.state == .Began {
+            animator.removeAllBehaviors()
+            transformBehavior.enabled = true
             tapDown(gesture)
         }
         else if gesture.state == .Changed {
+
+            let velocity = gesture.velocityInView(imageView)
+            self.transformBehavior.velocity = velocity.Float2 * float2(1,-1) * float2(transformFilter.aspect,1) * transformFilter.scale.x
+            
             if enableWarpFilter{
                 panningWarp(gesture)
             }
@@ -361,6 +509,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
         }
         else if gesture.state == .Ended{
+            transformBehavior.enabled = false
+            tapUp(gesture)
+        }
+        else if gesture.state == .Cancelled {
+            transformBehavior.enabled = false
             tapUp(gesture)
         }
     }
@@ -423,19 +576,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return new_point
     }
     
-    var tapDownTime:NSTimeInterval = 0
-    var tapUpTime:NSTimeInterval = 0
-    var tapDownTranslation = float2(0)
-    var tapUpTranslation = float2(0)
-    
     func tapDown(gesture:UIPanGestureRecognizer) {
         
         if tuoched {
             return
         }
 
-        tapDownTranslation = transformFilter.translation
-        
         finger_point = convertOrientation(gesture.locationInView(imageView))
         
         finger_point_before = finger_point
@@ -472,107 +618,115 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
     }
+
     
-//    var velocity0 = float2(0)
-//    var velocity  = float2(0)
-//    
-//    func velocityUpdate(gesture:UIPanGestureRecognizer) {
-//        let v = gesture.velocityInView(imageView)
-//        
-//        if gesture.state == .Began {
-//            tapDownTime = NSDate.timeIntervalSinceReferenceDate()
-//            velocity0 = float2(v.x.float,v.y.float)
-//        }
-//        else if gesture.state == .Changed {
-//            
-//            velocity0 = velocity
-//            velocity  = float2(v.x.float,v.y.float)
-//            
-//            tapDownTime = tapUpTime
-//            tapUpTime = NSDate.timeIntervalSinceReferenceDate()
-//        }
-//        else if gesture.state == .Ended{
-//                tapDownTime = tapUpTime
-//                tapUpTime = NSDate.timeIntervalSinceReferenceDate()
-//                velocity0 = velocity
-//                velocity  = float2(v.x.float,v.y.float);// + velocity0
-//        }
-//    }
-//
-//    func deccelerating_distance(current offset:float2, time:Float) -> float2 {
-//        
-//        let k:Float = 20 // spring constant
-//        let m:Float = 300 // mass
-//        
-//        let size = imageView.layer.bounds.size
-//        let length = min(size.width.float,size.height.float)
-//        
-//        let target  = float2(length)
-//        let current = offset * length
-//        
-//        let impulse_force = velocity * m
-//        let spring_force  = k * abs(target - current)
-//        
-//        var dy = (velocity0 + (impulse_force + spring_force) * time) * time
-//        dy = dy * float2(1,-1) / target
-//        
-//        if abs(dy.x) > 0.9 {
-//            dy.x = 0.9 * sign(dy.x)
-//        }
-//
-//        if abs(dy.y) > 0.9 {
-//            dy.y = 0.9 * sign(dy.y)
-//        }
-//
-//        return dy * transformFilter.scale.x
-//    }
-//    
+    var deceleration:UIDynamicItemBehavior?
+    var spring:UIAttachmentBehavior?
+    
+    var dynamicOffset:float2 = float2(0){
+        didSet{
+            let offset = (dynamicOffset/self.imageView.bounds.size.Float2 * 2)
+            self.transformFilter.translation = offset
+            
+            let bounds = -outOfBounds * imageView.bounds.size.Float2/2
+            
+            if abs(bounds.x) > 0 || abs(bounds.y) > 0 {
+                let anchor = CGPoint(x: bounds.x.cgfloat, y: bounds.y.cgfloat)
+                
+                let spring = UIAttachmentBehavior(item: dynamicItem, attachedToAnchor: anchor)
+                
+                spring.length    = 0
+                spring.damping   = 1
+                spring.frequency = 2
+                animator.addBehavior(spring)
+                
+                self.spring = spring
+            }
+        }
+    }
+    
+    
     func tapUp(gesture:UIPanGestureRecognizer) {
+        tuoched = false
+        
+        var velocity = gesture.velocityInView(imageView)
+        velocity = CGPoint(x: velocity.x,y: -velocity.y)
+        
+        dynamicItem.offset = (transformFilter.translation * imageView.bounds.size.Float2/2)
+        
+        let decelerate = UIDynamicItemBehavior(items: [dynamicItem])
+        decelerate.addLinearVelocity(velocity, forItem: dynamicItem)
+        decelerate.resistance = 3
+        
+        decelerate.action = {
+            //let offset = (self.dynamicItem.offset/self.imageView.bounds.size.Float2 * 2)
+            //self.transformFilter.translation = offset
+            self.dynamicOffset = self.dynamicItem.offset
+        }
+        
+        animator.addBehavior(decelerate)
+        self.deceleration = decelerate
+    }
+    
+    lazy var animator:UIDynamicAnimator = UIDynamicAnimator(referenceView: self.imageView)
+    lazy var dynamicItem:IMPDynamicItem = IMPDynamicItem()
+    
+    
+    func tapUp__(gesture:UIPanGestureRecognizer) {
         
         tuoched = false
         
         //
         // Bound limits
         //
-        let plate           = IMPPlate(aspect: transformFilter.aspect)
-        var transformedQuad = plate.quad(model: transformFilter.model)
-        transformedQuad.crop(region: IMPRegion(left: 0.1, right: 0.1, top: 0.1, bottom: 0.1))
+        //let plate           = IMPPlate(aspect: transformFilter.aspect)
+        //var transformedQuad = plate.quad(model: transformFilter.model)
+        //transformedQuad.crop(region: IMPRegion(left: 0.1, right: 0.1, top: 0.1, bottom: 0.1))
         
-        if !enableWarpFilter {
-            
-//            let time        = (tapUpTime-tapDownTime).float
+//        if !enableWarpFilter {
+//            
+//            transformBehavior.offset = self.outOfBounds
+//            transformBehavior.resistanceFacor = 1
+//            transformBehavior.springFactor = 10
+//            
+//            let decelerating = transformBehavior.deceleration
+//            
+//            var duration = NSTimeInterval(decelerating.duration)
+//            
+//            guard duration > 0.01 else {
+//                self.checkBounds(self.animateDuration)
+//                return
+//            }
+//            
+//            //let nom = 4 * transformFilter.scale.x.double
+//            //let newDuration = duration > self.animateDuration * nom ? self.animateDuration * nom : duration
 //
-//            let offset      = deccelerating_distance(current: transformFilter.translation, time: time)
-//            
-//            let decelerate:Float  = 9.8
-//            let duration    = NSTimeInterval(sqrtf(distance(offset, float2(0))/decelerate))
-//            
-//            print(" velocity0 = \(velocity0) velocity  = \(velocity) offset = \(offset) time =\(time) duration =\(duration)")
-//            
 //            let start = transformFilter.translation
-//            let final = start + offset
+//            let final = start + decelerating.distance
 //
-//            var curve = [Float]()
+//            //duration = newDuration
 //            
-//            currentTranslationTimer = IMPDisplayTimer.execute(duration: animateDuration, options: .EaseOut, update: { (atTime) in
+//            currentTranslationTimer = IMPDisplayTimer.execute(duration: duration, options: .Linear, update: { (atTime) in
+//                
+//                
 //                let t = pow(atTime.float,1/2)
-//                curve.append(t)
+//                print(t)
 //                self.transformFilter.translation = start.lerp(final: final, t: t)
 //                
 //                let bounds = abs(self.outOfBounds)
 //                
-//                if bounds.x >= 1 || bounds.y > 1 {
+//                if bounds.x > 0 || bounds.y > 0 {
+//                    duration = self.animateDuration
+//                    print("cancel: \(bounds)")
 //                    self.currentTranslationTimer?.cancel()
 //                }
 //                
-//                //print(" out of bounds == \(self.outOfBounds)")
 //                }, complete: { (flag) in
-//                    //print("curve = \(curve); x = 0:1/(length(curve)-1):1; plot(x,curve);")
 //                    if flag {
-                        self.checkBounds()
+                        self.checkBounds(self.animateDuration)
 //                    }
 //            })
-        }
+//        }
     }
     
     func panningDistance() -> float2 {
@@ -587,9 +741,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let x = 1/w * finger_point_offset.x.float
         let y = -1/h * finger_point_offset.y.float
         
-        let f = IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+        let f = 1/IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
-        return float2(x,y) * f * transformFilter.scale.x
+        return float2(x,y) * transformFilter.scale.x
     }
     
     var lastDistance = float2(0)
@@ -675,7 +829,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         slider.value = 0.5
         rotate(slider)
         
-        scaleSlider.value = 0.5
+        scaleSlider.value = 0
         scale(scaleSlider)
         
         transformFilter.translation = float2(0)
@@ -694,7 +848,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func checkBoundsAfterRotation()  {
         dispatch_async(dispatch_get_main_queue()) {
-            self.checkBounds()
+            self.checkBounds(self.animateDuration)
         }
     }
     
@@ -714,14 +868,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func checkBoundsAfterScale()  {
         dispatch_async(dispatch_get_main_queue()) {
-            self.checkBounds()
+            self.checkBounds(self.animateDuration)
         }
     }
 
     func scale(sender:UISlider){
         dispatch_async(context.dispatchQueue) { () -> Void in
             
-            var scale = sender.value * 2
+            var scale = (sender.value * 4 + 1)
             
             if scale < 1 {
                 //
@@ -730,14 +884,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 scale = 1
             }
             
-            self.transformFilter.scale(factor: scale)
-            self.updateCrop()
-            
             dispatch_async(dispatch_get_main_queue(), {
+                
+                self.transformFilter.scale(factor: scale)
+
                 if self.timer != nil {
                     self.timer?.invalidate()
                 }
-                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterScale), userInfo: nil, repeats: false)
+                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.checkBoundsAfterScale), userInfo: nil, repeats: false)
             })
         }
     }
