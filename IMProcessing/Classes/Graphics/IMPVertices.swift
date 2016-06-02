@@ -121,7 +121,7 @@ public extension IMPVertices{
 }
 
 /// Photo plate model
-public class IMPPlate: IMPVertices{
+public class IMPPhotoPlate: IMPVertices{
     
     /// Plate vertices
     public let vertices:[IMPVertex]

@@ -21,7 +21,7 @@ public func + (left:NSPoint, right:NSPoint) -> NSPoint {
     return NSPoint(x: left.x+right.x, y: left.y+right.y)
 }
 
-public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
+public class MPPhotoEditor: IMPTransformFilter, UIDynamicItem{
     
     //
     // Conversions between absolute view port of View and model presentation
@@ -94,7 +94,7 @@ public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
             // Model of transformed Quad
             // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
             //
-            let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
+            let transformedQuad = IMPPhotoPlate(aspect: aspect).quad(model: model)
             
             //
             // Offset for transformed quad which should contain inscribed croped quad
@@ -102,7 +102,7 @@ public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
             // NOTE:
             // 1. quads should be rectangle
             // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
-            //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
+            //    IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
             //
             return transformedQuad.translation(quad: cropQuad)
         }
@@ -136,8 +136,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPFilter(context:self.context)
     }()
     
-    lazy var transformFilter:MPPhotoPlateEditor = {
-        let f = MPPhotoPlateEditor(context:self.context)
+    lazy var transformFilter:MPPhotoEditor = {
+        let f = MPPhotoEditor(context:self.context)
         f.addDestinationObserver(destination: { (destination) in
             f.viewPort = self.imageView.layer.bounds
         })
@@ -163,7 +163,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     
     var currentScaleFactor:Float {
-        return IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+        return IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
     }
     
     
@@ -534,7 +534,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let x = 1/w * finger_point_offset.x.float
         let y = -1/h * finger_point_offset.y.float
         
-        //let f = 1/IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
+        //let f = 1/IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
         return float2(x,y) * transformFilter.scale.x
     }

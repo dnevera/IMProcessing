@@ -52,8 +52,8 @@ class ViewController: NSViewController {
     // Основной фильтр
     //
     var filter:IMPFilter!
-    var transformer: IMPPhotoPlateFilter!
-    var photoCutter: IMPPhotoPlateFilter!
+    var transformer: IMPTransformFilter!
+    var photoCutter: IMPTransformFilter!
     var cutter: IMPCropFilter!
     var zoomCutter: IMPCropFilter!
     var warp: IMPWarpFilter!
@@ -206,7 +206,7 @@ class ViewController: NSViewController {
         
         filter.addFilter(awb)
         
-        transformer = IMPPhotoPlateFilter(context: context)
+        transformer = IMPTransformFilter(context: context)
         
         cutter = IMPCropFilter(context: context)
         warp = IMPWarpFilter(context: context)
@@ -216,7 +216,7 @@ class ViewController: NSViewController {
         filter.insertFilter(cutter, after: transformer)
         filter.insertFilter(warp,   after: transformer)
 
-        photoCutter = IMPPhotoPlateFilter(context: context)
+        photoCutter = IMPTransformFilter(context: context)
         filter.insertFilter(photoCutter, index: 4)
         
         photoCutter.removeFromStack()
@@ -240,7 +240,7 @@ class ViewController: NSViewController {
         
         transformer.addMatrixModelObserver { (destination, model, aspect) in
             
-            let plate = IMPPlate(aspect: aspect)
+            let plate = IMPPhotoPlate(aspect: aspect)
             
             let transformedQuad = plate.quad(model: model)
             

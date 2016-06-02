@@ -334,5 +334,5 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     
     
     // Plate is a cube with virtual depth == 0
-    internal class Transfromer: IMPPlateNode {}
+    internal class Transfromer: IMPPhotoPlateNode {}
 }

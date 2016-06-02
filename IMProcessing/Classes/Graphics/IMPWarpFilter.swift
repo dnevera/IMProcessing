@@ -105,7 +105,7 @@ public class IMPWarpFilter: IMPFilter {
         }
     }
     
-    lazy var vertices = IMPPlate(aspect: 1, region: IMPRegion())
+    lazy var vertices = IMPPhotoPlate(aspect: 1, region: IMPRegion())
     
     lazy var vertexBuffer: MTLBuffer = {
         return self.context.device.newBufferWithBytes(self.vertices.raw, length: self.vertices.length, options: .CPUCacheModeDefaultCache)

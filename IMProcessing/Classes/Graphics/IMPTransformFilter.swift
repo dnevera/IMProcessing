@@ -1,5 +1,5 @@
 //
-//  IMPPhotoPlateFilter.swift
+//  IMPTransformFilter.swift
 //  IMProcessing
 //
 //  Created by denis svinarchuk on 20.04.16.
@@ -8,8 +8,11 @@
 
 import Metal
 
-/// Photo Plate Node is a Cube Node with virtual depth == 0
-public class IMPPlateNode: IMPRenderNode {
+/// Transform filter can be imagine as a photo plate tool 
+typealias IMPPhotoPlateFilter = IMPTransformFilter
+
+/// Image textured on the model of Rendering Node is a Cube Node with virtual depth == 0
+public class IMPPhotoPlateNode: IMPRenderNode {
     
     /// Cropping the plate region
     public var region = IMPRegion() {
@@ -20,7 +23,7 @@ public class IMPPlateNode: IMPRenderNode {
                     region.top != oldValue.top ||
                     region.bottom != oldValue.bottom
             {
-                vertices = IMPPlate(aspect: aspect, region: region)
+                vertices = IMPPhotoPlate(aspect: aspect, region: region)
             }
         }
     }
@@ -32,18 +35,18 @@ public class IMPPlateNode: IMPRenderNode {
             if super.aspect != oldValue || resetAspect {
                 super.aspect = aspect
                 resetAspect = false
-                vertices = IMPPlate(aspect: aspect, region: self.region)
+                vertices = IMPPhotoPlate(aspect: aspect, region: self.region)
             }
         }
     }
     
     public init(context: IMPContext, aspectRatio:Float, region:IMPRegion = IMPRegion()){
-        super.init(context: context, vertices: IMPPlate(aspect: aspectRatio, region: self.region))
+        super.init(context: context, vertices: IMPPhotoPlate(aspect: aspectRatio, region: self.region))
     }
 }
 
-/// Photo plate transoration filter
-public class IMPPhotoPlateFilter: IMPFilter {
+/// Photo plate transformation filter
+public class IMPTransformFilter: IMPFilter {
 
     public var backgroundColor:IMPColor {
         get {
@@ -56,7 +59,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
 
     public override var source: IMPImageProvider? {
         didSet {
-            updatePlateAspect(cropRegion)
+            updatePlateAspect(region)
         }
     }
     
@@ -164,7 +167,7 @@ public class IMPPhotoPlateFilter: IMPFilter {
     ///  Cut the plate with crop region
     ///
     ///  - parameter region: crop region
-    public var cropRegion:IMPRegion {
+    public var region:IMPRegion {
         set {
             guard (source != nil) else {return}
             updatePlateAspect(newValue)
@@ -187,8 +190,8 @@ public class IMPPhotoPlateFilter: IMPFilter {
         }
     }
         
-    lazy var plate:Plate = {
-        return Plate(context: self.context, aspectRatio:4/3)
+    lazy var plate:PhotoPlate = {
+        return PhotoPlate(context: self.context, aspectRatio:4/3)
     }()
     
     func updatePlateAspect(region:IMPRegion)  {
@@ -200,6 +203,6 @@ public class IMPPhotoPlateFilter: IMPFilter {
     }
     
     // Plate is a cube with virtual depth == 0
-    class Plate: IMPPlateNode {}
+    class PhotoPlate: IMPPhotoPlateNode {}
 }
 
