@@ -13,93 +13,6 @@ import AssetsLibrary
 import ImageIO
 
 
-extension NSSize {
-    var Float2:float2 {
-        return float2(self.width.float,self.height.float)
-    }
-}
-
-extension NSPoint {
-    var Float2:float2 {
-        return float2(self.x.float,self.y.float)
-    }
-}
-
-extension String{
-    static func uniqString() -> String{
-        return CFUUIDCreateString(nil, CFUUIDCreate(nil)) as String;
-    }
-}
-
-extension IMPImage {
-    var metaData:[String: AnyObject]? {
-        get{
-            let imgdata = NSData(data: UIImageJPEGRepresentation(self, 0.5)!)
-            var meta:NSDictionary? = nil
-            if let source = CGImageSourceCreateWithData(imgdata, nil) {
-                meta = CGImageSourceCopyPropertiesAtIndex(source,0,nil)
-            }
-            return meta as! [String: AnyObject]?
-        }
-    }
-}
-
-class IMPFileManager{
-    
-    init(defaultFolder:String){
-        self.current = defaultFolder
-        self.createDefaultFolder(self.current!)
-    }
-    
-    var documentsDirectory:NSString{
-        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
-        return paths [0] as NSString
-    }
-    
-    var current:String?{
-        didSet{
-            self.createDefaultFolder(self.current!)
-        }
-    }
-    
-    internal
-    func createDefaultFolder(folder:String) {
-        
-        let cacheDirectory = self.documentsDirectory.stringByAppendingPathComponent(folder);
-        
-        if NSFileManager.defaultManager().fileExistsAtPath(cacheDirectory) == false{
-            do{
-                try NSFileManager.defaultManager().createDirectoryAtPath(cacheDirectory, withIntermediateDirectories: true, attributes: nil)
-            }
-            catch  {
-                NSLog(" *** %@ cloud no be created...", cacheDirectory)
-            }
-        }
-    }
-    
-    func filePathForKey(fileKey: String?) ->String {
-        
-        var file:String?
-        
-        if fileKey == nil {
-            file = String.uniqString()
-        }
-        else{
-            file = fileKey
-        }
-        return String(format: "%@/%@/%@.jpeg", self.documentsDirectory, self.current!, file!)
-    }
-}
-
-
-public func == (left:NSPoint, right:NSPoint) -> Bool{
-    return left.x==right.x && left.y==right.y
-}
-
-public func != (left:NSPoint, right:NSPoint) -> Bool{
-    return !(left==right)
-}
-
 public func - (left:NSPoint, right:NSPoint) -> NSPoint {
     return NSPoint(x: left.x-right.x, y: left.y-right.y)
 }
@@ -108,131 +21,28 @@ public func + (left:NSPoint, right:NSPoint) -> NSPoint {
     return NSPoint(x: left.x+right.x, y: left.y+right.y)
 }
 
-
-extension _ArrayType where Generator.Element == Float {
-    var total: Float {
-        guard !isEmpty else { return 0 }
-        return  reduce(0, combine: +)
-    }
-    var average: Float {
-        guard !isEmpty else { return 0 }
-        return  total / Float(count)
-    }
-}
-
-extension _ArrayType where Generator.Element == float2 {
-    var total: float2 {
-        guard !isEmpty else { return float2(0) }
-        return reduce(float2(0), combine: +)
-    }
-    var average: float2 {
-        guard !isEmpty else { return float2(0) }
-        return  total /// Float(count)
-    }
-}
-
-public class IMPPanningBehavior{
-    
-    public struct Deceleration {
-        public let duration:Float
-        public let distance:float2
-        init(initial velocity:float2, offset:float2, spring:Float, resistance:Float){
-            
-            let norm:Float = 10000
-            let v = velocity
-            let velocity_mod = simd.distance(v, float2(0))
-            
-            let velocityAngle  = abs(atan(velocity.y/velocity.x))
-            let velocityVector = float2(sin(velocityAngle) * sign(velocity.x),cos(velocityAngle) * sign(velocity.y))
-            let x              = simd.distance(offset, float2(0)) * velocityVector
-            let force          = (spring * x + resistance * velocityVector) * norm
-            let force_mod      = simd.distance(force, float2(0))
-            
-            guard force_mod > 0 else {
-                duration = 0
-                distance = float2(0)
-                return
-            }
-
-            duration = velocity_mod/force_mod
-            
-            let d = (powf(velocity_mod, 2) * float2(1,1))/force/norm
-            distance =  d//clamp(d, min: float2(-1), max: float2(1))
-        }
-    }
-    
-    public init(precision:Int = 10) {
-        self.precision = precision
-    }
-    
-    public var offset = float2(0)
-    public let precision:Int
-    
-    public var deceleration:Deceleration {
-        return Deceleration(initial: velocity, offset: offset, spring: springFactor, resistance: resistanceFacor)
-    }
-    
-    public var velocity:float2 {
-        set {
-            if enabled {
-                isUpdating = true
-                velocityQueue.append(newValue)
-                isUpdating = false
-            }
-        }
-        get{
-            if velocityQueue.isEmpty { return lastVelocity }
-            return velocityQueue.suffix(self.precision).average
-        }
-    }
-    
-    public var resistanceFacor:Float = 50
-    public var springFactor:Float = 10
-
-    
-    public var enabled:Bool = false {
-        didSet {
-            if enabled {
-                lastUpdate = NSDate.timeIntervalSinceReferenceDate()
-                //timer.start()
-            }
-            else {
-                //timer.stop()
-                self.lastVelocity = self.velocityQueue.suffix(self.precision).average
-                self.velocityQueue.removeAll()
-                print(" deceleration = \(deceleration) ")
-            }
-        }
-    }
-    
-    var lastUpdate   = NSTimeInterval(0)
-    var lastPosition = float2(0)
-    var lastVelocity = float2(0)
-    var velocityQueue = [float2]()
-    var isUpdating    = false
-    
-    lazy var timer:IMPRTTimer = IMPRTTimer(usec: 100, update: { (timestamp, duration) in
-        dispatch_async(dispatch_get_main_queue(), {
-            if self.isUpdating { return }
-            self.velocityQueue.append(float2(0))
-        })
-    }){ (timestamp, duration) in
-        //self.lastVelocity = self.velocityQueue.suffix(self.precision).average
-        //self.velocityQueue.removeAll()
-    }
-}
-
 public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
     
+    //
+    // Conversions between absolute view port of View and model presentation
+    //
     public var cropBounds:IMPRegion? = nil
-    
     public var viewPort:CGRect? = nil
     
-    public var center:CGPoint = CGPoint(x: 0,y: 0) {
-        didSet{
+    //
+    // Conform to UIDynamicItem
+    //
+    public var center:CGPoint {
+        set{
             if let size = viewPort?.size {
-                translation = float2(center.x.float,center.y.float) / (float2(size.width.float,size.height.float)/2)
+                translation = float2(newValue.x.float,newValue.y.float) / (float2(size.width.float,size.height.float)/2)
             }
+        }
+        get {
+            if let size = viewPort?.size {
+                return CGPoint(x: translation.x.cgfloat*size.width/2, y: translation.y.cgfloat*size.height/2)
+            }
+            return CGPoint()
         }
     }
     
@@ -260,10 +70,13 @@ public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
     //            //
     //            // Acording to UIDynamicItem man transform operates only rotation
     //            //
-    //            angle.z = acos(newValue.a).float 
+    //            angle.z = acos(newValue.a).float
     //        }
     //    }
     
+    //
+    // Get out od bounds
+    //
     public var outOfBounds:float2 {
         get {
             
@@ -303,7 +116,7 @@ public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
             
             if abs(offset.x) > 0 || abs(offset.y) > 0 {
                 
-                offset = (self.translation+offset) * size.Float2/2
+                offset = (self.translation+offset) * float2(size.width.float,size.height.float)/2
                 
                 return CGPoint(x: offset.x.cgfloat, y: offset.y.cgfloat)
             }
@@ -361,65 +174,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let offset = (1 - currentScaleFactor * transformFilter.scale.x ) / 2
         return IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
     }
-    
-    var outOfBounds:float2 {
-        get {
-            let aspect   = transformFilter.aspect
-            let model    = transformFilter.model
-            
-            //
-            // Model of Cropped Quad
-            //
-            let cropQuad = IMPQuad(region:cropFilter.region, aspect: aspect)
-            
-            //
-            // Model of transformed Quad
-            // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
-            //
-            let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
-            
-            //
-            // Offset for transformed quad which should contain inscribed croped quad
-            //
-            // NOTE:
-            // 1. quads should be rectangle
-            // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
-            //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
-            //
-            return transformedQuad.translation(quad: cropQuad)
-        }
-    }
-    
-    ///  Check bounds of inscribed Rectangular
-    func checkBounds(duration:NSTimeInterval) {
-        animateTranslation(-outOfBounds, duration: duration)
-    }
-
-    //
-    // Display link timer 
-    //
-    var currentTranslationTimer:IMPDisplayTimer? {
-        willSet {
-            if let t = currentTranslationTimer {
-                t.invalidate()
-            }
-        }
-    }
-    
-    let animateDuration:NSTimeInterval = 0.2
-    
-    func animateTranslation(offset:float2, duration:NSTimeInterval)  {
-        
-        let start = transformFilter.translation
-        let final = start + offset
-        
-        currentTranslationTimer = IMPDisplayTimer.execute(
-            duration: duration,
-            options: .EaseIn,
-            update: { (atTime) in
-                self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
-            })
-    }
+   
     
     func updateCrop()  {
         self.cropFilter.region = currentCropRegion
@@ -706,6 +461,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
     }
     
+    lazy var animator:UIDynamicAnimator = UIDynamicAnimator(referenceView: self.imageView)
     var deceleration:UIDynamicItemBehavior?
     var spring:UIAttachmentBehavior?
     
@@ -714,6 +470,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         guard let anchor = transformFilter.anchor else { return }
         
         let spring = UIAttachmentBehavior(item: transformFilter, attachedToAnchor: anchor)
+
+        if transformFilter.scale.x <= 1 {
+            let offset = abs(transformFilter.outOfBounds)
+            
+            print("***** \(offset)")
+            
+            if offset.x < 0.1 * transformFilter.aspect && offset.y < 0.1 {
+                //
+                // remove oscilations
+                //
+                self.animator.removeAllBehaviors()
+                
+                let start = self.transformFilter.translation
+                let final = start - self.transformFilter.outOfBounds
+                IMPDisplayTimer.execute(duration: 0.2, options: .EaseOut, update: { (atTime) in
+                    self.transformFilter.translation = start.lerp(final: final, t: atTime.float)
+                    }, complete: { (flag) in
+                })
+                
+                return
+            }
+        }
         
         spring.length    = 0
         spring.damping   = 1
@@ -733,7 +511,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let decelerate = UIDynamicItemBehavior(items: [transformFilter])
         decelerate.addLinearVelocity(velocity, forItem: transformFilter)
-        decelerate.resistance = 3
+        decelerate.resistance = 1
+        deceleration?.density = 1
         
         decelerate.action = {
             self.checkTranslationBounds()
@@ -747,13 +526,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         decelerateToBonds(gesture)
     }
     
-    lazy var animator:UIDynamicAnimator = UIDynamicAnimator(referenceView: self.imageView)
-    
     func panningDistance() -> float2 {
-        
-        if currentTranslationTimer != nil {
-            currentTranslationTimer = nil
-        }
         
         let w = self.imageView.frame.size.width.float
         let h = self.imageView.frame.size.height.float
@@ -778,7 +551,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         lastDistance  = panningDistance()
         
-        transformFilter.translation -= lastDistance * (float2(1)-abs(outOfBounds))
+        transformFilter.translation -= lastDistance * (float2(1)-abs(transformFilter.outOfBounds))
     }
     
     func panningWarp(gesture:UIPanGestureRecognizer)  {
@@ -848,10 +621,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     func reset(sender:UIButton){
         
         slider.value = 0.5
-        rotate(slider)
+        transformFilter.angle.z = 0
+        updateCrop()
         
         scaleSlider.value = 0
-        scale(scaleSlider)
+        transformFilter.scale(factor: 1)
         
         transformFilter.translation = float2(0)
         
@@ -950,4 +724,73 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 }
+
+
+class IMPFileManager{
+    
+    init(defaultFolder:String){
+        self.current = defaultFolder
+        self.createDefaultFolder(self.current!)
+    }
+    
+    var documentsDirectory:NSString{
+        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+        return paths [0] as NSString
+    }
+    
+    var current:String?{
+        didSet{
+            self.createDefaultFolder(self.current!)
+        }
+    }
+    
+    internal
+    func createDefaultFolder(folder:String) {
+        
+        let cacheDirectory = self.documentsDirectory.stringByAppendingPathComponent(folder);
+        
+        if NSFileManager.defaultManager().fileExistsAtPath(cacheDirectory) == false{
+            do{
+                try NSFileManager.defaultManager().createDirectoryAtPath(cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+            }
+            catch  {
+                NSLog(" *** %@ cloud no be created...", cacheDirectory)
+            }
+        }
+    }
+    
+    func filePathForKey(fileKey: String?) ->String {
+        
+        var file:String?
+        
+        if fileKey == nil {
+            file = String.uniqString()
+        }
+        else{
+            file = fileKey
+        }
+        return String(format: "%@/%@/%@.jpeg", self.documentsDirectory, self.current!, file!)
+    }
+}
+
+extension String{
+    static func uniqString() -> String{
+        return CFUUIDCreateString(nil, CFUUIDCreate(nil)) as String;
+    }
+}
+
+
+extension IMPImage {
+    var metaData:[String: AnyObject]? {
+        get{
+            let imgdata = NSData(data: UIImageJPEGRepresentation(self, 0.5)!)
+            var meta:NSDictionary? = nil
+            if let source = CGImageSourceCreateWithData(imgdata, nil) {
+                meta = CGImageSourceCopyPropertiesAtIndex(source,0,nil)
+            }
+            return meta as! [String: AnyObject]?
+        }
+    }
+}
+
 
