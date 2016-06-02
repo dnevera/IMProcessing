@@ -222,17 +222,93 @@ public class IMPPanningBehavior{
     }
 }
 
-
-public class IMPDynamicItem:NSObject, UIDynamicItem{
-    public var center = CGPoint()
-    public var bounds = CGRect(x: 0, y: 0, width: 1, height: 1);
-    public var transform = CGAffineTransform()
-    public var offset:float2 {
-        set {
-            center = CGPoint(x: newValue.x.cgfloat, y: newValue.y.cgfloat)
+public class MPPhotoPlateEditor: IMPPhotoPlateFilter, UIDynamicItem{
+    
+    public var cropBounds:IMPRegion? = nil
+    
+    public var viewPort:CGRect? = nil
+    
+    public var center:CGPoint = CGPoint(x: 0,y: 0) {
+        didSet{
+            if let size = viewPort?.size {
+                translation = float2(center.x.float,center.y.float) / (float2(size.width.float,size.height.float)/2)
+            }
         }
+    }
+    
+    public var bounds:CGRect {
         get {
-            return float2(center.x.float,center.y.float)
+            return CGRect(x: 0, y: 0, width: 1, height: 1)
+        }
+    }
+    
+    public var transform = CGAffineTransform()
+    //
+    //  Ignor, or use the follow conversions :
+    //
+    //    {
+    //        get{
+    //            let m = model.transform
+    //            let c0 = m.columns.0
+    //            let c1 = m.columns.1
+    //            let tc = model.translation.columns.3
+    //            return CGAffineTransform(a:  c0.x.cgfloat, b:  c0.y.cgfloat,
+    //                                     c:  c1.x.cgfloat, d:  c1.y.cgfloat,
+    //                                     tx: tc.x.cgfloat, ty: tc.y.cgfloat)
+    //        }
+    //        set {
+    //            //
+    //            // Acording to UIDynamicItem man transform operates only rotation
+    //            //
+    //            angle.z = acos(newValue.a).float 
+    //        }
+    //    }
+    
+    public var outOfBounds:float2 {
+        get {
+            
+            guard let crop=self.cropBounds else { return float2(0) }
+            
+            let aspect   = self.aspect
+            let model    = self.model
+            
+            //
+            // Model of Cropped Quad
+            //
+            let cropQuad = IMPQuad(region:crop, aspect: aspect)
+            
+            //
+            // Model of transformed Quad
+            // Transformation matrix of the model can be the same which transformation filter has or it can be computed independently
+            //
+            let transformedQuad = IMPPlate(aspect: aspect).quad(model: model)
+            
+            //
+            // Offset for transformed quad which should contain inscribed croped quad
+            //
+            // NOTE:
+            // 1. quads should be rectangle
+            // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
+            //    IMPPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
+            //
+            return transformedQuad.translation(quad: cropQuad)
+        }
+    }
+    
+    public var anchor:CGPoint? {
+        get {
+            guard let size = viewPort?.size else { return nil }
+            
+            var offset = -outOfBounds
+            
+            if abs(offset.x) > 0 || abs(offset.y) > 0 {
+                
+                offset = (self.translation+offset) * size.Float2/2
+                
+                return CGPoint(x: offset.x.cgfloat, y: offset.y.cgfloat)
+            }
+            
+            return nil
         }
     }
 }
@@ -247,12 +323,20 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return IMPFilter(context:self.context)
     }()
     
-    lazy var transformFilter:IMPPhotoPlateFilter = {
-        return IMPPhotoPlateFilter(context:self.context)
+    lazy var transformFilter:MPPhotoPlateEditor = {
+        let f = MPPhotoPlateEditor(context:self.context)
+        f.addDestinationObserver(destination: { (destination) in
+            f.viewPort = self.imageView.layer.bounds
+        })
+        return f
     }()
     
     lazy var cropFilter: IMPCropFilter = {
-        return IMPCropFilter(context:self.context)
+        let f = IMPCropFilter(context:self.context)
+        f.addDestinationObserver(destination: { (destination) in
+            self.transformFilter.cropBounds = f.region
+        })
+        return f
     }()
     
     lazy var warpFilter: IMPWarpFilter = {
@@ -452,6 +536,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.imageView.setOrientation(orientation, animate: true)
         }
         
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapHandler(_:)))
+        tap.numberOfTapsRequired = 1
+        tap.numberOfTouchesRequired = 1
+        imageView.addGestureRecognizer(tap)
+        
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panHandler(_:)))
         imageView.addGestureRecognizer(pan)
         
@@ -487,10 +576,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     var pointerPlace:PointerPlace = .Undefined
     
+    func tapHandler(gesture:UIPanGestureRecognizer)  {
+        if gesture.state == .Began {
+           animator.removeAllBehaviors()
+        }
+    }
+    
     func panHandler(gesture:UIPanGestureRecognizer)  {
         
         if gesture.state == .Began {
-            animator.removeAllBehaviors()
             tapDown(gesture)
         }
         else if gesture.state == .Changed {
@@ -569,6 +663,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func tapDown(gesture:UIPanGestureRecognizer) {
         
+        animator.removeAllBehaviors()
+
         if tuoched {
             return
         }
@@ -609,63 +705,49 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
     }
-
     
     var deceleration:UIDynamicItemBehavior?
     var spring:UIAttachmentBehavior?
     
-    var dynamicOffset:float2 = float2(0){
-        didSet{
-            let offset = (dynamicOffset/self.imageView.bounds.size.Float2 * 2)
-            self.transformFilter.translation = offset
-            
-            print(" outOfBounds == \(outOfBounds)")
-            
-            let bounds = -outOfBounds * imageView.bounds.size.Float2/2
-            
-            if abs(bounds.x) > 0 || abs(bounds.y) > 0 {
-                let anchor = CGPoint(x: bounds.x.cgfloat, y: bounds.y.cgfloat)
-                
-                let spring = UIAttachmentBehavior(item: dynamicItem, attachedToAnchor: anchor)
-                
-                spring.length    = 0
-                spring.damping   = 1
-                spring.frequency = 1
-                
-                deceleration?.resistance = 20
-                
-                animator.addBehavior(spring)
-                
-                self.spring = spring
-            }
-        }
+    func checkTranslationBounds(){
+        
+        guard let anchor = transformFilter.anchor else { return }
+        
+        let spring = UIAttachmentBehavior(item: transformFilter, attachedToAnchor: anchor)
+        
+        spring.length    = 0
+        spring.damping   = 1
+        spring.frequency = 2
+        
+        animator.addBehavior(spring)
+        self.spring = spring
     }
-    
-    
-    func tapUp(gesture:UIPanGestureRecognizer) {
-        tuoched = false
+
+    func decelerateToBonds(gesture:UIPanGestureRecognizer? = nil) {
+        var velocity = CGPoint()
         
-        var velocity = gesture.velocityInView(imageView)
-        velocity = CGPoint(x: velocity.x,y: -velocity.y)
+        if let g = gesture {
+            velocity = g.velocityInView(imageView)
+            velocity = CGPoint(x: velocity.x,y: -velocity.y)
+        }
         
-        dynamicItem.offset = (transformFilter.translation * imageView.bounds.size.Float2/2)
-        
-        let decelerate = UIDynamicItemBehavior(items: [dynamicItem])
-        decelerate.addLinearVelocity(velocity, forItem: dynamicItem)
+        let decelerate = UIDynamicItemBehavior(items: [transformFilter])
+        decelerate.addLinearVelocity(velocity, forItem: transformFilter)
         decelerate.resistance = 3
         
         decelerate.action = {
-            self.dynamicOffset = self.dynamicItem.offset
+            self.checkTranslationBounds()
         }
-        
-        animator.addBehavior(decelerate)
+        self.animator.addBehavior(decelerate)
         self.deceleration = decelerate
     }
     
+    func tapUp(gesture:UIPanGestureRecognizer) {
+        tuoched = false
+        decelerateToBonds(gesture)
+    }
+    
     lazy var animator:UIDynamicAnimator = UIDynamicAnimator(referenceView: self.imageView)
-    lazy var dynamicItem:IMPDynamicItem = IMPDynamicItem()
-    
-    
     
     func panningDistance() -> float2 {
         
@@ -747,6 +829,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func longPress(gesture:UIPanGestureRecognizer)  {
         if gesture.state == .Began {
+            animator.removeAllBehaviors()
            // filter.enabled = false
         }
         else if gesture.state == .Ended {
@@ -781,57 +864,31 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     func toggleWarpFilter(sender:UISwitch){
         enableWarpFilter = sender.on
     }
-    
-    var timer:NSTimer?
-    
-    func checkBoundsAfterRotation()  {
-        dispatch_async(dispatch_get_main_queue()) {
-            self.checkBounds(self.animateDuration)
-        }
+        
+    func checkBoundsAfterTransformation()  {
+        animator.removeAllBehaviors()
+        decelerateToBonds()
+        checkTranslationBounds()
     }
     
     func rotate(sender:UISlider){
-        dispatch_async(context.dispatchQueue) { () -> Void in
-            self.transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
-            self.updateCrop()
-            
-            dispatch_async(dispatch_get_main_queue(), {
-                if self.timer != nil {
-                    self.timer?.invalidate()
-                }
-                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: #selector(self.checkBoundsAfterRotation), userInfo: nil, repeats: false)
-            })
-        }
+        transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
+        updateCrop()
+        checkBoundsAfterTransformation()
     }
     
-    func checkBoundsAfterScale()  {
-        dispatch_async(dispatch_get_main_queue()) {
-            self.checkBounds(self.animateDuration)
+    func scale(sender:UISlider){            
+        var scale = (sender.value * 4 + 1)
+        
+        if scale < 1 {
+            //
+            // scale can't be less then 1 while we try to crop
+            //
+            scale = 1
         }
-    }
-
-    func scale(sender:UISlider){
-        dispatch_async(context.dispatchQueue) { () -> Void in
-            
-            var scale = (sender.value * 4 + 1)
-            
-            if scale < 1 {
-                //
-                // scale can't be less then 1 while we try to crop
-                //
-                scale = 1
-            }
-            
-            dispatch_async(dispatch_get_main_queue(), {
-                
-                self.transformFilter.scale(factor: scale)
-
-                if self.timer != nil {
-                    self.timer?.invalidate()
-                }
-                self.timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(self.checkBoundsAfterScale), userInfo: nil, repeats: false)
-            })
-        }
+        
+        transformFilter.scale(factor: scale)
+        checkBoundsAfterTransformation()
     }
 
     var aflag = true
