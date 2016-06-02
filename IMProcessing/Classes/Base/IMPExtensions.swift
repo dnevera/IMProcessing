@@ -131,11 +131,10 @@ public extension IMPRegion{
     }
 
     public func lerp(final final:IMPRegion, t:Float) -> IMPRegion {
-        let l = left.lerp   (final: final.left,   t: t)
-        let r = right.lerp  (final: final.right,  t: t)
-        let t = top.lerp    (final: final.top,    t: t)
-        let b = bottom.lerp (final: final.bottom, t: t)
-        return IMPRegion(left: l, right: r, top: t, bottom: b)
+        let v1 = float4(left,right,top,bottom)
+        let v2 = float4(final.left,final.right,final.top,final.bottom)
+        let f = v1.lerp(final: v2, t: t)
+        return IMPRegion(left: f.x, right: f.y, top: f.z, bottom: f.w)
     }
 }
 
