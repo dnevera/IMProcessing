@@ -122,10 +122,20 @@ public extension IMPBlendingMode{
 }
 
 public extension IMPRegion{
+    
     public var width:Float {return 1-(left+right) }
     public var height:Float {return 1-(top+bottom) }
+    
     public var rectangle:NSRect{
         return NSRect(origin: NSPoint(x:left.cgfloat,y:top.cgfloat), size: NSSize(width: width, height: height))
+    }
+
+    public func lerp(final final:IMPRegion, t:Float) -> IMPRegion {
+        let l = left.lerp   (final: final.left,   t: t)
+        let r = right.lerp  (final: final.right,  t: t)
+        let t = top.lerp    (final: final.top,    t: t)
+        let b = bottom.lerp (final: final.bottom, t: t)
+        return IMPRegion(left: l, right: r, top: t, bottom: b)
     }
 }
 
