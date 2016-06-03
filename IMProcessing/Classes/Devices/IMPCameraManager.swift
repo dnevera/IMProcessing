@@ -597,6 +597,32 @@
             liveViewReadyHandlers.append(observer)
         }
         
+        /// Test camera torch
+        public var hasTorch:Bool {
+            return currentCamera.hasTorch
+        }
+
+        /// Change torch mode. It can be .Off, .On, .Auto
+        public var torchMode:AVCaptureTorchMode {
+            set{
+                if hasFlash && newValue != currentCamera.torchMode &&
+                    currentCamera.isTorchModeSupported(newValue)
+                {
+                    do{
+                        try currentCamera.lockForConfiguration()
+                        currentCamera.torchMode = newValue
+                        currentCamera.unlockForConfiguration()
+                    }
+                    catch let error as NSError {
+                        NSLog("IMPCameraManager error: \(error): \(#file):\(#line)")
+                    }
+                }
+            }
+            get{
+                return currentCamera.torchMode
+            }
+        }
+
         /// Test camera flash
         public var hasFlash:Bool {
             return currentCamera.hasFlash

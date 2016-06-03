@@ -558,7 +558,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         if currentFlash > 2 {
             currentFlash = 0
         }
-        cameraManager.flashMode = [.Off,.On,.Auto][currentFlash]
+        cameraManager.torchMode = [.Off,.On,.Auto][currentFlash]
         let name = ["Off", "On", "Auto"][currentFlash]
         dispatch_async(dispatch_get_main_queue()) { 
             sender.setTitle(String(format: "Flash %@", name), forState: .Normal)
