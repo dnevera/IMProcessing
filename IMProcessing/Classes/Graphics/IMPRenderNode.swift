@@ -17,9 +17,7 @@ public class IMPRenderNode: IMPContextProvider {
     }    
     
     public var backgroundColor:IMPColor = IMPColor.whiteColor()    
-    
-    //public typealias MatrixModelHandler =  ((destination:IMPImageProvider, model:IMPMatrixModel, aspect:Float) -> Void)
-    
+        
     public var context:IMPContext!
     
     public var model:IMPTransfromModel {

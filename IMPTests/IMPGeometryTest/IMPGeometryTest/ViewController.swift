@@ -223,46 +223,11 @@ class ViewController: NSViewController {
         
         zoomCutter = IMPCropFilter(context: context)
         filter.addFilter(zoomCutter)
-
-        
-//        let hist = IMPGHistogramAnalizer(context: context)
-//        
-//        filter.addSourceObserver { (source) in
-//            hist.source = source
-//            hist.apply()
-//            
-//            NSLog(" hist = \(hist.histogram)")
-//        }
         
         imageView = IMPImageView(context: context, frame: view.bounds)
         imageView.filter = filter
         imageView.backgroundColor = IMPColor(color: IMPPrefs.colors.background)
         
-        transformer.addMatrixModelObserver { (destination, model, aspect) in
-            
-            let plate = IMPPhotoPlate(aspect: aspect)
-            
-            let transformedQuad = plate.quad(model: model)
-            
-            let cropQuad = IMPQuad(region:self.currentCropRegion)
-            
-            let qoffset  = transformedQuad.translation(quad: cropQuad)
-            
-            print("\ncropQuad        = \(cropQuad)")
-            print("transformedQuad   = \(transformedQuad)")
-            print("qoffset           = \(qoffset)")
-
-            var offset = (1-plate.scaleFactorFor(model: model) * self.currentScale)/2
-
-            offset = offset > 0.49 ? 0.49 : offset
-            
-            let region = IMPRegion(left: offset, right: offset, top: offset, bottom: offset)
-            
-            self.currentCropRegion = region
-            
-            self.zoomCutter.region = region
-        }
-                
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -763,7 +728,7 @@ class ViewController: NSViewController {
     
     func  left(sender:NSButton) {
         asyncChanges { () -> Void in
-            self.transformer.angle = (sender.state == 1 ? IMPMatrixModel.left : IMPMatrixModel.flat)
+            self.transformer.angle = (sender.state == 1 ? IMPTransfromModel.left : IMPTransfromModel.flat)
         }
     }
 

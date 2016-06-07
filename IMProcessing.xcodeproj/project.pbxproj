@@ -101,7 +101,7 @@
 		31A658DA1CFD972900DD150D /* IMPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A6587D1CFD972900DD150D /* IMPView.swift */; };
 		31A658DB1CFD972900DD150D /* IMPMaxSizeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A6587F1CFD972900DD150D /* IMPMaxSizeFilter.swift */; };
 		31A658DC1CFD972900DD150D /* IMPCropFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658811CFD972900DD150D /* IMPCropFilter.swift */; };
-		31A658DD1CFD972900DD150D /* IMPMatrixModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658821CFD972900DD150D /* IMPMatrixModel.swift */; };
+		31A658DD1CFD972900DD150D /* IMPTransformModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658821CFD972900DD150D /* IMPTransformModel.swift */; };
 		31A658DF1CFD972900DD150D /* IMPQuad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658841CFD972900DD150D /* IMPQuad.swift */; };
 		31A658E01CFD972900DD150D /* IMPRenderNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658851CFD972900DD150D /* IMPRenderNode.swift */; };
 		31A658E11CFD972900DD150D /* IMPVertices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A658861CFD972900DD150D /* IMPVertices.swift */; };
@@ -281,7 +281,7 @@
 		31A6587D1CFD972900DD150D /* IMPView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPView.swift; sourceTree = "<group>"; };
 		31A6587F1CFD972900DD150D /* IMPMaxSizeFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPMaxSizeFilter.swift; sourceTree = "<group>"; };
 		31A658811CFD972900DD150D /* IMPCropFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPCropFilter.swift; sourceTree = "<group>"; };
-		31A658821CFD972900DD150D /* IMPMatrixModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPMatrixModel.swift; sourceTree = "<group>"; };
+		31A658821CFD972900DD150D /* IMPTransformModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPTransformModel.swift; sourceTree = "<group>"; };
 		31A658841CFD972900DD150D /* IMPQuad.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPQuad.swift; sourceTree = "<group>"; };
 		31A658851CFD972900DD150D /* IMPRenderNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPRenderNode.swift; sourceTree = "<group>"; };
 		31A658861CFD972900DD150D /* IMPVertices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPVertices.swift; sourceTree = "<group>"; };
@@ -745,7 +745,7 @@
 			isa = PBXGroup;
 			children = (
 				31A658811CFD972900DD150D /* IMPCropFilter.swift */,
-				31A658821CFD972900DD150D /* IMPMatrixModel.swift */,
+				31A658821CFD972900DD150D /* IMPTransformModel.swift */,
 				31A1FF741D02C47D00A614FB /* IMPTransformFilter.swift */,
 				31A658841CFD972900DD150D /* IMPQuad.swift */,
 				31A658851CFD972900DD150D /* IMPRenderNode.swift */,
@@ -1114,7 +1114,7 @@
 				31A658D11CFD972900DD150D /* IMPCameraManager.swift in Sources */,
 				31A658DC1CFD972900DD150D /* IMPCropFilter.swift in Sources */,
 				31A658BE1CFD972900DD150D /* IMPAdjustment.swift in Sources */,
-				31A658DD1CFD972900DD150D /* IMPMatrixModel.swift in Sources */,
+				31A658DD1CFD972900DD150D /* IMPTransformModel.swift in Sources */,
 				31A1FF751D02C47D00A614FB /* IMPTransformFilter.swift in Sources */,
 				31A658FA1CFD972900DD150D /* IMPJpegturbo.m in Sources */,
 				31A658F01CFD972900DD150D /* IMPSimd.swift in Sources */,

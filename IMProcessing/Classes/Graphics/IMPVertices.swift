@@ -113,7 +113,7 @@ public extension IMPVertices{
         let w = left + right
         let h = top + bottom
         
-        let scale = min(W / w, H / h)
+        var scale = min(W / w, H / h)
         
         return scale > 1 ? 2-scale : scale
     }

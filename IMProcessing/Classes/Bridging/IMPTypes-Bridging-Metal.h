@@ -41,20 +41,7 @@ extern "C" {
     } IMPVertexOut;
     
 #endif
-    
-//    typedef struct {         
-//        float4x4 projection;  // camera view model
-//        float4x4 transform;   // rotation,scale
-//        float4x4 translation; // moving
-//    } IMPMatrixModel;
-
-    typedef struct {
-        float3        scale;
-        float3x3      rotation;
-        float4x4      translation;
-        float4x4      projection;
-    } IMPTransformBuffer;
-    
+        
     typedef struct {
         float left;
         float right;
