@@ -390,7 +390,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             //
             // rotate up-side-down
             //
-            identity.rotateAround(vector: IMPMatrixModel.degrees180)
+            identity.rotate(radians: IMPMatrixModel.degrees180)
             
             // transform point
             p  =  float4x4(identity.transform) * p
@@ -401,10 +401,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         else {
             if o == .LandscapeLeft {
-                identity.rotateAround(vector: IMPMatrixModel.right)
+                identity.rotate(radians: IMPMatrixModel.right)
                 
             }else if o == .LandscapeRight {
-                identity.rotateAround(vector: IMPMatrixModel.left)
+                identity.rotate(radians: IMPMatrixModel.left)
             }
             p  =  float4x4(identity.transform) * p
             
@@ -523,7 +523,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func tapUp(gesture:UIPanGestureRecognizer) {
         tuoched = false
-        decelerateToBonds(gesture)
+        //decelerateToBonds(gesture)
     }
     
     func panningDistance() -> float2 {
@@ -536,7 +536,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         //let f = 1/IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
-        return float2(x,y) * transformFilter.scale.x
+        return float2(x,y) //* transformFilter.scale.x
     }
     
     var lastDistance = float2(0)
@@ -647,18 +647,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func rotate(sender:UISlider){
         transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
-        updateCrop()
-        checkBoundsAfterTransformation()
+        //updateCrop()
+        //checkBoundsAfterTransformation()
     }
     
     func scale(sender:UISlider){            
-        var scale = (sender.value * 4 + 1)
+        var scale = (sender.value+0.1) * 2
         
         if scale < 1 {
             //
             // scale can't be less then 1 while we try to crop
             //
-            scale = 1
+            //scale = 1
         }
         
         transformFilter.scale(factor: scale)

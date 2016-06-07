@@ -21,9 +21,26 @@ using namespace metal;
 
 namespace IMProcessing
 {
-    vertex IMPVertexOut vertex_transformation(
+//    vertex IMPVertexOut vertex_transformation_1(
+//                                              const device IMPVertex*      vertex_array [[ buffer(0) ]],
+//                                              const device IMPMatrixModel&  matrix_model [[ buffer(1) ]],
+//                                              unsigned int vid [[ vertex_id ]]) {
+//        
+//        
+//        IMPVertex in = vertex_array[vid];
+//        float3 position = float3(in.position);
+//        
+//        IMPVertexOut out;
+//        out.position = matrix_model.projection * matrix_model.transform * matrix_model.translation * float4(position,1);
+//        out.texcoord = float2(float3(in.texcoord).xy);
+//        
+//        return out;
+//    }
+//
+    
+    vertex IMPVertexOut vertex_transformation_1(
                                               const device IMPVertex*      vertex_array [[ buffer(0) ]],
-                                              const device IMPMatrixModel&  matrix_model [[ buffer(1) ]],
+                                              const device float4x4&       matrix_model [[ buffer(1) ]],
                                               unsigned int vid [[ vertex_id ]]) {
         
         
@@ -31,12 +48,15 @@ namespace IMProcessing
         float3 position = float3(in.position);
         
         IMPVertexOut out;
-        out.position = matrix_model.projection * matrix_model.transform * float4(position,1) * matrix_model.translation ;
+        //out.position = matrix_model.projection * ( (transpose(matrix_model.translation) * matrix_model.transform * matrix_model.translation) * matrix_model.translation) * float4(position,1);
+        //out.position = matrix_model.projection * matrix_model.translation *( ( (transpose(matrix_model.translation) * matrix_model.transform * matrix_model.translation) * float4(position,1)));
+        out.position = matrix_model * float4(position,1);
         out.texcoord = float2(float3(in.texcoord).xy);
         
         return out;
     }
     
+
     vertex IMPVertexOut vertex_warpTransformation(
                                                   const device IMPVertex*   vertex_array     [[ buffer(0) ]],
                                                   const device float4x4    &homography_model [[ buffer(1) ]],

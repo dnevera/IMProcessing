@@ -393,7 +393,7 @@ public struct IMPQuad {
         //
         // covert to relation aspect ratio
         //
-        offset.x /= aspect
+        //offset.x /= aspect
         
         return offset
     }

@@ -270,7 +270,10 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
             height = s.height
         }
 
-        if provider.texture?.width != width || provider.texture?.height != height {
+        if provider.texture?.width != width || provider.texture?.height != height
+            ||
+        provider === source
+        {
             let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
                 input.pixelFormat,
                 width: width, height: height, mipmapped: false)

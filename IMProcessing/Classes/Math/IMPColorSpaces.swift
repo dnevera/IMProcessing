@@ -50,8 +50,6 @@ public extension float3{
     public var bg:float2 { get{ return float2(b,g) } }
     public var gb:float2 { get{ return float2(g,b) } }
     
-    public var xxx:float3 { get{ return float3(x,x,x) } }
-    
     public func normalized() -> float3 {
         var vector = self
         var sum = vector.x+vector.y+vector.z
@@ -102,17 +100,6 @@ public extension float4{
     
     public var bg:float2 { get{ return float2(b,g) } }
     public var gb:float2 { get{ return float2(g,b) } }
-    public var xy:float2 { get{ return float2(x,y) } }
-    public var wz:float2 { get{ return float2(w,z) } }
-    
-    public var xxx:float3 { get{ return float3(x,x,x) } }
-    public var yyy:float3 { get{ return float3(y,y,y) } }
-    public var zzz:float3 { get{ return float3(z,z,z) } }
-    public var www:float3 { get{ return float3(w,w,w) } }
-    
-    public var xyw:float3 { get{ return float3(x,y,w) } }
-    public var yzx:float3 { get{ return float3(y,z,x) } }
-    public var xyz:float3 { get{ return float3(x,y,z) } }
     
     public func normalized() -> float4 {
         var vector = self

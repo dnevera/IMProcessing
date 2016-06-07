@@ -7,7 +7,6 @@
 
 #include "IMPStdlib_metal.h"
 
-
 typedef struct {
     char4 position;
 } IMPBlendVertex;

@@ -76,17 +76,31 @@ public class IMPTransformFilter: IMPFilter {
         self.init(context: context, vertex: "vertex_transformation", fragment: "fragment_transformation")
     }    
     
+    public var viewPortSize: MTLSize? {
+        didSet{
+            if let s = source {
+                plate.aspect = self.keepAspectRatio ? viewPortSize!.width.float/viewPortSize!.height.float : 1
+                dirty = true
+            }
+        }
+    }
+    
     public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider {
-        self.context.execute { (commandBuffer) -> Void in
+        self.context.execute{ (commandBuffer) -> Void in
 
             if let inputTexture = source.texture {
                 
                 var width  = inputTexture.width.float
                 var height = inputTexture.height.float
+
+                if let s = self.viewPortSize {
+                    width = s.width.float
+                    height = s.height.float
+                }
                 
                 width  -= width  * (self.plate.region.left   + self.plate.region.right);
-                height -= height * (self.plate.region.bottom + self.plate.region.top);
-
+                height -= height * (self.plate.region.bottom + self.plate.region.top);                            
+                
                 if width.int != provider.texture?.width || height.int != provider.texture?.height{
                     
                     let descriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
@@ -100,18 +114,18 @@ public class IMPTransformFilter: IMPFilter {
                 self.plate.render(commandBuffer, pipelineState: self.graphics.pipeline!, source: source, destination: provider)
             }
         }
-        return provider
+        return  provider //super.main(source: provider, destination: provider)
     }
     
     public var aspect:Float {
         return plate.aspect
     }
     
-    public var model:IMPMatrixModel {
+    public var model:IMPTransfromModel {
             return plate.model
     }
 
-    public var identityModel:IMPMatrixModel {
+    public var identityModel:IMPTransfromModel {
         return plate.identityModel
     }
     

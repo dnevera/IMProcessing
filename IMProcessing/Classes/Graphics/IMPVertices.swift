@@ -52,17 +52,16 @@ public extension IMPVertices{
     ///  - parameter model: 3D matrix transformation model
     ///
     ///  - returns: x,y coordinates
-    public func xyProjection(model model:IMPMatrixModel) -> [float2] {
+    public func xyProjection(model model:IMPTransfromModel) -> [float2] {
         var points = [float2]()
         for v in vertices {
             
             let xyzw = float4(v.position.x,v.position.y,v.position.z,1)
-            
-            let result = float4x4(model.projection) * float4x4(model.transform) * xyzw * float4x4(model.translation)
+            let result = model.matrix * xyzw
             let t = (1+result.z)/2
             let xy = result.xy/t
             
-            points.append(xy)
+            points.append(result.xy)
             
         }
         return points
@@ -74,7 +73,7 @@ public extension IMPVertices{
     ///  - parameter model: transformation matrix model
     ///
     ///  - returns: scale factor
-    public func scaleFactorFor(model model:IMPMatrixModel) -> Float {
+    public func scaleFactorFor(model model:IMPTransfromModel) -> Float {
         let points = xyProjection(model: model)
         
         var left:Float   = 0
@@ -132,7 +131,7 @@ public class IMPPhotoPlate: IMPVertices{
     /// Processing region
     public let region:IMPRegion
     
-    public func quad(model model:IMPMatrixModel) -> IMPQuad {
+    public func quad(model model:IMPTransfromModel) -> IMPQuad {
         let v = xyProjection(model: model)
         var q = IMPQuad(left_bottom: v[1], left_top: v[0], right_bottom: v[2], right_top: v[5])
         q.aspect = aspect
