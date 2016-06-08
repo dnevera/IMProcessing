@@ -27,12 +27,32 @@ public extension float3 {
     public func lerp(final final:float3, t:Float) -> float3 {
         return (1-t)*self + t*final
     }
+    
+    
+    public var xy:float2 { get{ return float2(x,y) }   set{self.x=newValue.x; self.y=newValue.y}}
+    public var xz:float2 { get{ return float2(x,z) }   set{self.x=newValue.x; self.z=newValue.y}}
+    public var yz:float2 { get{ return float2(y,z) }   set{self.y=newValue.x; self.z=newValue.y}}
+    public var xxx:float3 { get{ return float3(x,x,x)}}
+    public var yyy:float3 { get{ return float3(y,y,y)}}
+    public var zzz:float3 { get{ return float3(z,z,z)}}
 }
 
 public extension float4 {
     public func lerp(final final:float4, t:Float) -> float4 {
         return (1-t)*self + t*final
     }
+    
+    public var xy:float2 { get{ return float2(x,y) } set{self.x=newValue.x; self.y=newValue.y}}
+    public var wz:float2 { get{ return float2(w,z) } set{self.w=newValue.x; self.z=newValue.y}}
+    
+    public var xxx:float3 { get{ return float3(x,x,x) } }
+    public var yyy:float3 { get{ return float3(y,y,y) } }
+    public var zzz:float3 { get{ return float3(z,z,z) } }
+    public var www:float3 { get{ return float3(w,w,w) } }
+    
+    public var xyw:float3 { get{ return float3(x,y,w) } set{self.x=newValue.x; self.y=newValue.y; self.w=newValue.z}}
+    public var yzx:float3 { get{ return float3(y,z,x) } set{self.y=newValue.x; self.z=newValue.y; self.x=newValue.z}}
+    public var xyz:float3 { get{ return float3(x,y,z) } set{self.x=newValue.x; self.y=newValue.y; self.z=newValue.z}}
 }
 
 
@@ -111,74 +131,66 @@ public extension matrix_float4x4{
 // MARK: - Basic matrix transformations
 public extension matrix_float4x4 {
     
-    public mutating func translate(x x:Float, y:Float, z:Float){
+    public mutating func translate(position p:float3){
         let m0 = self.columns.0
         let m1 = self.columns.1
         let m2 = self.columns.2
         let m3 = self.columns.3
-        self = matrix_float4x4(columns: (
+        let m = matrix_float4x4(columns: (
             m0,
             m1,
             m2,
             float4(
-                m0.x * x + m0.y * y + m0.z * z + m0.w,
-                m1.x * x + m1.y * y + m1.z * z + m1.w,
-                m2.x * x + m2.y * y + m2.z * z + m2.w,
-                m3.x * x + m3.y * y + m3.z * z + m3.w)
+                m0.x * p.x + m0.y * p.y + m0.z * p.z + m0.w,
+                m1.x * p.x + m1.y * p.y + m1.z * p.z + m1.w,
+                m2.x * p.x + m2.y * p.y + m2.z * p.z + m2.w,
+                m3.x * p.x + m3.y * p.y + m3.z * p.z + m3.w)
             )
         )
+        
+        self = matrix_multiply(m,self)
     }
     
-    public mutating func scale(x x:Float, y:Float, z:Float)  {
+    public mutating func scale(factor f:float3)  {
         let m0 = self.columns.0
         let m1 = self.columns.1
         let m2 = self.columns.2
         let m3 = self.columns.3
         
         let rows = [
-            [m0.x * x, m1.x * x, m2.x * x, m3.x ],
-            [m0.y * y, m1.y * y, m2.y * y, m3.y ],
-            [m0.z * z, m1.z * z, m2.z * z, m3.z ],
+            [m0.x * f.x, m1.x * f.x, m2.x * f.x, m3.x ],
+            [m0.y * f.y, m1.y * f.y, m2.y * f.y, m3.y ],
+            [m0.z * f.z, m1.z * f.z, m2.z * f.z, m3.z ],
             [m0.w,     m1.w,     m2.w,     m3.w ],
             ]
         
         self = matrix_float4x4(rows: rows)
     }
   
-    public mutating func rotate(radians radians:Float, x:Float, y:Float, z:Float) {
+    public mutating func rotate(radians radians:Float, point:float3) {
         
-        let v =  normalize(float3(x,y,z))
+        let v =  normalize(point)
         let cos = cosf(radians)
         let cosp = 1.0 - cos
         let sin = sinf(radians)
         
         let m = [
             [cos  + cosp * v[0] * v[0],
-                cosp * v[0] * v[1] + v[2] * sin,
-                cosp * v[0] * v[2] - v[1] * sin,
-                0.0],
+             cosp * v[0] * v[1] + v[2] * sin,
+             cosp * v[0] * v[2] - v[1] * sin,
+             0],
             [cosp * v[0] * v[1] - v[2] * sin,
-                cos  + cosp * v[1] * v[1],
-                cosp * v[1] * v[2] + v[0] * sin,
-                0.0],
+             cos  + cosp * v[1] * v[1],
+             cosp * v[1] * v[2] + v[0] * sin,
+             0],
             [cosp * v[0] * v[2] + v[1] * sin,
-                cosp * v[1] * v[2] - v[0] * sin,
-                cos  + cosp * v[2] * v[2],
-                0.0],
-            [0.0,0.0,0.0,
-                1.0]
+             cosp * v[1] * v[2] - v[0] * sin,
+             cos  + cosp * v[2] * v[2],
+             0],
+            [0.0, 0.0, 0.0, 1.0]
         ]
         
-        self = matrix_multiply(self,  matrix_float4x4(rows: m))
-    }
-    
-    public mutating func move(x x:Float, y: Float){
-        self = matrix_multiply(self,
-                               matrix_float4x4(columns:[
-                                float4(1, 0, 0, x),
-                                float4(0, 1, 0, y),
-                                float4(0, 0, 1, 0),
-                                float4(0, 0, 0, 1)]))
+        self = matrix_multiply(matrix_float4x4(rows: m),self)
     }
 }
 

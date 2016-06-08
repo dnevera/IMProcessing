@@ -17,24 +17,25 @@ public class IMPRenderNode: IMPContextProvider {
     }    
     
     public var backgroundColor:IMPColor = IMPColor.whiteColor()    
-    
-    public typealias MatrixModelHandler =  ((destination:IMPImageProvider, model:IMPMatrixModel, aspect:Float) -> Void)
-    
+        
     public var context:IMPContext!
     
-    public var model:IMPMatrixModel {
+    public var model:IMPTransfromModel {
         get{
             return currentMatrixModel
         }
     }
 
-    public var identityModel:IMPMatrixModel {
+    public var identityModel:IMPTransfromModel {
         get{
             var matrix = matrixIdentityModel
-            matrix.setPerspective(radians: fovy, aspect: aspect, nearZ: 0, farZ: 1)
-            matrix.scale(x: 1, y: 1, z: 1)
-            matrix.rotateAround(x: 0, y: 0, z: 0)
-            matrix.move(x: 0, y: 0)
+            matrix.projection.aspect = aspect
+            matrix.projection.fovy   = fovy
+            matrix.projection.near   = 0
+            matrix.projection.far    = 1
+            matrix.scale = float3(1)
+            matrix.angle = float3(0)
+            matrix.translation = float3(0)
             return matrix
         }
     }
@@ -52,9 +53,17 @@ public class IMPRenderNode: IMPContextProvider {
         }
     }
     
+    
     /// Node scale
     public var scale = float3(1){
         didSet{
+            updateMatrixModel(currentDestinationSize)
+        }
+    }
+    
+    ///
+    public var rotationPoint = float2(0) {
+        didSet {
             updateMatrixModel(currentDestinationSize)
         }
     }
@@ -184,10 +193,10 @@ public class IMPRenderNode: IMPContextProvider {
     
     var vertexBuffer: MTLBuffer!
     
-    var matrixIdentityModel:IMPMatrixModel {
+    var matrixIdentityModel:IMPTransfromModel {
         get{
-            var m = IMPMatrixModel.identity
-            m.translate(x: 0, y: 0, z: -1)
+            var m = IMPTransfromModel()
+            m.translation.z = -1
             return m
         }
     }
@@ -215,28 +224,32 @@ public class IMPRenderNode: IMPContextProvider {
     
     var currentDestination:IMPImageProvider?
     
-    var currentMatrixModel:IMPMatrixModel! {
+    var currentMatrixModel:IMPTransfromModel! {
         didSet {
-            memcpy(matrixBuffer.contents(), &currentMatrixModel, matrixBuffer.length)
+            var matrix = currentMatrixModel.matrix
+            memcpy(matrixBuffer.contents(), &matrix, matrixBuffer.length)
         }
     }
     
-    func updateMatrixModel(size:MTLSize) -> IMPMatrixModel  {
+    func updateMatrixModel(size:MTLSize) -> IMPTransfromModel  {
         
         var matrix = matrixIdentityModel
         
-        matrix.setPerspective(radians: fovy, aspect: aspect, nearZ: 0, farZ: 1)
-
-        matrix.scale(x: scale.x, y: scale.y, z: scale.z)
-        matrix.rotateAround(x: angle.x, y: angle.y, z: angle.z)
-        matrix.move(x: translation.x, y: translation.y)
+        matrix.projection.aspect = aspect
+        matrix.projection.fovy   = fovy
+        matrix.projection.near   = 0
+        matrix.projection.far    = 1
         
+        matrix.angle = angle
+        matrix.translation = float3(translation.x,translation.y,0)
+        matrix.scale = scale
+
         currentMatrixModel = matrix
         
         return currentMatrixModel
     }
     
     lazy var matrixBuffer: MTLBuffer = {
-        return self.context.device.newBufferWithLength(sizeof(IMPMatrixModel), options: .CPUCacheModeDefaultCache)
+        return self.context.device.newBufferWithLength(sizeof(float4x4), options: .CPUCacheModeDefaultCache)
     }()
 }

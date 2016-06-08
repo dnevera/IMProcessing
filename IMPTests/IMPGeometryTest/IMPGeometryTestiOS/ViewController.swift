@@ -104,7 +104,9 @@ public class MPPhotoEditor: IMPTransformFilter, UIDynamicItem{
             // 2. scale of transformed quad should be great then or equal scaleFactorFor for the transformed model:
             //    IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: model)
             //
-            return transformedQuad.translation(quad: cropQuad)
+            //return transformedQuad.translation(quad: cropQuad)
+            return IMPTransfromModel.with(angle: -angle).transform(point: transformedQuad.translation(quad: cropQuad))
+
         }
     }
     
@@ -311,7 +313,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     var finger_point = NSPoint() {
         didSet{
             finger_point_before = oldValue
-            finger_point_offset = finger_point_before - finger_point
+            finger_point_offset = IMPTransfromModel.with(model:transformFilter.model,
+                translation:float3(0)).transform(point:finger_point_before - finger_point)
+
         }
     }
     
@@ -369,9 +373,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             return point
         }
         
-        //
-        // adjust absolute coordinates to relative
-        //
         var new_point = point
         
         let w = imageView.bounds.size.width.float
@@ -380,38 +381,34 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         new_point.x = new_point.x/w.cgfloat * 2 - 1
         new_point.y = new_point.y/h.cgfloat * 2 - 1
         
-        // make relative point
-        var p = float4(new_point.x.float,new_point.y.float,0,1)
+        var p = float2(new_point.x.float,new_point.y.float)
         
-        // make idenity transformation
-        var identity = IMPMatrixModel.identity
+        var model =  IMPTransfromModel()
+        //var identity = IMPMatrixModel.identity
         
         if o == .PortraitUpsideDown {
-            //
-            // rotate up-side-down
-            //
-            identity.rotateAround(vector: IMPMatrixModel.degrees180)
+            //identity.rotate(radians: IMPMatrixModel.degrees180)
+            model.angle = IMPTransfromModel.degrees180
             
-            // transform point
-            p  =  float4x4(identity.transform) * p
+            p  =  model.transform(point: p) //float4x4(identity.transform) * p
             
-            // back to absolute coords
             new_point.x = (p.x.cgfloat+1)/2 * w
             new_point.y = (p.y.cgfloat+1)/2 * h
         }
         else {
             if o == .LandscapeLeft {
-                identity.rotateAround(vector: IMPMatrixModel.right)
+                //identity.rotate(radians: IMPMatrixModel.right)
+                model.angle = IMPTransfromModel.right
                 
             }else if o == .LandscapeRight {
-                identity.rotateAround(vector: IMPMatrixModel.left)
+                //identity.rotate(radians: IMPMatrixModel.left)
+                model.angle = IMPTransfromModel.left
             }
-            p  =  float4x4(identity.transform) * p
+            p  =  model.transform(point: p) //float4x4(identity.transform) * p
             
             new_point.x = (p.x.cgfloat+1)/2 * h
             new_point.y = (p.y.cgfloat+1)/2 * w
         }
-        
         
         return new_point
     }
@@ -509,6 +506,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             velocity = CGPoint(x: velocity.x,y: -velocity.y)
         }
         
+        velocity = IMPTransfromModel.with(angle: -transformFilter.angle).transform(point: velocity)
+        
         let decelerate = UIDynamicItemBehavior(items: [transformFilter])
         decelerate.addLinearVelocity(velocity, forItem: transformFilter)
         decelerate.resistance = 1
@@ -536,7 +535,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         //let f = 1/IMPPhotoPlate(aspect: transformFilter.aspect).scaleFactorFor(model: transformFilter.model)
         
-        return float2(x,y) * transformFilter.scale.x
+        return float2(x,y) //* transformFilter.scale.x
     }
     
     var lastDistance = float2(0)
@@ -646,19 +645,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func rotate(sender:UISlider){
-        transformFilter.angle = IMPMatrixModel.right * (sender.value - 0.5)
-        updateCrop()
-        checkBoundsAfterTransformation()
+        transformFilter.angle = IMPTransfromModel.right * (sender.value - 0.5)
+        //updateCrop()
+        //checkBoundsAfterTransformation()
     }
     
     func scale(sender:UISlider){            
-        var scale = (sender.value * 4 + 1)
+        var scale = (sender.value+0.1) * 2
         
         if scale < 1 {
             //
             // scale can't be less then 1 while we try to crop
             //
-            scale = 1
+            //scale = 1
         }
         
         transformFilter.scale(factor: scale)

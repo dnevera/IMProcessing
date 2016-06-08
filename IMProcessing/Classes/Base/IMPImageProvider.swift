@@ -126,7 +126,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public func rotateLeft() {
         if let source = copyTexture() {
             transformation(source, width: source.height, height: source.width,
-                           angle: IMPMatrixModel.left,
+                           angle: IMPTransfromModel.left,
                            reflectMode: (horizontal: .None, vertical: .None)
             )
         }
@@ -135,7 +135,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public func rotateRight() {
         if let source = copyTexture() {
             transformation(source, width: source.height, height: source.width,
-                           angle: IMPMatrixModel.right,
+                           angle: IMPTransfromModel.right,
                            reflectMode: (horizontal: .None, vertical: .None)
             )
         }
@@ -144,7 +144,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public func rotate180() {
         if let source = copyTexture() {
             transformation(source, width: source.width, height: source.height,
-                           angle: IMPMatrixModel.degrees180,
+                           angle: IMPTransfromModel.degrees180,
                            reflectMode: (horizontal: .None, vertical: .None)
             )
         }
@@ -153,7 +153,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public func reflectHorizontal() {
         if let source = copyTexture() {
             transformation(source, width: source.width, height: source.height,
-                           angle: IMPMatrixModel.flat,
+                           angle: IMPTransfromModel.flat,
                            reflectMode: (horizontal: .Mirroring, vertical: .None)
             )
         }
@@ -162,7 +162,7 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
     public func reflectVertical() {
         if let source = copyTexture() {
             transformation(source, width: source.width, height: source.height,
-                           angle: IMPMatrixModel.flat,
+                           angle: IMPTransfromModel.flat,
                            reflectMode: (horizontal: .None, vertical: .Mirroring)
             )
         }
@@ -274,28 +274,28 @@ public class IMPImageProvider: IMPTextureProvider,IMPContextProvider {
             transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
             
         case IMPExifOrientationLeft180:
-            transformer.angle = IMPMatrixModel.degrees180
+            transformer.angle = IMPTransfromModel.degrees180
             
         case IMPExifOrientationVerticalFlipped:
             transformer.reflectMode = (horizontal:.None, vertical:.Mirroring)
             
         case IMPExifOrientationLeft90VertcalFlipped:
             swapSize()
-            transformer.angle = IMPMatrixModel.left
+            transformer.angle = IMPTransfromModel.left
             transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
             
         case IMPExifOrientationLeft90:
             swapSize()
-            transformer.angle = IMPMatrixModel.right
+            transformer.angle = IMPTransfromModel.right
             
         case IMPExifOrientationLeft90HorizontalFlipped:
             swapSize()
-            transformer.angle = IMPMatrixModel.right
+            transformer.angle = IMPTransfromModel.right
             transformer.reflectMode = (horizontal:.Mirroring, vertical:.None)
             
         case IMPExifOrientationRight90:
             swapSize()
-            transformer.angle = IMPMatrixModel.left
+            transformer.angle = IMPTransfromModel.left
             
         default:
             return source

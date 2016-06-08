@@ -41,7 +41,7 @@ public class IMPWarpFilter: IMPFilter {
         self.init(context: context, vertex: "vertex_warpTransformation", fragment: "fragment_passthrough")
     }
     
-    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider {
+    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider? {
         if let texture = source.texture{
             context.execute { (commandBuffer) in
                 

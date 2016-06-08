@@ -74,7 +74,7 @@ public enum IMPTimingCurve: Float {
     }
 }
 
-public class IMPDisplayTimer {
+public class IMPDisplayTimer:NSObject {
     
     public enum UpdateCurveOptions{
         case Linear
@@ -90,17 +90,33 @@ public class IMPDisplayTimer {
     
     public static func execute(duration duration: NSTimeInterval,
                                         options:IMPTimingCurve = .Default,
+                                        resolution:Int = 20,
                                         update:UpdateHandler,
                                         complete:CompleteHandler? = nil) -> IMPDisplayTimer {
         
         let timer = IMPDisplayTimer(duration: duration,
                                     timingFunction: options.function,
+                                    resolution: resolution,
                                     update: update,
                                     complete: complete)
+        IMPDisplayTimer.timerList.append(timer)
         timer.start()
         return timer
     }
- 
+
+    
+    public static func cancelAll() {
+        while let t = IMPDisplayTimer.timerList.last {
+            t.cancel()
+        }
+    }
+
+    public static func invalidateAll() {
+        while let t = IMPDisplayTimer.timerList.last {
+            t.invalidate()
+        }
+    }
+
     public func cancel() {
         stop(true)
     }
@@ -109,67 +125,77 @@ public class IMPDisplayTimer {
         stop(false)
     }
     
+    static var timerList = [IMPDisplayTimer]()
+    
     var timingFunction:IMPTimingFunction
     var timeElapsed:NSTimeInterval = 0
     
     let updateHandler:UpdateHandler
     let completeHandler:CompleteHandler?
     let duration:NSTimeInterval
-    var displayLink:CADisplayLink? = nil
+    let resulution:Int
+    var timer:IMPRTTimer? = nil
     
     
-    init(duration:NSTimeInterval, timingFunction:IMPTimingFunction, update:UpdateHandler, complete:CompleteHandler?){
+    private init(duration:NSTimeInterval,
+                 timingFunction:IMPTimingFunction,
+                 resolution r:Int,
+                 update:UpdateHandler,
+                 complete:CompleteHandler?){
+        self.resulution = r
         self.duration = duration
         self.timingFunction = timingFunction
         updateHandler = update
         completeHandler = complete
     }
     
+    func removeFromList()  {
+        if let index = IMPDisplayTimer.timerList.indexOf(self) {
+            IMPDisplayTimer.timerList.removeAtIndex(index)
+        }
+    }
+    
     func start() {
         if duration > 0 {
-            dispatch_async(dispatch_get_main_queue()) {
+            
+            self.timeElapsed = 0
+            
+            self.timer = IMPRTTimer(usec: 50, update: { (timestamp, duration) in
                 
-                self.timeElapsed = 0
+                guard self.duration > 0    else {return}
                 
-                self.displayLink  = CADisplayLink(target: self, selector: #selector(self.changeAnimation))
-                self.displayLink!.frameInterval = 1
+                if self.timeElapsed > self.duration {
+                    self.stop(true)
+                    return
+                }
                 
-                self.displayLink?.addToRunLoop(NSRunLoop.currentRunLoop(), forMode:NSRunLoopCommonModes)
-            }
+                self.timeElapsed +=  NSTimeInterval(duration)/NSTimeInterval(IMPRTTimer.nanos_per_sec)
+                
+                var atTime = (self.timeElapsed/self.duration).float
+                
+                let t = NSTimeInterval(self.timingFunction(t: atTime > 1 ? 1 : atTime))
+                
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.updateHandler(atTime:  t)
+                }
+            })
+            
+            self.timer?.start()
         }
         else {
-            dispatch_async(dispatch_get_main_queue()) {
-                self.stop(true)
-            }
+            self.stop(true)
         }
     }
     
     func stop(flag:Bool) {
-        self.displayLink?.invalidate()
-        self.displayLink = nil
+        removeFromList()
+        timer?.stop()
+        timer = nil
         if let c = self.completeHandler {
-            c(flag: flag)
+            dispatch_async(dispatch_get_main_queue()) {
+                c(flag: flag)
+            }
         }
-    }
-    
-    @objc func changeAnimation() {
-        
-        guard self.duration > 0    else {return}
-        guard let displayLink = self.displayLink else {return}
-        
-        if timeElapsed > duration {
-            stop(true)
-            return
-        }
-        
-        timeElapsed += displayLink.duration
-        
-        var atTime = (timeElapsed/duration).float
-        
-        let t = NSTimeInterval(timingFunction(t: atTime > 1 ? 1 : atTime))
-        
-        updateHandler(atTime:  t)
-        
     }
 }
 #endif

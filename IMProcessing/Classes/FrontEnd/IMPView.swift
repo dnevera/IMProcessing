@@ -324,10 +324,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                 transform = CATransform3DRotate(transform, angle, 0.0, 0.0, -1.0)
     
                 delay(duration, closure: {
+                    self.updateLayer(duration)
                     self.animateLayer(duration, closure: { (duration) in
                         layer.transform = self.correctImageOrientation(transform);
                     })
-                    self.updateLayer(duration)
                 })
             }
         }
@@ -530,7 +530,6 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     func changeBounds(texure:MTLTexture, bounds:CGRect, duration:NSTimeInterval) {
         
         guard let l = metalLayer else { return }
-        
         if !CGRectEqualToRect(l.frame, bounds) {
 
             animateLayer(duration, closure: { (duration) in

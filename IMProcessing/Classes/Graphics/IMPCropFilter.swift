@@ -18,7 +18,13 @@ public class IMPCropFilter: IMPFilter {
         }
     }
     
-    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider {
+    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider? {
+        
+        if region.left == 0 && region.right == 0 && region.bottom == 0 && region.top == 0 {
+            provider.texture = source.texture
+            return provider
+        }
+        
         if let texture = source.texture{
             context.execute { (commandBuffer) in
                 
@@ -32,8 +38,7 @@ public class IMPCropFilter: IMPFilter {
                 
                 let destinationSize = MTLSize(
                     width: (self.region.width * w.float).int,
-                    height: (self.region.height * h.float).int, depth: d)
-                
+                    height: (self.region.height * h.float).int, depth: d)                
                 
                 if destinationSize.width != provider.texture?.width || destinationSize.height != provider.texture?.height{
                     
@@ -59,6 +64,6 @@ public class IMPCropFilter: IMPFilter {
                 blit.endEncoding()                
             }
         }
-        return provider
+        return provider 
     }
 }
