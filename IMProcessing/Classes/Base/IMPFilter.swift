@@ -290,7 +290,11 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
         }
     }
     
-    public func main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider {
+    public func main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider? {
+        return nil
+    }
+    
+    func internal_main(source source: IMPImageProvider , destination provider:IMPImageProvider) -> IMPImageProvider {
         
         var currentFilter = self
         
@@ -345,6 +349,11 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                 }
             }
             
+            
+            if let p = main(source: currrentProvider, destination: provider) {
+                currrentProvider = p
+            }
+            
             //
             // Filter chains...
             //
@@ -373,13 +382,13 @@ public class IMPFilter: NSObject,IMPFilterProtocol {
                     // copy source to destination
                     //
                     
-                    passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
-                    addFunction(passThroughKernel!)
+                    //passThroughKernel = passThroughKernel ?? IMPFunction(context: self.context, name: IMPSTD_PASS_KERNEL)
+                    //addFunction(passThroughKernel!)
                 }
                 
                 executeSourceObservers(source)
                 
-                _destination = main(source:  s, destination: _destination)
+                _destination = internal_main(source:  s, destination: _destination)
                 
                 executeDestinationObservers(_destination)
             }

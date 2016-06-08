@@ -10,7 +10,7 @@ import Foundation
 import Darwin
 
 extension mach_timebase_info{
-    static var sharedInstance = mach_timebase_info(0)
+    static let sharedInstance = mach_timebase_info(0)
     private init(_:Int) {
         self.init()
         mach_timebase_info(&self)
@@ -66,6 +66,8 @@ public class IMPRTTimer {
         return mach_absolute_time()
     }
     
+    var info = mach_timebase_info()
+    
     var lastUpdate:UInt64 = 0
     var startTime:UInt64 = 0
     public func start()  {
@@ -83,18 +85,20 @@ public class IMPRTTimer {
                 let lu = self.lastUpdate
                 self.lastUpdate = t
                 dispatch_async(self.handler_queue) {
-                    self.update(timestamp: t-self.startTime, duration: t-(lu == 0 ? t : lu) )
+                    let ts = t-self.startTime
+                    let ds = t-(lu == 0 ? t : lu)
+                    self.update(timestamp: ts.nanos, duration: ds.nanos )
                 }
                 self.wait_until(usec: self.duration)
             }
         }
+        timer_queue.suspended = false
     }
     
     public func stop(){
         condition = false
         timer_queue.suspended = true
         timer_queue.cancelAllOperations()
-        timer_queue.suspended = false
         if let c = self.complete {
             let t = self.now
             let lu = self.lastUpdate
@@ -108,7 +112,7 @@ public class IMPRTTimer {
     var update:UpdateHandler
     var complete:UpdateHandler?
     
-    var condition     = true
+    var condition     = false
     let handler_queue = dispatch_queue_create(IMProcessing.names.prefix + "rttimer.handler", DISPATCH_QUEUE_SERIAL)
     lazy var timer_queue:NSOperationQueue   =  {
         let t = NSOperationQueue()
@@ -121,12 +125,6 @@ public class IMPRTTimer {
         stop()
     }
     
-    lazy var info:mach_timebase_info = {
-        var i = mach_timebase_info()
-        mach_timebase_info(&i)
-        return i
-    }()
-
     func wait_until(nsec nsec:UInt64){
         mach_wait_until(now + UInt64(nsec).abs)
     }

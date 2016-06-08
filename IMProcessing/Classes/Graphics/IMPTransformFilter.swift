@@ -85,7 +85,7 @@ public class IMPTransformFilter: IMPFilter {
         }
     }
     
-    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider {
+    public override func main(source source:IMPImageProvider , destination provider: IMPImageProvider) -> IMPImageProvider? {
         self.context.execute{ (commandBuffer) -> Void in
 
             if let inputTexture = source.texture {
@@ -114,7 +114,7 @@ public class IMPTransformFilter: IMPFilter {
                 self.plate.render(commandBuffer, pipelineState: self.graphics.pipeline!, source: source, destination: provider)
             }
         }
-        return  provider //super.main(source: provider, destination: provider)
+        return provider
     }
     
     public var aspect:Float {
