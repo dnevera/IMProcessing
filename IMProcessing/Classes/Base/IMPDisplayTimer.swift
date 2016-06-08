@@ -171,7 +171,7 @@ public class IMPDisplayTimer:NSObject {
                 
                 self.timeElapsed +=  NSTimeInterval(duration)/NSTimeInterval(IMPRTTimer.nanos_per_sec)
                 
-                var atTime = (self.timeElapsed/self.duration).float
+                let atTime = (self.timeElapsed/self.duration).float
                 
                 let t = NSTimeInterval(self.timingFunction(t: atTime > 1 ? 1 : atTime))
                 

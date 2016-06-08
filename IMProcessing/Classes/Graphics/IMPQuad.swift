@@ -362,7 +362,7 @@ public struct IMPQuad {
         for i in 0..<4{
             let line = IMPLineSegment(p0: self[i], p1: self[i+1])
             for j in 0..<4{
-                let qline = IMPLineSegment(p0: quad[i], p1: quad[i+1])
+                let qline = IMPLineSegment(p0: quad[j], p1: quad[j+1])
                 let p = qline.crossPoint(line: line)
                 if contains(point: p) {
                     return true

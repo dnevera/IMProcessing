@@ -61,7 +61,7 @@ public extension IMPVertices{
             let t = (1+result.z)/2
             let xy = result.xy/t
             
-            points.append(result.xy)
+            points.append(xy)
             
         }
         return points
@@ -113,7 +113,7 @@ public extension IMPVertices{
         let w = left + right
         let h = top + bottom
         
-        var scale = min(W / w, H / h)
+        let scale = min(W / w, H / h)
         
         return scale > 1 ? 2-scale : scale
     }

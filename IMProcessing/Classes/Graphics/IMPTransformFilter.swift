@@ -78,10 +78,10 @@ public class IMPTransformFilter: IMPFilter {
     
     public var viewPortSize: MTLSize? {
         didSet{
-            if let s = source {
+            //if let s = source {
                 plate.aspect = self.keepAspectRatio ? viewPortSize!.width.float/viewPortSize!.height.float : 1
                 dirty = true
-            }
+            //}
         }
     }
     

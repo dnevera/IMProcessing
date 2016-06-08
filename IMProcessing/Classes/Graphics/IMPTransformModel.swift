@@ -53,11 +53,11 @@ public struct IMPTransfromModel{
     var scaleMatrix       = float4x4(matrix_identity_float4x4)
     
     public var projection = IMPProjectionModel()
-
-    public init(translation translation:float3 = float3(0),
-                            angle:float3 = float3(0),
-                            scale:float3=float3(1),
-                            projection:IMPProjectionModel = IMPProjectionModel()){
+    
+    public init(translation:float3 = float3(0),
+                angle:float3 = float3(0),
+                scale:float3=float3(1),
+                projection:IMPProjectionModel = IMPProjectionModel()){
         defer{
             self.projection = projection
             self.angle = angle
@@ -74,8 +74,16 @@ public struct IMPTransfromModel{
     }
 
     
+    public func lerp(final final:IMPTransfromModel, t:Float) -> IMPTransfromModel {
+        var f = self
+        f.translation = f.translation.lerp(final: final.translation, t: t)
+        f.angle = f.angle.lerp(final: final.angle, t: t)
+        f.scale = f.scale.lerp(final: final.scale, t: t)
+        return f
+    }
+    
     public static func with(model model:IMPTransfromModel,
-                                  translation translation:float3?=nil,
+                                  translation:float3?=nil,
                                               angle:float3?=nil,
                                               scale:float3?=nil,
                                             projection:IMPProjectionModel?=nil) -> IMPTransfromModel{

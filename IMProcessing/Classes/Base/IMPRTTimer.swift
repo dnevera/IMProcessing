@@ -19,11 +19,13 @@ extension mach_timebase_info{
 
 extension UInt64 {
     var nanos:UInt64 {
-        return  UInt64( (UInt32(self) * mach_timebase_info.sharedInstance.numer) / mach_timebase_info.sharedInstance.denom)
+        let info = mach_timebase_info.sharedInstance
+        return  UInt64( (UInt32(self) * info.numer) / info.denom)
     }
     
     var abs:UInt64 {
-        return  UInt64( (UInt32(self) * mach_timebase_info.sharedInstance.denom) / mach_timebase_info.sharedInstance.numer)
+        let info = mach_timebase_info.sharedInstance
+        return  UInt64( (UInt32(self) * info.denom) / info.numer)
     }
 }
 
@@ -85,9 +87,9 @@ public class IMPRTTimer {
                 let lu = self.lastUpdate
                 self.lastUpdate = t
                 dispatch_async(self.handler_queue) {
-                    let ts = t-self.startTime
-                    let ds = t-(lu == 0 ? t : lu)
-                    self.update(timestamp: ts.nanos, duration: ds.nanos )
+                    let ts = (t-self.startTime).nanos
+                    let ds = (t-(lu == 0 ? t : lu)).nanos
+                    self.update(timestamp: ts, duration: ds )
                 }
                 self.wait_until(usec: self.duration)
             }
