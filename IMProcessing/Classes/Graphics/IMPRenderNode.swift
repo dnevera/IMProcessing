@@ -119,7 +119,7 @@ public class IMPRenderNode: IMPContextProvider {
     ///  - parameter pipelineState: graphics pipeline
     ///  - parameter source:        source texture
     ///  - parameter destination:   destination texture
-    public func render(commandBuffer:  MTLCommandBuffer,
+    public func render(commandBuffer: MTLCommandBuffer,
                        pipelineState: MTLRenderPipelineState,
                        source: IMPImageProvider,
                        destination: IMPImageProvider
