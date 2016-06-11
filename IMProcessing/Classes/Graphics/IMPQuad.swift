@@ -134,7 +134,6 @@ public struct IMPLineSegment {
     public func distanceTo(parallelLine line:IMPLineSegment) -> Float {
         if line.isParallel(toLine: self){
             let p = line.normalIntersection(point: p0)
-            print("p = \(p)")
             return distance(p0,p)
         }
         else {

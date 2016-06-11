@@ -20,12 +20,12 @@ extension mach_timebase_info{
 extension UInt64 {
     var nanos:UInt64 {
         let info = mach_timebase_info.sharedInstance
-        return  UInt64( (UInt32(self) * info.numer) / info.denom)
+        return  UInt64( self * UInt64(info.numer) / UInt64(info.denom))
     }
     
     var abs:UInt64 {
         let info = mach_timebase_info.sharedInstance
-        return  UInt64( (UInt32(self) * info.denom) / info.numer)
+        return  UInt64( (self * UInt64(info.denom)) / UInt64(info.numer))
     }
 }
 
