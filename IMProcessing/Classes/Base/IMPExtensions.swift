@@ -49,8 +49,8 @@ public enum IMProcessing{
         #if os(iOS)
         public static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #else
-        //public static let pixelFormat = MTLPixelFormat.RGBA16Unorm
-        public static let pixelFormat = MTLPixelFormat.RGBA8Unorm
+        public static let pixelFormat = MTLPixelFormat.RGBA16Unorm
+        //public static let pixelFormat = MTLPixelFormat.RGBA8Unorm
         #endif
     }
 }
@@ -131,10 +131,13 @@ public extension IMPRegion{
     }
 
     public func lerp(final final:IMPRegion, t:Float) -> IMPRegion {
-        let v1 = float4(left,right,top,bottom)
-        let v2 = float4(final.left,final.right,final.top,final.bottom)
-        let f = v1.lerp(final: v2, t: t)
-        return IMPRegion(left: f.x, right: f.y, top: f.z, bottom: f.w)
+        //let v1 = float4(left,right,top,bottom)
+        //let v2 = float4(final.left,final.right,final.top,final.bottom)
+        //let f = v1.lerp(final: v2, t: t)
+        return IMPRegion(left:  left.lerp(  final: final.left,  t: t),
+                         right: right.lerp( final: final.right, t: t),
+                         top:   top.lerp(   final: final.top,   t: t),
+                         bottom:bottom.lerp(final: final.bottom,t: t) )
     }
 }
 

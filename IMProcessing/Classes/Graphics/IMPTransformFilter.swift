@@ -46,16 +46,9 @@ public class IMPPhotoPlateNode: IMPRenderNode {
 }
 
 /// Photo plate transformation filter
-public class IMPTransformFilter: IMPFilter {
+public class IMPTransformFilter: IMPFilter, IMPGraphicsProvider {
 
-    public var backgroundColor:IMPColor {
-        get {
-            return plate.backgroundColor
-        }
-        set {
-            plate.backgroundColor = newValue
-        }
-    }
+    public var backgroundColor:IMPColor = IMPColor.whiteColor()
 
     public override var source: IMPImageProvider? {
         didSet {
@@ -78,10 +71,8 @@ public class IMPTransformFilter: IMPFilter {
     
     public var viewPortSize: MTLSize? {
         didSet{
-            //if let s = source {
-                plate.aspect = self.keepAspectRatio ? viewPortSize!.width.float/viewPortSize!.height.float : 1
-                dirty = true
-            //}
+            plate.aspect = self.keepAspectRatio ? viewPortSize!.width.float/viewPortSize!.height.float : 1
+            dirty = true
         }
     }
     
@@ -111,7 +102,12 @@ public class IMPTransformFilter: IMPFilter {
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
                         
-                self.plate.render(commandBuffer, pipelineState: self.graphics.pipeline!, source: source, destination: provider)
+                self.plate.render(commandBuffer, pipelineState:
+                    self.graphics.pipeline!,
+                    source: source,
+                    destination: provider,
+                    clearColor: self.clearColor
+                )
             }
         }
         return provider

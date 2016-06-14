@@ -349,6 +349,7 @@ extension IMPImageView {
             
             imageView = IMPView(context: self.context, frame: self.bounds)
             imageView.backgroundColor = IMPColor.clearColor()
+            imageView.animationDuration = 0
             
             scrollView.documentView = imageView
             

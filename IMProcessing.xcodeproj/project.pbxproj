@@ -131,6 +131,7 @@
 		3134EEAC1D085A370083E6D0 /* IMPImage+CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3134EE6D1D085A370083E6D0 /* IMPImage+CGImage.swift */; };
 		3134EEAD1D085A370083E6D0 /* IMPImage+MTLTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3134EE6E1D085A370083E6D0 /* IMPImage+MTLTexture.swift */; };
 		3134EEAE1D085A370083E6D0 /* IMPJpegturbo.m in Sources */ = {isa = PBXBuildFile; fileRef = 3134EE701D085A370083E6D0 /* IMPJpegturbo.m */; };
+		3138108E1D10644D00E97068 /* IMPVignetteFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3138108D1D10644D00E97068 /* IMPVignetteFilter.swift */; };
 		31E97B391CCA14BA004560DF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E97B381CCA14BA004560DF /* AppDelegate.swift */; };
 		31E97B3B1CCA14BA004560DF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E97B3A1CCA14BA004560DF /* ViewController.swift */; };
 		31E97B3E1CCA14BA004560DF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 31E97B3C1CCA14BA004560DF /* Main.storyboard */; };
@@ -335,6 +336,7 @@
 		3134EE6E1D085A370083E6D0 /* IMPImage+MTLTexture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IMPImage+MTLTexture.swift"; sourceTree = "<group>"; };
 		3134EE6F1D085A370083E6D0 /* IMPJpegturbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPJpegturbo.h; sourceTree = "<group>"; };
 		3134EE701D085A370083E6D0 /* IMPJpegturbo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMPJpegturbo.m; sourceTree = "<group>"; };
+		3138108D1D10644D00E97068 /* IMPVignetteFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPVignetteFilter.swift; sourceTree = "<group>"; };
 		31E97B361CCA14B9004560DF /* IMProcessingIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessingIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		31E97B381CCA14BA004560DF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		31E97B3A1CCA14BA004560DF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -495,6 +497,7 @@
 			isa = PBXGroup;
 			children = (
 				3134ED7E1D085A270083E6D0 /* IMPDitheringFilter.swift */,
+				3138108D1D10644D00E97068 /* IMPVignetteFilter.swift */,
 				3134ED7F1D085A270083E6D0 /* IMPFilmGrainFilter.swift */,
 				3134ED801D085A270083E6D0 /* IMPRandomNoiseFilter.swift */,
 			);
@@ -1094,6 +1097,7 @@
 				3134EDE31D085A270083E6D0 /* IMPPaletteView.swift in Sources */,
 				3134EDCC1D085A270083E6D0 /* IMPLutFilter.swift in Sources */,
 				3134EDCA1D085A270083E6D0 /* IMPCurvesFilter.swift in Sources */,
+				3138108E1D10644D00E97068 /* IMPVignetteFilter.swift in Sources */,
 				3134EDCF1D085A270083E6D0 /* IMPContext.swift in Sources */,
 				31E97D2E1CCA1918004560DF /* AppDelegate.swift in Sources */,
 				3134EDCE1D085A270083E6D0 /* IMPWBFilter.swift in Sources */,

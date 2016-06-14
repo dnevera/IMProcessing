@@ -402,9 +402,7 @@ public class IMPView: IMPViewBase, IMPContextProvider {
                         if !CGSizeEqualToSize(self.metalLayer.drawableSize, actualImageTexture.size){ self.metalLayer.drawableSize = actualImageTexture.size }
 
                         if let drawable = self.metalLayer.nextDrawable(){
-                            
-                            //self.changeBounds(actualImageTexture, bounds: self.getNewBounds(actualImageTexture), duration: 0)
-                            
+                                                        
                             self.renderPassDescriptor.colorAttachments[0].texture     = drawable.texture
                             self.renderPassDescriptor.colorAttachments[0].loadAction  = .Clear
                             self.renderPassDescriptor.colorAttachments[0].storeAction = .Store
@@ -478,17 +476,15 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         CATransaction.begin()
         CATransaction.setDisableActions(duration <= 0 ? true : false)
-        if duration > 0 {
+        //if duration > 0 {
             CATransaction.setAnimationDuration(duration)
-        }
+        //}
         
         closure(duration: duration)
         
         CATransaction.commit()
     }
     
-
-    #if os(iOS)
     
     func getNewBounds(texture:MTLTexture) -> CGRect {
         var adjustedSize = bounds.size
@@ -500,9 +496,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
             var ratio  = texture.width.cgfloat/texture.height.cgfloat
             let aspect = originalBounds.size.width/originalBounds.size.height
             
+            #if os(iOS)
             if UIDeviceOrientationIsLandscape(self.orientation)  {
                 ratio  = 1/ratio
             }
+            #endif
             
             let newRatio = aspect/ratio
             
@@ -526,7 +524,8 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         return  CGRect(origin: origin, size: adjustedSize)
     }
 
-    
+    #if os(iOS)
+
     func changeBounds(texure:MTLTexture, bounds:CGRect, duration:NSTimeInterval) {
         
         guard let l = metalLayer else { return }
@@ -563,15 +562,15 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
 
     override public func updateLayer(){
+        currentDestination = currentDestination ?? filter?.destination
+        guard let t = currentDestination?.texture else { return }
+        
         if let l = metalLayer {
-            currentDestination = currentDestination ?? filter?.destination
-
-            if let t = currentDestination?.texture{
-                l.drawableSize = t.size
-            }
-            l.frame = CGRect(origin: CGPointZero, size:  bounds.size)
+            l.drawableSize = t.size
+            animateLayer(animationDuration, closure: { (duration) in
+                l.frame = CGRect(origin: CGPointZero, size:  self.bounds.size)
+            })
         }
-        //layerNeedUpdate = true
     }
     
     public override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {

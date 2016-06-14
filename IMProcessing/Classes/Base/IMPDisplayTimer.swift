@@ -8,7 +8,10 @@
 
 
 #if os(iOS)
-import UIKit
+    import UIKit
+#else
+    import Cocoa
+#endif
 
 public typealias IMPTimingFunction = ((t:Float) -> Float)
 
@@ -175,9 +178,9 @@ public class IMPDisplayTimer:NSObject {
                 
                 let t = NSTimeInterval(self.timingFunction(t: atTime > 1 ? 1 : atTime))
                 
-                dispatch_async(dispatch_get_main_queue()) {
+                //dispatch_async(dispatch_get_main_queue()) {
                     self.updateHandler(atTime:  t)
-                }
+                //}
             })
             
             self.timer?.start()
@@ -198,4 +201,4 @@ public class IMPDisplayTimer:NSObject {
         }
     }
 }
-#endif
+//#endif

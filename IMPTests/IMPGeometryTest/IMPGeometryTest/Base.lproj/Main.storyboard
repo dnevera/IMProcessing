@@ -86,12 +86,12 @@
                                     <items>
                                         <menuItem title="Fit on Screen" tag="3004" keyEquivalent="0" id="qfI-q8-csN">
                                             <connections>
-                                                <action selector="chooseMenuItem:" target="Voe-Tx-rLC" id="CaH-7N-XzR"/>
+                                                <action selector="chooseMenuItem:" target="Voe-Tx-rLC" id="gkR-SB-gLH"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="100 %" tag="3005" keyEquivalent="1" id="e5x-JD-vjY" userLabel="100 %">
                                             <connections>
-                                                <action selector="chooseMenuItem:" target="Voe-Tx-rLC" id="U6P-bs-M9V"/>
+                                                <action selector="chooseMenuItem:" target="Voe-Tx-rLC" id="g85-VA-1sS"/>
                                             </connections>
                                         </menuItem>
                                     </items>

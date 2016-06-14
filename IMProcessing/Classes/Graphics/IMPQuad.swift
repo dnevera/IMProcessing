@@ -231,6 +231,14 @@ public struct IMPQuad {
         }
     }
     
+    public func lerp(final final:IMPQuad, t:Float) -> IMPQuad {
+        let lb = left_bottom.lerp(final: final.left_bottom, t: t)
+        let lt = left_top.lerp(final: final.left_top, t: t)
+        let rt = right_top.lerp(final: final.right_top, t: t)
+        let rb = right_bottom.lerp(final: final.right_bottom, t: t)
+        return IMPQuad(left_bottom: lb, left_top: lt, right_bottom: rb, right_top: rt)
+    }
+    
     public subscript(index: Int) -> float2 {
         get {
             let i = index < 0 ? (4-abs(index))%4 : index%4
@@ -537,3 +545,20 @@ public struct IMPQuad {
         return c
     }
 }
+
+public func - (left:IMPQuad,right:IMPQuad) -> IMPQuad {
+    let left_bottom  = left.left_bottom - right.left_bottom
+    let left_top     = left.left_top - right.left_top
+    let right_top    = left.right_top - right.right_top
+    let right_bottom = left.right_bottom - right.right_bottom
+    return IMPQuad(left_bottom: left_bottom, left_top: left_top, right_bottom: right_bottom, right_top: right_top)
+}
+
+public func + (left:IMPQuad,right:IMPQuad) -> IMPQuad {
+    let left_bottom  = left.left_bottom + right.left_bottom
+    let left_top     = left.left_top + right.left_top
+    let right_top    = left.right_top + right.right_top
+    let right_bottom = left.right_bottom + right.right_bottom
+    return IMPQuad(left_bottom: left_bottom, left_top: left_top, right_bottom: right_bottom, right_top: right_top)
+}
+

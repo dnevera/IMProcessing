@@ -14,6 +14,24 @@
 import Metal
 import simd
 
+public protocol IMPGraphicsProvider {
+    var backgroundColor:IMPColor {get set}
+    var graphics:IMPGraphics! {get}
+}
+
+extension IMPGraphicsProvider{
+    public var clearColor:MTLClearColor {
+        get {
+            let rgba = backgroundColor.rgba
+            let color = MTLClearColor(red:   rgba.r.double,
+                                      green: rgba.g.double,
+                                      blue:  rgba.b.double,
+                                      alpha: rgba.a.double)
+            return color
+        }
+    }
+}
+
 public class IMPGraphics: NSObject, IMPContextProvider {
     
     public let vertexName:String

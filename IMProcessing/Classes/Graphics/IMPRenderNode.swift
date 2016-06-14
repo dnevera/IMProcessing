@@ -16,8 +16,6 @@ public class IMPRenderNode: IMPContextProvider {
         case None
     }    
     
-    public var backgroundColor:IMPColor = IMPColor.whiteColor()    
-        
     public var context:IMPContext!
     
     public var model:IMPTransfromModel {
@@ -122,7 +120,8 @@ public class IMPRenderNode: IMPContextProvider {
     public func render(commandBuffer: MTLCommandBuffer,
                        pipelineState: MTLRenderPipelineState,
                        source: IMPImageProvider,
-                       destination: IMPImageProvider
+                       destination: IMPImageProvider,
+                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
         ) {
         
         currentDestination = destination
@@ -137,7 +136,8 @@ public class IMPRenderNode: IMPContextProvider {
     public func render(commandBuffer:  MTLCommandBuffer,
                        pipelineState: MTLRenderPipelineState,
                        source: MTLTexture,
-                       destination: MTLTexture
+                       destination: MTLTexture,
+                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
         ) {
         
         
@@ -178,18 +178,6 @@ public class IMPRenderNode: IMPContextProvider {
     lazy var renderPassDescriptor:MTLRenderPassDescriptor = {
         return MTLRenderPassDescriptor()                
     }()
-    
-    
-    var clearColor:MTLClearColor {
-        get {
-            let rgba = backgroundColor.rgba
-            let color = MTLClearColor(red:   rgba.r.double,
-                                 green: rgba.g.double,
-                                 blue:  rgba.b.double,
-                                 alpha: rgba.a.double)
-            return color
-        }
-    }
     
     var vertexBuffer: MTLBuffer!
     
