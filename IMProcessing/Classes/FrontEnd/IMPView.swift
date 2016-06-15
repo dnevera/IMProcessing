@@ -462,12 +462,14 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     
     internal var layerNeedUpdate:Bool = true  {
         didSet {
-            if layerNeedUpdate {
-                #if os(iOS)
-                    updateLayer(isFirstFrame ? 0 : animationDuration)
-                #else
-                    updateLayer()
-                #endif
+            dispatch_async(dispatch_get_main_queue()) { 
+                if self.layerNeedUpdate {
+                    #if os(iOS)
+                        self.updateLayer(self.isFirstFrame ? 0 : self.animationDuration)
+                    #else
+                        self.updateLayer()
+                    #endif
+                }
             }
         }
     }
@@ -476,9 +478,9 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         
         CATransaction.begin()
         CATransaction.setDisableActions(duration <= 0 ? true : false)
-        //if duration > 0 {
+        if duration > 0 {
             CATransaction.setAnimationDuration(duration)
-        //}
+        }
         
         closure(duration: duration)
         

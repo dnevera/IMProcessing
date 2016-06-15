@@ -10,8 +10,8 @@ import Foundation
 import simd
 import Accelerate
 
-public let IMPMinimumPoint:Float = 1e-6
-public let IMPEPSPoint:Float = (1+1e-4)
+public let IMPMinimumPoint:Float = FLT_EPSILON
+public let IMPEPSPoint:Float = (1+FLT_EPSILON)
 
 public struct IMPLineSegment {
     
@@ -27,7 +27,7 @@ public struct IMPLineSegment {
             var f = float3()
             f.x =  p0.y-p1.y
             f.y =  p1.x-p0.x
-            f.z = -(p0.x*p1.y - p1.x*p0.y) // -((p0.x*(p0.y-p1.y) + p0.y*(p1.x-p0.x)))
+            f.z = -(p0.x*p1.y - p1.x*p0.y) 
             return f
         }
     }

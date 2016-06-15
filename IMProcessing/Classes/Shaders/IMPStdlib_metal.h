@@ -29,6 +29,7 @@
 #include "IMPFilmGrain_metal.h"
 #include "IMPDithering_metal.h"
 #include "IMPGraphics_metal.h"
+#include "IMPVignette_metal.h"
 
 #ifdef __cplusplus
 

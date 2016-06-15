@@ -337,6 +337,7 @@
 		3134EE6F1D085A370083E6D0 /* IMPJpegturbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPJpegturbo.h; sourceTree = "<group>"; };
 		3134EE701D085A370083E6D0 /* IMPJpegturbo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMPJpegturbo.m; sourceTree = "<group>"; };
 		3138108D1D10644D00E97068 /* IMPVignetteFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMPVignetteFilter.swift; sourceTree = "<group>"; };
+		314D72F31D115DF000C4B727 /* IMPVignette_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPVignette_metal.h; sourceTree = "<group>"; };
 		31E97B361CCA14B9004560DF /* IMProcessingIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IMProcessingIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		31E97B381CCA14BA004560DF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		31E97B3A1CCA14BA004560DF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -603,6 +604,7 @@
 				3134EDB41D085A270083E6D0 /* IMPConstants_metal.h */,
 				3134EDB51D085A270083E6D0 /* IMPDithering_metal.h */,
 				3134EDB61D085A270083E6D0 /* IMPFilmGrain_metal.h */,
+				314D72F31D115DF000C4B727 /* IMPVignette_metal.h */,
 				3134EDB71D085A270083E6D0 /* IMPFlowControl_metal.h */,
 				3134EDB81D085A270083E6D0 /* IMPGaussianBlur_metal.h */,
 				3134EDB91D085A270083E6D0 /* IMPGraphics_metal.h */,

@@ -17,8 +17,16 @@ public class IMPVignetteFilter: IMPFilter,IMPAdjustmentProtocol {
     }
     
     public struct Adjustment {
-        public var start:Float  = 0.4
-        public var end:Float    = 0.9
+        public var start:Float  = 0 {
+            didSet {
+                check_diff()
+            }
+        }
+        public var end:Float    = 1 {
+            didSet {
+                check_diff()
+            }
+        }
         public var color    = float3(0)
         public var blending = IMPBlending(mode: NORMAL, opacity: 1)
         public init(start:Float, end:Float, color:float3, blending:IMPBlending){
@@ -28,6 +36,12 @@ public class IMPVignetteFilter: IMPFilter,IMPAdjustmentProtocol {
             self.blending = blending
         }
         public init() {}
+        
+        mutating func  check_diff() {
+            if abs(end - start) < FLT_EPSILON  {
+                end   = start+FLT_EPSILON // to avoid smoothstep 0 division
+            }
+        }
     }
     
     /// Vignette region
