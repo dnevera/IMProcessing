@@ -101,13 +101,14 @@ public class IMPTransformFilter: IMPFilter, IMPGraphicsProvider {
                                         
                     provider.texture = self.context.device.newTextureWithDescriptor(descriptor)
                 }
-                        
-                self.plate.render(commandBuffer, pipelineState:
-                    self.graphics.pipeline!,
+                
+                self.plate.render(commandBuffer,
+                    pipelineState: self.graphics.pipeline!,
                     source: source,
                     destination: provider,
-                    clearColor: self.clearColor
-                )
+                    clearColor: self.clearColor, configure: { (command) in
+                        self.configureGraphics(self.graphics, command: command)
+                })
             }
         }
         return provider
@@ -125,6 +126,7 @@ public class IMPTransformFilter: IMPFilter, IMPGraphicsProvider {
         return plate.identityModel
     }
     
+    public func configureGraphics(graphics:IMPGraphics, command:MTLRenderCommandEncoder){}
     
     ///  Rotate plate on angle in radians arround axis
     ///

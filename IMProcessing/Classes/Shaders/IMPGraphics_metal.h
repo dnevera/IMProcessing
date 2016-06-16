@@ -36,6 +36,21 @@ namespace IMProcessing
         
         return out;
     }
+ 
+    vertex IMPVertexOut vertex_passthrough(
+                                              const device IMPVertex*   vertex_array [[ buffer(0) ]],
+                                              unsigned int vid [[ vertex_id ]]) {
+        
+        
+        IMPVertex in = vertex_array[vid];
+        float3 position = float3(in.position);
+        
+        IMPVertexOut out;
+        out.position = float4(position,1);
+        out.texcoord = float2(float3(in.texcoord).xy);
+        
+        return out;
+    }
     
 
     vertex IMPVertexOut vertex_warpTransformation(

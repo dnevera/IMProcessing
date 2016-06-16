@@ -231,6 +231,8 @@ public struct IMPQuad {
         }
     }
     
+    public static let null = IMPQuad(left_bottom: float2(0), left_top: float2(0), right_bottom: float2(0), right_top: float2(0))
+    
     public func lerp(final final:IMPQuad, t:Float) -> IMPQuad {
         let lb = left_bottom.lerp(final: final.left_bottom, t: t)
         let lt = left_top.lerp(final: final.left_top, t: t)

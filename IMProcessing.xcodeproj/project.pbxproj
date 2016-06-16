@@ -231,7 +231,7 @@
 		3134EDB61D085A270083E6D0 /* IMPFilmGrain_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPFilmGrain_metal.h; sourceTree = "<group>"; };
 		3134EDB71D085A270083E6D0 /* IMPFlowControl_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPFlowControl_metal.h; sourceTree = "<group>"; };
 		3134EDB81D085A270083E6D0 /* IMPGaussianBlur_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGaussianBlur_metal.h; sourceTree = "<group>"; };
-		3134EDB91D085A270083E6D0 /* IMPGraphics_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGraphics_metal.h; sourceTree = "<group>"; };
+		3134EDB91D085A270083E6D0 /* IMPGraphics_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGraphics_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3134EDBA1D085A270083E6D0 /* IMPHistogram_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogram_metal.h; sourceTree = "<group>"; };
 		3134EDBB1D085A270083E6D0 /* IMPHistogramLayer_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogramLayer_metal.h; sourceTree = "<group>"; };
 		3134EDBC1D085A270083E6D0 /* IMPRandomNoise_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPRandomNoise_metal.h; sourceTree = "<group>"; };
@@ -323,7 +323,7 @@
 		3134EE601D085A370083E6D0 /* IMPFilmGrain_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPFilmGrain_metal.h; sourceTree = "<group>"; };
 		3134EE611D085A370083E6D0 /* IMPFlowControl_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPFlowControl_metal.h; sourceTree = "<group>"; };
 		3134EE621D085A370083E6D0 /* IMPGaussianBlur_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGaussianBlur_metal.h; sourceTree = "<group>"; };
-		3134EE631D085A370083E6D0 /* IMPGraphics_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGraphics_metal.h; sourceTree = "<group>"; };
+		3134EE631D085A370083E6D0 /* IMPGraphics_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPGraphics_metal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.metal; };
 		3134EE641D085A370083E6D0 /* IMPHistogram_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogram_metal.h; sourceTree = "<group>"; };
 		3134EE651D085A370083E6D0 /* IMPHistogramLayer_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPHistogramLayer_metal.h; sourceTree = "<group>"; };
 		3134EE661D085A370083E6D0 /* IMPRandomNoise_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMPRandomNoise_metal.h; sourceTree = "<group>"; };

@@ -121,14 +121,15 @@ public class IMPRenderNode: IMPContextProvider {
                        pipelineState: MTLRenderPipelineState,
                        source: IMPImageProvider,
                        destination: IMPImageProvider,
-                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
+                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1),
+                       configure: ((command:MTLRenderCommandEncoder)->Void)?=nil
         ) {
         
         currentDestination = destination
         
         if let input = source.texture {
             if let texture = destination.texture {
-                render(commandBuffer, pipelineState: pipelineState, source: input, destination: texture)
+                render(commandBuffer, pipelineState: pipelineState, source: input, destination: texture, clearColor: clearColor, configure: configure)
             }
         }
      }
@@ -137,7 +138,8 @@ public class IMPRenderNode: IMPContextProvider {
                        pipelineState: MTLRenderPipelineState,
                        source: MTLTexture,
                        destination: MTLTexture,
-                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
+                       clearColor:MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1),
+                       configure: ((command:MTLRenderCommandEncoder)->Void)?=nil
         ) {
         
         
@@ -164,10 +166,13 @@ public class IMPRenderNode: IMPContextProvider {
         renderEncoder.setFragmentBuffer(flipVectorBuffer, offset: 0, atIndex: 0)
         renderEncoder.setFragmentTexture(source, atIndex:0)
         
+        if let configure = configure {
+            configure(command: renderEncoder)
+        }
+        
         renderEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: vertices.count, instanceCount: vertices.count/3)
         renderEncoder.endEncoding()
     }
-    
     
     public var vertices:IMPVertices! {
         didSet{
