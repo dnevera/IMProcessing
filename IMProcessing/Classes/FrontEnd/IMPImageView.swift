@@ -322,7 +322,18 @@ extension IMPImageView {
             }
         }
         
+        public func addMouseEventObserver(observer:IMPView.MouseEventHandler){
+            imageView.addMouseEventObserver(observer)
+        }
         
+        public var imageArea:NSRect {
+            var frame = imageView.frame
+            frame.origin.x += scrollView.contentInsets.left
+            frame.origin.y += scrollView.contentInsets.top
+            frame.size.width -= scrollView.contentInsets.right
+            frame.size.height -= scrollView.contentInsets.bottom
+            return frame
+        }
         
         private var imageView:IMPView!
         private var scrollView:IMPScrollView!

@@ -123,6 +123,8 @@ public extension IMPBlendingMode{
 
 public extension IMPRegion{
     
+    public static let null = IMPRegion(left: 0.5, right: 0.5, top: 0.5, bottom: 0.5)
+     
     public var width:Float {return 1-(left+right) }
     public var height:Float {return 1-(top+bottom) }
     

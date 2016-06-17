@@ -600,6 +600,65 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         return false
     }
     
+    lazy var trackingArea:NSTrackingArea? = nil
+
+    override public func updateTrackingAreas() {
+        if mouseEventEnabled {
+            super.updateTrackingAreas()
+            if let t = trackingArea{
+                removeTrackingArea(t)
+            }
+            trackingArea = NSTrackingArea(rect: frame,
+                                          options: [.ActiveInKeyWindow,.MouseMoved,.MouseEnteredAndExited],
+                                          owner: self, userInfo: nil)
+            addTrackingArea(trackingArea!)
+        }
+    }
+   
+    override public func mouseEntered(event:NSEvent) {
+        lounchMouseObservers(event)
+    }
+    
+    override public func mouseExited(event:NSEvent) {
+        lounchMouseObservers(event)
+    }
+    
+    override public func mouseMoved(event:NSEvent) {
+        lounchMouseObservers(event)
+    }
+   
+    override public func mouseDown(event:NSEvent) {
+        lounchMouseObservers(event)
+    }
+    
+    override public func mouseUp(event:NSEvent) {
+        lounchMouseObservers(event)
+    }
+    
+    public typealias MouseEventHandler = ((event:NSEvent)->Void)
+    
+    var mouseEventHandlers = [MouseEventHandler]()
+    
+    var mouseEventEnabled = false
+    public func addMouseEventObserver(observer:MouseEventHandler){
+        mouseEventHandlers.append(observer)
+        mouseEventEnabled = true
+    }
+    
+    public func removeMouseEventObservers(){
+        mouseEventEnabled = false
+        if let t = trackingArea{
+            removeTrackingArea(t)
+        }
+        mouseEventHandlers.removeAll()
+    }
+    
+    func lounchMouseObservers(event:NSEvent){
+        for o in mouseEventHandlers {
+            o(event: event)
+        }
+    }
+    
     #endif
 }
 
