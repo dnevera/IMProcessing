@@ -12,6 +12,10 @@ import Metal
 /// Warp transformation filter
 public class IMPWarpFilter: IMPFilter, IMPGraphicsProvider {
     
+    public var model:float4x4 {
+        return transformation
+    }
+
     /// Source image quad
     public var sourceQuad = IMPQuad() {
         didSet{

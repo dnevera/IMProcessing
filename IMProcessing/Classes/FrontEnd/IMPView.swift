@@ -635,7 +635,11 @@ public class IMPView: IMPViewBase, IMPContextProvider {
         lounchMouseObservers(event)
     }
     
-    public typealias MouseEventHandler = ((event:NSEvent)->Void)
+    override public func mouseDragged(event: NSEvent) {
+        lounchMouseObservers(event)
+    }
+           
+    public typealias MouseEventHandler = ((event:NSEvent, location:NSPoint, view:NSView)->Void)
     
     var mouseEventHandlers = [MouseEventHandler]()
     
@@ -654,8 +658,10 @@ public class IMPView: IMPViewBase, IMPContextProvider {
     }
     
     func lounchMouseObservers(event:NSEvent){
+        let location = event.locationInWindow
+        let point  = self.convertPoint(location,fromView:nil)
         for o in mouseEventHandlers {
-            o(event: event)
+            o(event: event, location: point, view: self)
         }
     }
     
