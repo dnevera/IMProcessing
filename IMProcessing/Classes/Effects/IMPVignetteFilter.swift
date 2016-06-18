@@ -8,26 +8,35 @@
 
 import Metal
 
-/// Crop filter
+/// Vignette filter
 public class IMPVignetteFilter: IMPFilter,IMPAdjustmentProtocol {
     
+    /// Vignetting type
+    ///
+    ///  - Center: around center point
+    ///  - Frame:  by region frame rectangle
     public enum Type{
         case Center
         case Frame
     }
     
+    ///  @brief Vignette adjustment
     public struct Adjustment {
+        /// Start vignetting path
         public var start:Float  = 0 {
             didSet {
                 check_diff()
             }
         }
+        /// End vignetting path
         public var end:Float    = 1 {
             didSet {
                 check_diff()
             }
         }
+        /// Vignetting color
         public var color    = float3(0)
+        /// Blending options
         public var blending = IMPBlending(mode: NORMAL, opacity: 1)
         public init(start:Float, end:Float, color:float3, blending:IMPBlending){
             self.start = start
@@ -63,8 +72,10 @@ public class IMPVignetteFilter: IMPFilter,IMPAdjustmentProtocol {
         }
     }
     
+    /// Default adjusment
     public static let defaultAdjustment = Adjustment()
     
+    /// Current adjusment
     public var adjustment:Adjustment!{
         didSet{
             memcpy(colorStartUniformBuffer.contents(), &self.adjustment.start, colorStartUniformBuffer.length)
