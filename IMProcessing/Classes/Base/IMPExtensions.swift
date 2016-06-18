@@ -140,6 +140,22 @@ public extension IMPRegion{
     }
 }
 
+public func + (left:IMPRegion, right:IMPRegion) -> IMPRegion {
+    return IMPRegion(left: left.left+right.left, right: left.right+right.right, top: left.top+right.top, bottom: left.bottom+right.bottom)
+}
+
+public func - (left:IMPRegion, right:IMPRegion) -> IMPRegion {
+    return IMPRegion(left: left.left-right.left, right: left.right-right.right, top: left.top-right.top, bottom: left.bottom-right.bottom)
+}
+
+public func * (left:IMPRegion, right:IMPRegion) -> IMPRegion {
+    return IMPRegion(left: left.left*right.left, right: left.right*right.right, top: left.top*right.top, bottom: left.bottom*right.bottom)
+}
+
+public func / (left:IMPRegion, right:IMPRegion) -> IMPRegion {
+    return IMPRegion(left: left.left/right.left, right: left.right/right.right, top: left.top/right.top, bottom: left.bottom/right.bottom)
+}
+
 public extension String {
     
     var floatValue: Float {
